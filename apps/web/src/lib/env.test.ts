@@ -3,14 +3,25 @@ import { describe, expect, it } from "vitest";
 import { EnvValidationError, parseEnv } from "./env";
 
 describe("parseEnv", () => {
-  it("accepts a valid environment", () => {
-    expect(parseEnv({ DEPLOY_ENV: "local" })).toEqual({ DEPLOY_ENV: "local" });
+  it("accepts a valid environment and applies defaults", () => {
+    expect(parseEnv({ DEPLOY_ENV: "local" })).toEqual({ DEPLOY_ENV: "local", LOG_LEVEL: "info" });
   });
 
   it("ignores variables it does not know", () => {
     expect(parseEnv({ DEPLOY_ENV: "production", PATH: "/usr/bin" })).toEqual({
       DEPLOY_ENV: "production",
+      LOG_LEVEL: "info",
     });
+  });
+
+  it("treats an empty optional value as not set", () => {
+    expect(parseEnv({ DEPLOY_ENV: "local", LOG_LEVEL: "" }).LOG_LEVEL).toBe("info");
+  });
+
+  it("rejects an unknown log level", () => {
+    expect(() => parseEnv({ DEPLOY_ENV: "local", LOG_LEVEL: "verbose" })).toThrow(
+      /LOG_LEVEL is invalid/,
+    );
   });
 
   it("reports a missing variable by name", () => {
