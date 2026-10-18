@@ -70,9 +70,38 @@ similar values are replaced with `[REDACTED]`. Log through `getLogger()` / `getR
 | `pnpm build`                        | Production build of every package.                       |
 | `pnpm typecheck`                    | TypeScript checks (generates Next.js route types first). |
 | `pnpm lint`                         | ESLint with type-aware rules.                            |
-| `pnpm test`                         | Unit tests (Vitest); integration tests come in Task 0.5. |
-| `pnpm e2e`                          | End-to-end tests (none yet; Task 0.5).                   |
+| `pnpm test`                         | Unit and integration tests (Vitest).                     |
+| `pnpm e2e`                          | Builds, then runs the end-to-end tests (Playwright).     |
 | `pnpm format` / `pnpm format:check` | Prettier write / check. `docs/` is never reformatted.    |
+
+## Tests
+
+| Kind        | Where                                                    | Run                                                   |
+| ----------- | -------------------------------------------------------- | ----------------------------------------------------- |
+| Unit        | `apps/web/src/**/*.test.ts`, `apps/web/tests/factories/` | `pnpm test`, or `pnpm test:unit` in `apps/web`        |
+| Integration | `apps/web/tests/integration/`                            | `pnpm test`, or `pnpm test:integration` in `apps/web` |
+| End-to-end  | `apps/web/tests/e2e/*.spec.ts`                           | `pnpm e2e` (builds first)                             |
+
+Integration tests will use the local database once it exists (ADR-005); until then the project holds a placeholder.
+
+End-to-end tests run the **production build** with `next start` on port 3100 (`DEPLOY_ENV=local`), so they do not
+clash with `pnpm dev` on 3000. They open the local hosts (`upwilling.localhost:3100`, …) in Chromium. Install the
+browser once per machine (about 100 MB, stored outside the repository):
+
+```bash
+pnpm --filter @upwilling/web exec playwright install chromium --only-shell
+```
+
+Reading a failure:
+
+- **Vitest** prints the failing test name, an expected/received diff and the source line.
+- **Playwright** prints the failing step, the locator, expected/received and the source line. A screenshot and a
+  trace of each failed test are kept: open the report with `pnpm --filter @upwilling/web exec playwright show-report`
+  (the Trace tab replays every step with the page, network and console).
+- Lines prefixed `[WebServer]` are the app's own error output. The `/dev/test-error` test prints one on purpose.
+
+Test data is synthetic only: build people with `apps/web/tests/factories/` (emails on `example.test`). Never put
+real names, emails or phone numbers in tests.
 
 ## Layout
 

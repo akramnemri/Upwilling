@@ -4,6 +4,9 @@ node_modules/
 .turbo/
 dist/
 coverage/
+playwright-report/
+blob-report/
+test-results/
 next-env.d.ts
 
 # Human-maintained documents: never reformatted by tooling.
