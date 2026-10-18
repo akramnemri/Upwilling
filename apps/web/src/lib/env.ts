@@ -9,10 +9,12 @@ import { z } from "zod";
  */
 const envSchema = z.object({
   DEPLOY_ENV: z.enum(["local", "recette", "production"]),
+  LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug"]).default("info"),
 });
 
 export type Env = z.infer<typeof envSchema>;
 export type DeployEnv = Env["DEPLOY_ENV"];
+export type LogLevel = Env["LOG_LEVEL"];
 
 export class EnvValidationError extends Error {
   constructor(readonly problems: readonly string[]) {
@@ -28,7 +30,11 @@ export class EnvValidationError extends Error {
 }
 
 /** Validates a raw environment. Error messages name variables but never echo their values (they may be secrets). */
-export function parseEnv(source: Readonly<Record<string, string | undefined>>): Env {
+export function parseEnv(rawSource: Readonly<Record<string, string | undefined>>): Env {
+  // An empty value (`LOG_LEVEL=` in a .env file) means "not set", so defaults and "missing" messages apply.
+  const source = Object.fromEntries(
+    Object.entries(rawSource).filter(([, value]) => value !== undefined && value !== ""),
+  );
   const result = envSchema.safeParse(source);
   if (result.success) {
     return result.data;
@@ -36,7 +42,7 @@ export function parseEnv(source: Readonly<Record<string, string | undefined>>): 
 
   const problems = result.error.issues.map((issue) => {
     const variable = issue.path.join(".") || "(root)";
-    return source[variable] === undefined || source[variable] === ""
+    return source[variable] === undefined
       ? `${variable} is missing`
       : `${variable} is invalid: ${describeIssue(issue)}`;
   });

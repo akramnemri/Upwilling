@@ -15,6 +15,7 @@
   "dependencies": {
     "@upwilling/design-system": "workspace:*",
     "next": "16.3.8",
+    "pino": "9.14.0",
     "react": "19.2.9",
     "react-dom": "19.2.9",
     "zod": "4.6.7"

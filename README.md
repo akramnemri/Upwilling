@@ -49,6 +49,19 @@ Modern browsers resolve `*.localhost` to `127.0.0.1` by themselves. If yours doe
 
 If a required environment variable is missing or invalid, the server prints the list and exits.
 
+## Operations endpoints and logs
+
+| Endpoint                  | Purpose                                                                                           |
+| ------------------------- | ------------------------------------------------------------------------------------------------- |
+| `GET /api/health`         | Liveness: always `{"status":"ok"}`, on any host (Docker healthcheck). Checks nothing else.        |
+| `GET /api/ready`          | Readiness: configuration (and the database once it exists). `503` when not ready.                 |
+| `GET /api/dev/test-error` | Local only (`DEPLOY_ENV=local`): returns an error on purpose. `?kind=expected` for a handled one. |
+| `/dev/test-error`         | Local only: a page that fails while rendering, to see the error page.                             |
+
+Server logs are JSON lines on stdout. Every line of a request carries the same `requestId`, also returned to the
+client in the `x-request-id` response header and shown on error responses. Passwords, tokens, cookies, emails and
+similar values are replaced with `[REDACTED]`. Log through `getLogger()` / `getRequestLogger()`, never `console`.
+
 ## Commands (run from the repository root)
 
 | Command                             | What it does                                             |
