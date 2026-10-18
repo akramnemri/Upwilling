@@ -1,0 +1,62 @@
+# The repository is PUBLIC. When in doubt, ignore it.
+
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build and tool output
+.next/
+out/
+dist/
+build/
+.turbo/
+storybook-static/
+*.tsbuildinfo
+next-env.d.ts
+
+# Tests
+coverage/
+playwright-report/
+blob-report/
+test-results/
+playwright/.cache/
+
+# Environment files: only the example templates are committed
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Secrets and keys
+*.pem
+*.key
+*.p12
+*.crt
+id_rsa*
+id_ed25519*
+
+# Database dumps and backups
+*.dump
+*.sql.gz
+*.sql.gpg
+backups/
+
+# Source documents (internal strategy PDFs) stay local, never published
+docs/sources/*
+!docs/sources/README.md
+docs/phase0/*.pdf
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# OS and editors
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+*.swp
