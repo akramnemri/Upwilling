@@ -1,6 +1,6 @@
 # ADR-018 — Pinned toolchain and framework versions
 
-- Status: Accepted (supervisor merged PR #1, 2026-10-18; lint tooling rows added in Task 0.2)
+- Status: Accepted (supervisor merged PR #1, 2026-10-18; lint tooling rows added in Task 0.2; CI tooling added in Task 0.6)
 - Date: 2026-10-18
 - Verified on: 2026-10-18, from official sources only (no remembered versions)
 
@@ -43,6 +43,20 @@ Upgrades are deliberate PRs (`chore(deps)`), never drive-by changes.
 | Prettier | **3.9.10** | 3.9.10 | Latest. |
 | `@types/node` / `@types/react` / `@types/react-dom` | **24.19.2 / 19.2.18 / 19.2.7** | — | Latest patches of the Node 24 and React 19.2 lines. |
 | Database | **not pinned** | — | Placeholder; see ADR-005. |
+
+### CI tooling (added in Task 0.6, verified 2026-10-18 from each project's latest GitHub release)
+
+GitHub Actions are pinned to the **full commit SHA** of the release tag (tags can be moved, a SHA cannot),
+with the version in a trailing comment. Upgrades are `chore(ci)` PRs that update SHA and comment together.
+
+| Action / tool | Version | Commit SHA / digest | Notes |
+|---|---|---|---|
+| `actions/checkout` | **v7.0.1** | `3d3c42e5aac5ba805825da76410c181273ba90b1` | `persist-credentials: false`. |
+| `pnpm/action-setup` | **v6.1.0** | `ea17c68df8912ef543352723c149a84f56e3d413` | Reads pnpm's version from `packageManager`. |
+| `actions/setup-node` | **v7.1.0** | `949feb2413d6458794dcd2491c4babbbce0c15c1` | Node from `.nvmrc`; pnpm store cache. |
+| `actions/cache` | **v6.1.0** | `55cc8345863c7cc4c66a329aec7e433d2d1c52a9` | Turborepo local cache (`.turbo/cache`). |
+| `actions/upload-artifact` | **v7.0.2** | `cf430e030ddbb5b0abf93d22962f4752f3646cd9` | Playwright report, on failure only. |
+| gitleaks (Docker image `ghcr.io/gitleaks/gitleaks`) | **v8.30.1** | `sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f` | Run directly instead of `gitleaks-action` (fewer third-party parts, no licence question). |
 
 ## Consequences
 

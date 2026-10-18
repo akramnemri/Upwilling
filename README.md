@@ -103,6 +103,22 @@ Reading a failure:
 Test data is synthetic only: build people with `apps/web/tests/factories/` (emails on `example.test`). Never put
 real names, emails or phone numbers in tests.
 
+## Continuous integration
+
+`.github/workflows/ci.yml` runs on every pull request and on every push to `develop` and `main`:
+
+- **`checks`**: frozen install, `format:check`, `typecheck`, `lint`, `test`, `build`, then `e2e`. When e2e fails,
+  the Playwright report is attached to the run as the `playwright-report` artifact (kept 7 days).
+- **`secret-scan`**: gitleaks scans the whole git history. A finding fails the job and the value is redacted
+  in the log. If it is a real secret, it is already public: tell the supervisor so it is rotated first.
+
+Both checks are required before merging (rulesets: [`docs/runbooks/github-repository-settings.md`](docs/runbooks/github-repository-settings.md)).
+To run the secret scan locally (Docker):
+
+```bash
+docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:v8.30.1 git /repo --redact --no-banner
+```
+
 ## Layout
 
 ```text
