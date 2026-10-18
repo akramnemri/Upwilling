@@ -1,0 +1,30 @@
+# Local development services. Start with:  docker compose -f infra/local/compose.yaml up -d
+# The database is not here yet: it is a placeholder until the supervisor provides it (ADR-005).
+name: upwilling-local
+
+services:
+  mailpit:
+    # Catches every email sent locally; nothing leaves the machine (ADR-012).
+    image: axllent/mailpit:v1.31.6
+    restart: unless-stopped
+    ports:
+      # Bound to 127.0.0.1 so other machines on the network cannot read captured emails.
+      - "127.0.0.1:1025:1025" # SMTP
+      - "127.0.0.1:8025:8025" # Web UI: http://localhost:8025
+    environment:
+      MP_DATABASE: /data/mailpit.db
+      MP_MAX_MESSAGES: "5000"
+      # Accept any SMTP credentials so app config can mirror production auth settings.
+      MP_SMTP_AUTH_ACCEPT_ANY: "true"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "true"
+    volumes:
+      - mailpit-data:/data
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  mailpit-data:
