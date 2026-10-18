@@ -1,6 +1,6 @@
 # ADR-018 — Pinned toolchain and framework versions
 
-- Status: Proposed (supervisor to confirm in the Task 0.1 review)
+- Status: Accepted (supervisor merged PR #1, 2026-10-18; lint tooling rows added in Task 0.2)
 - Date: 2026-10-18
 - Verified on: 2026-10-18, from official sources only (no remembered versions)
 
@@ -37,6 +37,11 @@ Upgrades are deliberate PRs (`chore(deps)`), never drive-by changes.
 | Playwright (`@playwright/test`) | **1.64.1** | 1.64.1 | Latest. Next.js peer accepts `^1.51.1`. |
 | Storybook (`storybook`, `@storybook/nextjs-vite`) | **10.6.2** | 10.6.2 | Latest; `@storybook/nextjs-vite` peer accepts Next `^16`. Used from Task 2.3; framework choice confirmed then. |
 | Zod (runtime validation, 02 §1) | **4.6.7** | 4.6.7 | Proposed schema library for env, route input and webhooks. Installed in Task 0.3. |
+| ESLint (`eslint`, `@eslint/js`) | **9.39.5** | 10.13.0 | `eslint-config-next@16.3.8` bundles `eslint-plugin-react`, `-import` and `-jsx-a11y`, whose peer ranges stop at ESLint 9. Payload's template uses ESLint 9. (Added in Task 0.2.) |
+| `eslint-config-next` | **16.3.8** | — | Same version as Next.js. |
+| `typescript-eslint` | **8.71.2** | 8.71.2 | Latest; supports TypeScript `<6.1`. |
+| Prettier | **3.9.10** | 3.9.10 | Latest. |
+| `@types/node` / `@types/react` / `@types/react-dom` | **24.19.2 / 19.2.18 / 19.2.7** | — | Latest patches of the Node 24 and React 19.2 lines. |
 | Database | **not pinned** | — | Placeholder; see ADR-005. |
 
 ## Consequences

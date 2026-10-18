@@ -1,0 +1,28 @@
+{
+  "name": "@upwilling/web",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Next.js application serving upwilling.fr and careerboost.upwilling.fr (Payload added in Milestone 3)",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "next typegen && tsc --noEmit",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@upwilling/design-system": "workspace:*",
+    "next": "16.3.8",
+    "react": "19.2.9",
+    "react-dom": "19.2.9"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.7",
+    "@upwilling/config": "workspace:*",
+    "eslint": "9.39.5",
+    "typescript": "5.9.3"
+  }
+}
