@@ -10,26 +10,44 @@ Decisions: [`docs/decisions/`](docs/decisions/README.md). Current progress: [`do
 
 ## Prerequisites
 
-| Tool    | Version               | Notes                                                                                                                          |
-| ------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| Node.js | 24 LTS (see `.nvmrc`) | `pnpm install` refuses other majors.                                                                                           |
-| pnpm    | 11.28.6               | Provided by Corepack from the `packageManager` field: run `corepack enable` once (needs an administrator terminal on Windows). |
-| Git     | any recent            | The repository uses LF line endings (`.gitattributes`).                                                                        |
-
-Docker (for the local mail catcher and, later, the database) is introduced in Task 0.3.
+| Tool    | Version                                  | Notes                                                                                                                          |
+| ------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Node.js | 24 LTS (see `.nvmrc`)                    | `pnpm install` refuses other majors.                                                                                           |
+| pnpm    | 11.28.6                                  | Provided by Corepack from the `packageManager` field: run `corepack enable` once (needs an administrator terminal on Windows). |
+| Git     | any recent                               | The repository uses LF line endings (`.gitattributes`).                                                                        |
+| Docker  | Docker Desktop / Engine with Compose v2+ | Runs the local services in `infra/local/compose.yaml` (Mailpit; the database later, ADR-005).                                  |
 
 ## Setup
 
 ```bash
 git clone https://github.com/akramnemri/Upwilling.git
 cd Upwilling
-git switch develop
 corepack enable
 pnpm install
+cp .env.example apps/web/.env.local
+docker compose -f infra/local/compose.yaml up -d
 pnpm dev
 ```
 
-Open <http://localhost:3000>. The temporary page says "UpWilling — en construction".
+## Local hosts
+
+The app serves one site per host name. `localhost` itself is **not** a known host and answers 404.
+
+| URL                                 | Serves                                  |
+| ----------------------------------- | --------------------------------------- |
+| <http://upwilling.localhost:3000>   | Academy site (tenant `upwilling`)       |
+| <http://careerboost.localhost:3000> | Association site (tenant `careerboost`) |
+| <http://admin.localhost:3000>       | Admin host (Payload from Milestone 3)   |
+| <http://localhost:8025>             | Mailpit: emails captured locally        |
+
+Modern browsers resolve `*.localhost` to `127.0.0.1` by themselves. If yours does not, add to your hosts file
+(`C:\Windows\System32\drivers\etc\hosts` on Windows, `/etc/hosts` elsewhere):
+
+```text
+127.0.0.1 upwilling.localhost careerboost.localhost admin.localhost
+```
+
+If a required environment variable is missing or invalid, the server prints the list and exits.
 
 ## Commands (run from the repository root)
 
@@ -39,7 +57,7 @@ Open <http://localhost:3000>. The temporary page says "UpWilling — en construc
 | `pnpm build`                        | Production build of every package.                       |
 | `pnpm typecheck`                    | TypeScript checks (generates Next.js route types first). |
 | `pnpm lint`                         | ESLint with type-aware rules.                            |
-| `pnpm test`                         | Unit and integration tests (none yet; Task 0.5).         |
+| `pnpm test`                         | Unit tests (Vitest); integration tests come in Task 0.5. |
 | `pnpm e2e`                          | End-to-end tests (none yet; Task 0.5).                   |
 | `pnpm format` / `pnpm format:check` | Prettier write / check. `docs/` is never reformatted.    |
 
