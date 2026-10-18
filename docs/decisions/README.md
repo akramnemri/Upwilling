@@ -23,4 +23,5 @@ and setting the old one's status to "Superseded by ADR-YYY".
 | [015](ADR-015-vlab-out-of-scope.md) | VLAB out of scope | Accepted |
 | [016](ADR-016-git-branching.md) | Git workflow | Accepted |
 | [017](ADR-017-recette-environment.md) | Recette on the same VPS, separate domain | Accepted |
-| [018](ADR-018-pinned-versions.md) | Pinned versions | Proposed |
+| [018](ADR-018-pinned-versions.md) | Pinned versions | Accepted |
+| [019](ADR-019-typescript-strictness.md) | TypeScript strictness options | Proposed (re-checked in Task 3.1) |
