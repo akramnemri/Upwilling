@@ -1,17 +1,18 @@
 # STATUS
 
-Updated: 2026-10-18 by Claude (session 2 — Task 0.5 implemented, awaiting manual test)
+Updated: 2026-10-18 by Claude (session 2 — Task 0.6 implemented, awaiting manual test and [HUMAN] repository settings)
 
 ## Current position
 - Milestone: M0 — Repository & tooling foundation
-- Task: 0.5 — Testing foundation — state: **implemented, waiting for the supervisor's manual test**
-- Branch / PR: `chore/m0-testing-foundation` → `develop` (PR opened at the end of session 2).
+- Task: 0.6 — CI pipeline — state: **implemented, waiting for the supervisor's manual test and repository settings**
+- Branch / PR: `chore/m0-ci-pipeline` → `develop`.
 
 ## Last completed tasks
 - 0.1 — Verify versions and record foundational ADRs — merged 2026-10-18 (PR #1, `efd7107`)
 - 0.2 — Monorepo scaffold — merged 2026-10-18 (PR #3, `38fefa5`)
 - 0.3 — Local infrastructure & environment validation — merged 2026-10-18 (PR #4, `c2699cd`)
 - 0.4 — Error, logging & request-context foundation — merged 2026-10-18 (PR #5, `c15a88c`)
+- 0.5 — Testing foundation — merged 2026-10-18 (PR #7, `10c2379`), manual test passed
 
 ## What exists now (so a new session does not have to rediscover it)
 - pnpm 11 workspace + Turborepo: `apps/web` (Next.js 16.3.8, App Router, `src/`), `packages/config`
@@ -31,6 +32,9 @@ Updated: 2026-10-18 by Claude (session 2 — Task 0.5 implemented, awaiting manu
   Runs `next start --port 3100` (`DEPLOY_ENV=local`); Turbo `e2e` depends on `build`. Report + traces on failure.
 - Test data: `apps/web/tests/factories/person.ts` (`buildPerson`), emails restricted to `example.test` / `example.com`.
 - `infra/local/compose.yaml`: Mailpit v1.31.6 only (no database, ADR-005).
+- CI (Task 0.6): `.github/workflows/ci.yml`, jobs `checks` (install, format, typecheck, lint, test, build, e2e) and
+  `secret-scan` (gitleaks v8.30.1 Docker image, full history). Actions pinned by commit SHA (ADR-018 "CI tooling").
+  Repository settings to apply by hand: `docs/runbooks/github-repository-settings.md`.
 
 ## Decisions since last milestone
 - ADR-001…ADR-017 recorded from `docs/ai/01_ARCHITECTURE.md` §3 (see `docs/decisions/README.md`).
@@ -40,6 +44,8 @@ Updated: 2026-10-18 by Claude (session 2 — Task 0.5 implemented, awaiting manu
 - ADR-019 — TypeScript strictness (proposed): `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`; re-check in Task 3.1.
 - Task 0.3: minimal Vitest brought forward from Task 0.5 (supervisor-approved).
 - Task 0.5: Chromium headless shell download approved (supervisor, 2026-10-18); placeholder integration test requested.
+- Task 0.6: gitleaks runs from its official Docker image (pinned by digest), not `gitleaks-action`. No `.gitleaks.toml`:
+  the full history scan found nothing. Turbo strict env mode was checked: `CI` reaches Playwright.
 - Host allowlist: `www.*` and bare `localhost` are refused (404) by the app; Caddy redirects `www` (Task 1.4).
   Only the `Host` header is used, never `X-Forwarded-Host`.
 - Invalid environment → the server prints the problems and **exits with code 1** (Next.js alone would keep listening).
@@ -61,7 +67,7 @@ Updated: 2026-10-18 by Claude (session 2 — Task 0.5 implemented, awaiting manu
 - Task 0.3: no Postgres container in `infra/local/compose.yaml`. Done that way.
 - Task 0.4: `/api/ready` reports `database: "not_configured"`; the "stop the DB, ready fails" manual step waits for the DB.
 - Task 0.5: no database-backed integration tests yet (placeholder `tests/integration/environment.test.ts`).
-- Task 0.6: CI without a Postgres service container.
+- Task 0.6: CI without a Postgres service container and without a migration check. Docker image build waits for Task 1.1.
 - Revisit before M3: Payload cannot start without a database adapter.
 
 ## Open issues / risks
@@ -73,7 +79,7 @@ Updated: 2026-10-18 by Claude (session 2 — Task 0.5 implemented, awaiting manu
 - Client-side-only errors are not reported to the server yet (Sentry, Task 1.6).
 
 ## Waiting on human / PO
-- Supervisor: manual test of Task 0.5 (steps in the PR / task report).
+- Supervisor: manual test of Task 0.6 and the repository settings runbook (rulesets, Actions, secret scanning).
 - Supervisor: concrete database choice (ADR-005), at the latest before M3.
 - Supervisor: confirm ADR-019.
 - PO items listed in `docs/ai/01_ARCHITECTURE.md` §17 (recette domain, shared accounts, brand files, …).
@@ -85,7 +91,8 @@ Updated: 2026-10-18 by Claude (session 2 — Task 0.5 implemented, awaiting manu
   (the shell may predate these installs), and set `COREPACK_ENABLE_DOWNLOAD_PROMPT=0`.
 
 ## Next step (exact)
-1. Supervisor tests Task 0.5 manually: `pnpm test`, `pnpm e2e`, break a test on purpose and read the failure.
-2. After merge: sync `develop`, delete `chore/m0-testing-foundation` (§4b).
-3. Then Task 0.6 — CI pipeline (GitHub Actions, gitleaks, repository rulesets [HUMAN]), which closes M0.
-   CI must run `playwright install --with-deps chromium --only-shell` before `pnpm e2e`. Do not start it unasked.
+1. Supervisor applies `docs/runbooks/github-repository-settings.md` and runs the Task 0.6 manual test
+   (deliberate lint error PR → CI fails; fix → CI passes).
+2. After merge: sync `develop`, delete `chore/m0-ci-pipeline` (§4b). M0 exit criteria are then met
+   (except the database parts, deferred by ADR-005).
+3. Then M1, Task 1.1 — Production Dockerfile with container roles. Do not start it unasked.
