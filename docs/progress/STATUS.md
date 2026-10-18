@@ -1,11 +1,11 @@
 # STATUS
 
-Updated: 2026-10-18 by Claude (end of session 1 — handoff)
+Updated: 2026-10-18 by Claude (session 2 — Task 0.5 implemented, awaiting manual test)
 
 ## Current position
 - Milestone: M0 — Repository & tooling foundation
-- Task: 0.5 — Testing foundation — state: **planned, not started** (plan below needs the supervisor's "go")
-- Branch / PR: none open for 0.5. `develop` is at the Task 0.4 squash commit (`c15a88c`) plus this handoff PR.
+- Task: 0.5 — Testing foundation — state: **implemented, waiting for the supervisor's manual test**
+- Branch / PR: `chore/m0-testing-foundation` → `develop` (PR opened at the end of session 2).
 
 ## Last completed tasks
 - 0.1 — Verify versions and record foundational ADRs — merged 2026-10-18 (PR #1, `efd7107`)
@@ -24,8 +24,12 @@ Updated: 2026-10-18 by Claude (end of session 1 — handoff)
 - `apps/web/src/instrumentation{,.node}.ts`: env check at startup (exit 1 if invalid), console scrubbing, `onRequestError` logging.
 - Routes: `/` (temporary tenant page), `/api/health`, `/api/ready`, local-only `/api/dev/test-error` and `/dev/test-error`;
   `error.tsx`, `global-error.tsx`, `not-found.tsx` (French).
-- Tests: Vitest 4.1.12, single config `apps/web/vitest.config.ts`, 77 unit tests in `src/**/*.test.ts`
-  (env for tests: `DEPLOY_ENV=local`, `LOG_LEVEL=fatal`).
+- Tests (Task 0.5): Vitest 4.1.12 projects in `apps/web/vitest.config.ts`: `unit` (`src/**/*.test.ts`,
+  `tests/factories/**/*.test.ts`) and `integration` (`tests/integration/`, one placeholder until ADR-005); 90 tests.
+  Env for tests: `DEPLOY_ENV=local`, `LOG_LEVEL=fatal`. Scripts in `apps/web`: `test:unit`, `test:integration`.
+- E2E: Playwright 1.64.1, Chromium headless shell only, `apps/web/playwright.config.ts`, `tests/e2e/*.spec.ts` (8 tests).
+  Runs `next start --port 3100` (`DEPLOY_ENV=local`); Turbo `e2e` depends on `build`. Report + traces on failure.
+- Test data: `apps/web/tests/factories/person.ts` (`buildPerson`), emails restricted to `example.test` / `example.com`.
 - `infra/local/compose.yaml`: Mailpit v1.31.6 only (no database, ADR-005).
 
 ## Decisions since last milestone
@@ -35,6 +39,7 @@ Updated: 2026-10-18 by Claude (end of session 1 — handoff)
   pino 9.14.0 (the version Payload 3.91.0 pins); Zod 4.6.7; Vitest 4.1.12; Mailpit v1.31.6.
 - ADR-019 — TypeScript strictness (proposed): `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`; re-check in Task 3.1.
 - Task 0.3: minimal Vitest brought forward from Task 0.5 (supervisor-approved).
+- Task 0.5: Chromium headless shell download approved (supervisor, 2026-10-18); placeholder integration test requested.
 - Host allowlist: `www.*` and bare `localhost` are refused (404) by the app; Caddy redirects `www` (Task 1.4).
   Only the `Host` header is used, never `X-Forwarded-Host`.
 - Invalid environment → the server prints the problems and **exits with code 1** (Next.js alone would keep listening).
@@ -55,7 +60,7 @@ Updated: 2026-10-18 by Claude (end of session 1 — handoff)
 ## Deferred because of the database placeholder (ADR-005)
 - Task 0.3: no Postgres container in `infra/local/compose.yaml`. Done that way.
 - Task 0.4: `/api/ready` reports `database: "not_configured"`; the "stop the DB, ready fails" manual step waits for the DB.
-- Task 0.5: no database-backed integration tests yet.
+- Task 0.5: no database-backed integration tests yet (placeholder `tests/integration/environment.test.ts`).
 - Task 0.6: CI without a Postgres service container.
 - Revisit before M3: Payload cannot start without a database adapter.
 
@@ -68,7 +73,7 @@ Updated: 2026-10-18 by Claude (end of session 1 — handoff)
 - Client-side-only errors are not reported to the server yet (Sentry, Task 1.6).
 
 ## Waiting on human / PO
-- Supervisor: "go" for the Task 0.5 plan below (including the browser download).
+- Supervisor: manual test of Task 0.5 (steps in the PR / task report).
 - Supervisor: concrete database choice (ADR-005), at the latest before M3.
 - Supervisor: confirm ADR-019.
 - PO items listed in `docs/ai/01_ARCHITECTURE.md` §17 (recette domain, shared accounts, brand files, …).
@@ -79,18 +84,8 @@ Updated: 2026-10-18 by Claude (end of session 1 — handoff)
 - In the agent's Git Bash, prepend `/c/Program Files/nodejs` and `/c/Program Files/GitHub CLI` to `PATH`
   (the shell may predate these installs), and set `COREPACK_ENABLE_DOWNLOAD_PROMPT=0`.
 
-## Next step (exact): Task 0.5 — Testing foundation (plan proposed, waiting for "go")
-1. Branch `chore/m0-testing-foundation` from `develop`.
-2. Vitest projects in `apps/web/vitest.config.ts`: `unit` (`src/**/*.test.ts`, existing) and `integration`
-   (`tests/integration/**/*.test.ts`, empty for now: DB-backed tests wait for ADR-005).
-3. Playwright `@playwright/test@1.64.1` in `apps/web` (`playwright.config.ts`, `tests/e2e/`): `webServer` runs
-   `next start` on port 3100 with `DEPLOY_ENV=local` (Turbo `e2e` depends on `build`). Smoke tests: each local host shows
-   its tenant / admin host; unknown host → 404; `/api/health` and `/api/ready`; the test-error page shows "Référence".
-   `list` reporter + HTML report and traces on failure only. Chromium only.
-   Needs the supervisor's OK to download **Chrome Headless Shell 156** (~100 MB, Playwright CDN) via
-   `pnpm exec playwright install chromium --only-shell` into `%LOCALAPPDATA%\ms-playwright` (outside the repo).
-4. Synthetic test-data factories in `apps/web/tests/factories/` (hand-written, no faker): `@example.test` emails,
-   obviously fake names, deterministic sequences; a unit test enforces the email domain.
-5. Root `pnpm e2e` via Turbo; README section on running tests and reading failures; checks; STATUS; PR; task report.
-Out of scope: axe accessibility checks (with real pages in M2), DB-backed integration tests (ADR-005).
-After 0.5: Task 0.6 — CI pipeline (GitHub Actions, gitleaks, repository rulesets [HUMAN]), which closes M0.
+## Next step (exact)
+1. Supervisor tests Task 0.5 manually: `pnpm test`, `pnpm e2e`, break a test on purpose and read the failure.
+2. After merge: sync `develop`, delete `chore/m0-testing-foundation` (§4b).
+3. Then Task 0.6 — CI pipeline (GitHub Actions, gitleaks, repository rulesets [HUMAN]), which closes M0.
+   CI must run `playwright install --with-deps chromium --only-shell` before `pnpm e2e`. Do not start it unasked.
