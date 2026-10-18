@@ -1,12 +1,15 @@
 # STATUS
 
-Updated: 2026-10-18 by Claude (session 2 — M0 closed; Task 1.1a implemented, awaiting manual test)
+Updated: 2026-10-18 by Claude (end of session 2 — handoff; M0 closed; Task 1.1a in PR #9, awaiting manual test)
+
+> This file is updated on the task branch. Until PR #9 is merged, `develop` still holds the Task 0.6 version:
+> start a new session from `feat/m1-role-host-routing` (or after the merge, from `develop`).
 
 ## Current position
 - Milestone: M1 — Deployment chain (Essai 1). M0 is complete (database parts deferred by ADR-005).
 - Task: 1.1a — Role and host routing (first half of Task 1.1, split approved) — state: **implemented, waiting for the
   supervisor's manual test**
-- Branch / PR: `feat/m1-role-host-routing` → `develop`.
+- Branch / PR: `feat/m1-role-host-routing` → `develop`, PR #9 (CI green: `checks`, `secret-scan`, SonarCloud).
 
 ## Last completed tasks
 - 0.1 — Verify versions and record foundational ADRs — merged 2026-10-18 (PR #1, `efd7107`)
@@ -38,6 +41,8 @@ Updated: 2026-10-18 by Claude (session 2 — M0 closed; Task 1.1a implemented, a
 - CI (Task 0.6): `.github/workflows/ci.yml`, jobs `checks` (install, format, typecheck, lint, test, build, e2e) and
   `secret-scan` (gitleaks v8.30.1 Docker image, full history). Actions pinned by commit SHA (ADR-018 "CI tooling").
   Repository settings to apply by hand: `docs/runbooks/github-repository-settings.md`.
+  A third check, **SonarCloud Code Analysis**, also runs on PRs: it comes from a GitHub App on the repository,
+  not from this repo's files (not set up by the agent; confirm with the supervisor before relying on it).
 
 ## Decisions since last milestone
 - ADR-001…ADR-017 recorded from `docs/ai/01_ARCHITECTURE.md` §3 (see `docs/decisions/README.md`).
@@ -68,11 +73,12 @@ Updated: 2026-10-18 by Claude (session 2 — M0 closed; Task 1.1a implemented, a
   to `develop`, left as is, reconciled at the first `develop → main` promotion.
 - Source PDFs live in `docs/sources/` and are **out of git** (`.gitignore`): the repository is public.
 
-## Working agreements (session 1)
+## Working agreements
 - The supervisor may ask the agent to squash-merge a PR after a passed manual test; the agent then verifies the merge,
   syncs `develop` and deletes the branch (local + remote). Otherwise the supervisor merges.
 - PR titles become the squash commit subject: use conventional commits with the task number.
 - Each task is verified from a **fresh clone** with `pnpm install --frozen-lockfile` before the PR is opened.
+  **Delete the clone right after** (disk space is tight, see below); never leave clones in the scratchpad.
 
 ## Deferred because of the database placeholder (ADR-005)
 - Task 0.3: no Postgres container in `infra/local/compose.yaml`. Done that way.
@@ -88,6 +94,10 @@ Updated: 2026-10-18 by Claude (session 2 — M0 closed; Task 1.1a implemented, a
 - First `pnpm lint` after a fresh install can take minutes on Windows (antivirus); later runs ~25 s. Watch it in CI.
 - Free-text scrubbing is best-effort (patterns); the rule stays "structured fields, never interpolate personal data".
 - Client-side-only errors are not reported to the server yet (Sentry, Task 1.6).
+- **Disk space on the supervisor's machine is tight** (about 5 GB free on 2026-10-18). This project's own footprint is
+  ~2.5 GB (repo incl. `node_modules`/`.next`/`.turbo` ~1.1 GB, pnpm store ~0.6 GB, Playwright shell ~0.3 GB, Docker
+  images ~0.15 GB). Task 1.1b builds Docker images: prune the build cache after testing (`docker builder prune`
+  removes all unused build cache, including other projects': ask first), and never keep more than one local image tag.
 
 ## Waiting on human / PO
 - Supervisor: manual test of Task 1.1a.
@@ -101,6 +111,10 @@ Updated: 2026-10-18 by Claude (session 2 — M0 closed; Task 1.1a implemented, a
   (logged in as `akramnemri`), Docker Desktop (may need to be started).
 - In the agent's Git Bash, prepend `/c/Program Files/nodejs` and `/c/Program Files/GitHub CLI` to `PATH`
   (the shell may predate these installs), and set `COREPACK_ENABLE_DOWNLOAD_PROMPT=0`.
+- Installed for this project outside the repo: Chrome Headless Shell 156 (`%LOCALAPPDATA%\ms-playwright\chromium_headless_shell-1248`),
+  gitleaks image `ghcr.io/gitleaks/gitleaks:v8.30.1`. Docker Desktop also runs other projects' containers (Kubernetes,
+  Elasticsearch/Kibana, MySQL): never stop, prune or remove anything that is not this project's.
+- Large `docker`/Windows disk checks are slow here (antivirus): scan targeted folders, not the whole drive.
 
 ## Next step (exact)
 1. Supervisor tests Task 1.1a manually (steps in the PR / task report).
