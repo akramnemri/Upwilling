@@ -53,7 +53,9 @@ compose ps
 
 echo "== web-upwilling (APP_ROLE=web, SITE=upwilling) on :3001"
 expect_status 200 3001 upwilling.localhost /
-expect_body 3001 upwilling.localhost / "tenant « upwilling »"
+expect_body 3001 upwilling.localhost / "Notre nouveau site arrive bientôt."
+# Files from apps/web/public are copied into the image separately: check the brand icon is served.
+expect_status 200 3001 upwilling.localhost /brands/upwilling/icon.svg
 expect_status 200 3001 upwilling.localhost /api/ready
 # Client assets are copied into the image separately from the standalone server: check one is served.
 asset=$(curl -s --max-time 10 -H "Host: upwilling.localhost" http://127.0.0.1:3001/ | grep -oE '/_next/static/[^"]+\.js' | head -n 1 || true)

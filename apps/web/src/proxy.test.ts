@@ -61,4 +61,13 @@ describe("proxy", () => {
     expect(proxy(requestFor("upwilling.localhost:3000", "/api/ready")).status).toBe(200);
     expect(proxy(requestFor("admin.localhost:3000", "/admin")).status).toBe(200);
   });
+
+  it("marks every local response as noindex, including 404s (production rule: content isIndexable)", () => {
+    expect(proxy(requestFor("upwilling.localhost:3000")).headers.get("x-robots-tag")).toBe(
+      "noindex, nofollow",
+    );
+    expect(proxy(requestFor("unknown.localhost:3000")).headers.get("x-robots-tag")).toBe(
+      "noindex, nofollow",
+    );
+  });
 });

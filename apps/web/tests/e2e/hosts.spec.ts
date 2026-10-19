@@ -3,20 +3,23 @@ import { expect, test } from "@playwright/test";
 import { localUrl } from "./hosts";
 
 // One smoke test per local host: the request reaches the app and resolves to the right tenant.
+// Brand details (title, logo, robots) are covered in brand-pages.spec.ts.
 const KNOWN_HOSTS = [
-  { host: "upwilling.localhost", expectedText: "tenant « upwilling »" },
-  { host: "careerboost.localhost", expectedText: "tenant « careerboost »" },
-  { host: "admin.localhost", expectedText: "espace d'administration" },
+  { host: "upwilling.localhost", heading: "Notre nouveau site arrive bientôt." },
+  {
+    host: "careerboost.localhost",
+    heading: "Investir en vous aujourd’hui, construire la vie que vous voulez demain.",
+  },
+  { host: "admin.localhost", heading: "UpWilling — en construction" },
 ] as const;
 
-for (const { host, expectedText } of KNOWN_HOSTS) {
+for (const { host, heading } of KNOWN_HOSTS) {
   test(`${host} serves its own home page`, async ({ page }) => {
     const response = await page.goto(localUrl(host));
 
     expect(response?.status()).toBe(200);
     expect(response?.headers()["x-request-id"]).toBeTruthy();
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("UpWilling — en construction");
-    await expect(page.getByText(expectedText)).toBeVisible();
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText(heading);
   });
 }
 
