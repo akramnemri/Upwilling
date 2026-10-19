@@ -49,6 +49,21 @@ Modern browsers resolve `*.localhost` to `127.0.0.1` by themselves. If yours doe
 
 If a required environment variable is missing or invalid, the server prints the list and exits.
 
+## Container roles
+
+One image runs as several containers; `APP_ROLE` (and `SITE` for `web`) decides what each one answers.
+Everything else gets a plain-text 404 from the proxy (rules: `apps/web/src/modules/core/routing/`).
+
+| `APP_ROLE`            | Hosts served          | Paths                                                                         |
+| --------------------- | --------------------- | ----------------------------------------------------------------------------- |
+| `web` + `SITE=<site>` | that site's host only | pages; under `/api` only `/api/ready` (and `/api/dev/*` locally); no `/admin` |
+| `cms`                 | admin and hooks hosts | admin host: everything; hooks host: `/api/webhooks/*` only                    |
+| `worker`              | none (no HTTP)        | —                                                                             |
+| unset (local only)    | every local host      | same path rules as above, per host                                            |
+
+`/api/health` answers on any host in every role (Docker healthcheck). Outside `DEPLOY_ENV=local`, a missing
+`APP_ROLE` stops the server at startup.
+
 ## Operations endpoints and logs
 
 | Endpoint                  | Purpose                                                                                           |

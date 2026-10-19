@@ -54,4 +54,11 @@ describe("proxy", () => {
     expect(proxy(requestFor("localhost:3000", "/api/health/extra")).status).toBe(404);
     expect(proxy(requestFor("localhost:3000", "/")).status).toBe(404);
   });
+
+  it("applies the route rules: no admin or unlisted API path on a site host (full matrix in core)", () => {
+    expect(proxy(requestFor("upwilling.localhost:3000", "/admin")).status).toBe(404);
+    expect(proxy(requestFor("upwilling.localhost:3000", "/api/users")).status).toBe(404);
+    expect(proxy(requestFor("upwilling.localhost:3000", "/api/ready")).status).toBe(200);
+    expect(proxy(requestFor("admin.localhost:3000", "/admin")).status).toBe(200);
+  });
 });

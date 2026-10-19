@@ -29,3 +29,14 @@ for (const host of ["unknown.localhost", "localhost"]) {
     await expect(page.getByText("upwilling", { exact: false })).toHaveCount(0);
   });
 }
+
+// Public sites never expose the admin or unlisted API routes, even before Payload is installed (01 §5.3).
+for (const path of ["/admin", "/api/users", "/%61dmin"]) {
+  test(`upwilling.localhost refuses ${path} with 404`, async ({ page }) => {
+    const response = await page.goto(localUrl("upwilling.localhost", path));
+
+    expect(response?.status()).toBe(404);
+    // The proxy's plain-text 404, not the app's not-found page: the request never reached a route.
+    expect(response?.headers()["content-type"]).toContain("text/plain");
+  });
+}
