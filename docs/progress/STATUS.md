@@ -1,17 +1,15 @@
 # STATUS
 
-Updated: 2026-10-19 by Claude (session 3 — Task 1.1b implemented, PR stacked on PR #9)
+Updated: 2026-10-19 by Claude (session 3 — Tasks 1.1a/1.1b merged; Task 1.2 implemented, in review)
 
-> This file is updated on the task branch. Until PRs #9 and #10 are merged, `develop` still holds the Task 0.6
-> version: start a new session from `feat/m1-docker-image` (or after the merges, from `develop`).
+> This file is updated on the task branch. Until the Task 1.2 PR is merged, `develop` still says 1.1b is in review:
+> start a new session from `feat/m1-brand-pages` (or after the merge, from `develop`).
 
 ## Current position
 - Milestone: M1 — Deployment chain (Essai 1). M0 is complete (database parts deferred by ADR-005).
-- Task: 1.1b — Docker image with container roles (second half of Task 1.1) — state: **implemented, waiting for the
-  supervisor's review** (manual test waived by the supervisor, see below).
-- Branch / PR: `feat/m1-docker-image` → `feat/m1-role-host-routing` (stacked on PR #9, supervisor-approved
-  2026-10-19). GitHub retargets it to `develop` when PR #9 is merged and its branch deleted.
-- Task 1.1a (PR #9): manual test waived by the supervisor on 2026-10-19 ("I'll trust your own tests"); ready to merge.
+- Task: 1.2 — Branded "under construction" pages (TR-13) — state: **implemented, waiting for the supervisor's
+  manual test** (mobile width, Lighthouse) and for PO inputs (contact emails, academy logo, copy validation).
+- Branch / PR: `feat/m1-brand-pages` → `develop`.
 
 ## Last completed tasks
 - 0.1 — Verify versions and record foundational ADRs — merged 2026-10-18 (PR #1, `efd7107`)
@@ -20,10 +18,19 @@ Updated: 2026-10-19 by Claude (session 3 — Task 1.1b implemented, PR stacked o
 - 0.4 — Error, logging & request-context foundation — merged 2026-10-18 (PR #5, `c15a88c`)
 - 0.5 — Testing foundation — merged 2026-10-18 (PR #7, `10c2379`), manual test passed
 - 0.6 — CI pipeline — merged 2026-10-18 (PR #8, `60e3ad9`), manual test passed (M0 closed)
+- 1.1a — Role and host routing — merged 2026-10-19 (PR #9, `58acca2`), manual test waived by the supervisor
+- 1.1b — Docker image with container roles — merged 2026-10-19 (PR #10, `29fa6df`), manual test waived
 
 ## What exists now (so a new session does not have to rediscover it)
 - pnpm 11 workspace + Turborepo: `apps/web` (Next.js 16.3.8, App Router, `src/`), `packages/config`
-  (tsconfig/ESLint/Prettier presets), `packages/design-system` (placeholder: `BRANDS`, `isBrand`).
+  (tsconfig/ESLint/Prettier presets), `packages/design-system` (`BRANDS`, `isBrand`, `contrastRatio`, and the
+  TEMPORARY theme `temporary-brand-theme.ts`: color roles per brand + small scale as `--uw-*` variables, injected by
+  the root layout as a `<style>`; replaced by the token pipeline in Task 2.1). Asset rights: `assets/LICENSES.md`.
+- `apps/web/src/modules/content/` (Task 1.2): `UNDER_CONSTRUCTION` per tenant (French copy, logo, icons, OG image,
+  `contactEmail: null` until the PO gives it), `UnderConstructionPage`, `buildSiteMetadata()` (title, description,
+  icons, Open Graph, robots), `isIndexable()` = production **and** site host only. The proxy adds
+  `X-Robots-Tag: noindex, nofollow` to every other response (Next 16 may stream the robots meta tag into `<body>`).
+  Brand files: `apps/web/public/brands/<brand>/` (copied into the image).
 - `apps/web/src/lib/`: `env.ts` (Zod, `getEnv()`; vars `DEPLOY_ENV`, `LOG_LEVEL`, `APP_ROLE`, `SITE`), `errors.ts` (`AppError`,
   `normalizeError`, `toErrorResponse`), `logger.ts` (pino, `getLogger()`), `redaction.ts`, `console-scrubbing.ts`,
   `request-id.ts`, `request-context.ts` (`getRequestId()`, `getRequestLogger()`), `http/route-handler.ts` (`withErrorHandling`).
@@ -51,7 +58,7 @@ Updated: 2026-10-19 by Claude (session 3 — Task 1.1b implemented, PR stacked o
   `/tmp` every 10 s; SIGTERM → finishes the iteration, logs `worker stopped`, exit 0. Liveness logic:
   `src/lib/container-health.ts` (`checkContainerHealth`: HTTP `/api/health` for web/cms, heartbeat ≤ 60 s for worker).
 - `infra/local/compose.roles.yaml` (project `upwilling-roles`): web-upwilling :3001, cms :3002, worker; `init`,
-  `read_only` + tmpfs, memory limits, log rotation. `infra/local/smoke-roles.sh`: 28 checks, used locally and in CI.
+  `read_only` + tmpfs, memory limits, log rotation. `infra/local/smoke-roles.sh`: 29 checks, used locally and in CI.
   Runbook: `docs/runbooks/local-container-roles.md`. Measured idle RAM: web ~52 MiB, cms ~52 MiB, worker ~26 MiB.
 - CI has a third job, `docker` (build image + smoke script).
 - CI (Task 0.6): `.github/workflows/ci.yml`, jobs `checks` (install, format, typecheck, lint, test, build, e2e) and
@@ -80,6 +87,10 @@ Updated: 2026-10-19 by Claude (session 3 — Task 1.1b implemented, PR stacked o
   with standalone, but it does in 16.3.8): the standalone server cannot run natively on Windows (EPERM on pnpm
   symlinks), so the image is tested by the Docker smoke test instead. Next.js exits 143 after a graceful SIGTERM
   drain: expected, asserted by the smoke test.
+- Task 1.2: brand colors kept at the 04 §2 values (the Career Boost logo sent 2026-10-19 matches them within ±8 per
+  channel). Text green is `#2E7D34` (raw `#389840` is 3.7:1 on white). Contrast test lives in `apps/web` until the
+  design-system package gets its own tests (Task 2.1). No dependency added. Contact details are never taken from
+  personal profiles (the supervisor suggested LinkedIn; declined, CLAUDE.md personal-data rule).
 - Route rules match a canonical path (percent-decoded, lowercased, repeated slashes collapsed); malformed encoding and
   `.`/`..` segments are refused.
 - Host allowlist: `www.*` and bare `localhost` are refused (404) by the app; Caddy redirects `www` (Task 1.4).
@@ -121,8 +132,13 @@ Updated: 2026-10-19 by Claude (session 3 — Task 1.1b implemented, PR stacked o
   before `docker builder prune` (it removes other projects' build cache too).
 
 ## Waiting on human / PO
-- Supervisor: review of Task 1.1b (PR #10); merge PR #9 first (or ask the agent to squash-merge it).
+- Supervisor: manual test of Task 1.2 (both hosts, phone width, Lighthouse in Chrome DevTools).
+- PO: public contact address for each site (organization mailbox, e.g. a `contact@` address); academy logo files
+  (SVG, + favicon); vector source of the Career Boost logo; validation of the French copy in
+  `apps/web/src/modules/content/under-construction.ts`. **Before go-live** the two `contactEmail: null` must be filled.
 - Supervisor: add the `docker` check to both rulesets (`docs/runbooks/github-repository-settings.md` §3).
+- Supervisor: GitHub auto-merge is disabled in the repository settings (an attempt on PR #10 was refused); enable it
+  only if you want the agent to use it.
 - Supervisor: confirm the repository settings runbook was applied (`docs/runbooks/github-repository-settings.md`).
 - Supervisor: concrete database choice (ADR-005), at the latest before M3.
 - Supervisor: confirm ADR-019.
@@ -139,6 +155,6 @@ Updated: 2026-10-19 by Claude (session 3 — Task 1.1b implemented, PR stacked o
 - Large `docker`/Windows disk checks are slow here (antivirus): scan targeted folders, not the whole drive.
 
 ## Next step (exact)
-1. Supervisor merges PR #9 (1.1a), then PR #10 (1.1b, retargeted to `develop`) after review.
-2. After each merge: sync `develop`, delete the branch (§4b).
-3. Then Task 1.2 — Branded "under construction" pages (TR-13). Post the plan first; do not start unasked.
+1. Supervisor tests Task 1.2 manually (steps in the PR / task report).
+2. After merge: sync `develop`, delete `feat/m1-brand-pages` (§4b).
+3. Then Task 1.3 — Server provisioning runbook & scripts [HUMAN]. Post the plan first; do not start unasked.
