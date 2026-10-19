@@ -3,7 +3,7 @@
 #
 # Not here yet, on purpose:
 # - Postgres service container and migration check: the database is a placeholder (ADR-005).
-# - Docker image build: the Dockerfile arrives in Task 1.1.
+# - Pushing the image to GHCR: deployment workflows, Task 1.5.
 #
 # Actions are pinned to full commit SHAs (a tag can be moved; a SHA cannot). Versions: ADR-018.
 name: CI
@@ -99,3 +99,20 @@ jobs:
           docker run --rm -v "$GITHUB_WORKSPACE:/repo"
           ghcr.io/gitleaks/gitleaks:v8.30.1@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f
           git /repo --redact --verbose --no-banner
+
+  docker:
+    name: docker
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Plain docker CLI (BuildKit is the default builder on the runner): no extra third-party action.
+      - name: Build the production image
+        run: docker build --progress=plain -f apps/web/Dockerfile -t upwilling-web:local .
+
+      # Runs the three roles from infra/local/compose.roles.yaml and checks hosts, paths, hardening, shutdown.
+      - name: Smoke test the container roles
+        run: bash infra/local/smoke-roles.sh

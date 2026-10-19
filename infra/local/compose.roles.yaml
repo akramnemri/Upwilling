@@ -1,0 +1,56 @@
+# The production image, run locally once per container role (Task 1.1, 01_ARCHITECTURE.md §5.1, §5.3, §10).
+# Separate from compose.yaml (dev services). Build the image first, from the repository root:
+#   docker build -f apps/web/Dockerfile -t upwilling-web:local .
+#   docker compose -f infra/local/compose.roles.yaml up -d --wait
+# Then: http://upwilling.localhost:3001 (web, SITE=upwilling) and http://admin.localhost:3002 (cms).
+# Automated checks: infra/local/smoke-roles.sh. Runbook: docs/runbooks/local-container-roles.md
+name: upwilling-roles
+
+# Settings shared by every role, as production will use them (Task 1.4 reuses these values).
+x-app: &app
+  image: upwilling-web:local
+  # Built by `docker build` above; never look for it on a registry.
+  pull_policy: never
+  # A real init process as PID 1: it forwards SIGTERM to Node and reaps zombie processes.
+  init: true
+  read_only: true
+  tmpfs:
+    - /tmp
+    - /app/apps/web/.next/cache:uid=1000,gid=1000
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
+
+services:
+  web-upwilling:
+    <<: *app
+    environment:
+      DEPLOY_ENV: local
+      LOG_LEVEL: info
+      APP_ROLE: web
+      SITE: upwilling
+    ports:
+      - "127.0.0.1:3001:3000"
+    mem_limit: 512m
+
+  cms:
+    <<: *app
+    environment:
+      DEPLOY_ENV: local
+      LOG_LEVEL: info
+      APP_ROLE: cms
+    ports:
+      - "127.0.0.1:3002:3000"
+    mem_limit: 512m
+
+  worker:
+    <<: *app
+    environment:
+      DEPLOY_ENV: local
+      LOG_LEVEL: info
+      APP_ROLE: worker
+    # No ports: the worker serves no HTTP. Its healthcheck reads the heartbeat file in /tmp.
+    mem_limit: 384m

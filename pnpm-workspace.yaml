@@ -10,3 +10,5 @@ allowBuilds:
   # Transitive dependency of eslint-config-next. Its postinstall only downloads a fallback binary;
   # the prebuilt binary comes from an optional dependency, so the script is not needed.
   unrs-resolver: false
+  # Its postinstall only checks the binary that the platform-specific optional dependency already provides.
+  esbuild: false

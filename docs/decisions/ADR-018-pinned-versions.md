@@ -43,6 +43,7 @@ Upgrades are deliberate PRs (`chore(deps)`), never drive-by changes.
 | Prettier | **3.9.10** | 3.9.10 | Latest. |
 | `@types/node` / `@types/react` / `@types/react-dom` | **24.19.2 / 19.2.18 / 19.2.7** | — | Latest patches of the Node 24 and React 19.2 lines. |
 | Database | **not pinned** | — | Placeholder; see ADR-005. |
+| esbuild | **0.28.2** (devDependency of `apps/web`) | 0.28.2 (2026-08-08) | Bundles the worker and the Docker healthcheck into single CommonJS files (Task 1.1b, decision D4). Its install script is not run (`allowBuilds: esbuild: false`): the platform binary comes from an optional dependency. |
 
 ### CI tooling (added in Task 0.6, verified 2026-10-18 from each project's latest GitHub release)
 
@@ -57,6 +58,12 @@ with the version in a trailing comment. Upgrades are `chore(ci)` PRs that update
 | `actions/cache` | **v6.1.0** | `55cc8345863c7cc4c66a329aec7e433d2d1c52a9` | Turborepo local cache (`.turbo/cache`). |
 | `actions/upload-artifact` | **v7.0.2** | `cf430e030ddbb5b0abf93d22962f4752f3646cd9` | Playwright report, on failure only. |
 | gitleaks (Docker image `ghcr.io/gitleaks/gitleaks`) | **v8.30.1** | `sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f` | Run directly instead of `gitleaks-action` (fewer third-party parts, no licence question). |
+
+### Container base image (added in Task 1.1b, verified 2026-10-19)
+
+| Image | Tag | Digest (multi-arch index) | Notes |
+|---|---|---|---|
+| Node.js | **`node:24.22.0-trixie-slim`** | `sha256:7f486cabe892bff8fef04c0f7da8dba84a560be3e4e2740b7a86afc57ebec315` | Build and runtime stages of `apps/web/Dockerfile` (decision D3). Debian 13 slim; 24.22.0 is the latest Node 24 release (2026-10-14). Upgrades are `chore(deps)` PRs that change tag and digest together. |
 
 ## Consequences
 
