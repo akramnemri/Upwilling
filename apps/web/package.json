@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build && node scripts/bundle-entries.mjs",
     "start": "next start",
     "typecheck": "next typegen && tsc --noEmit",
     "lint": "eslint .",
@@ -29,6 +29,7 @@
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.7",
     "@upwilling/config": "workspace:*",
+    "esbuild": "0.28.2",
     "eslint": "9.39.5",
     "typescript": "5.9.3",
     "vitest": "4.1.12"
