@@ -1,15 +1,17 @@
 # STATUS
 
-Updated: 2026-10-18 by Claude (end of session 2 — handoff; M0 closed; Task 1.1a in PR #9, awaiting manual test)
+Updated: 2026-10-19 by Claude (session 3 — Task 1.1b implemented, PR stacked on PR #9)
 
-> This file is updated on the task branch. Until PR #9 is merged, `develop` still holds the Task 0.6 version:
-> start a new session from `feat/m1-role-host-routing` (or after the merge, from `develop`).
+> This file is updated on the task branch. Until PRs #9 and #10 are merged, `develop` still holds the Task 0.6
+> version: start a new session from `feat/m1-docker-image` (or after the merges, from `develop`).
 
 ## Current position
 - Milestone: M1 — Deployment chain (Essai 1). M0 is complete (database parts deferred by ADR-005).
-- Task: 1.1a — Role and host routing (first half of Task 1.1, split approved) — state: **implemented, waiting for the
-  supervisor's manual test**
-- Branch / PR: `feat/m1-role-host-routing` → `develop`, PR #9 (CI green: `checks`, `secret-scan`, SonarCloud).
+- Task: 1.1b — Docker image with container roles (second half of Task 1.1) — state: **implemented, waiting for the
+  supervisor's review** (manual test waived by the supervisor, see below).
+- Branch / PR: `feat/m1-docker-image` → `feat/m1-role-host-routing` (stacked on PR #9, supervisor-approved
+  2026-10-19). GitHub retargets it to `develop` when PR #9 is merged and its branch deleted.
+- Task 1.1a (PR #9): manual test waived by the supervisor on 2026-10-19 ("I'll trust your own tests"); ready to merge.
 
 ## Last completed tasks
 - 0.1 — Verify versions and record foundational ADRs — merged 2026-10-18 (PR #1, `efd7107`)
@@ -38,6 +40,20 @@ Updated: 2026-10-18 by Claude (end of session 2 — handoff; M0 closed; Task 1.1
   Runs `next start --port 3100` (`DEPLOY_ENV=local`); Turbo `e2e` depends on `build`. Report + traces on failure.
 - Test data: `apps/web/tests/factories/person.ts` (`buildPerson`), emails restricted to `example.test` / `example.com`.
 - `infra/local/compose.yaml`: Mailpit v1.31.6 only (no database, ADR-005).
+- Docker (Task 1.1b): `apps/web/Dockerfile` (build context = repo root, `.dockerignore`), base
+  `node:24.22.0-trixie-slim` pinned by digest; Next.js `output: "standalone"` with `outputFileTracingRoot` = repo root.
+  Runtime: user `node`, app files owned by root, `HEALTHCHECK` → `dist/healthcheck.cjs`, entrypoint
+  `apps/web/docker/entrypoint.sh` (`APP_ROLE=worker` → `dist/worker.cjs`, else `server.js`). `ENV HOSTNAME=0.0.0.0`
+  is required (Docker sets HOSTNAME to the container ID). Image ~400 MB as listed by Docker Desktop, app 49 MB.
+- `pnpm build` in `apps/web` = `next build` + `scripts/bundle-entries.mjs` (esbuild → `dist/worker.cjs`,
+  `dist/healthcheck.cjs`, CommonJS because pino calls `require()`).
+- Worker placeholder: `src/jobs/worker.ts` (entry) + `worker-loop.ts` (`runWorkerLoop`, abortable); heartbeat file in
+  `/tmp` every 10 s; SIGTERM → finishes the iteration, logs `worker stopped`, exit 0. Liveness logic:
+  `src/lib/container-health.ts` (`checkContainerHealth`: HTTP `/api/health` for web/cms, heartbeat ≤ 60 s for worker).
+- `infra/local/compose.roles.yaml` (project `upwilling-roles`): web-upwilling :3001, cms :3002, worker; `init`,
+  `read_only` + tmpfs, memory limits, log rotation. `infra/local/smoke-roles.sh`: 28 checks, used locally and in CI.
+  Runbook: `docs/runbooks/local-container-roles.md`. Measured idle RAM: web ~52 MiB, cms ~52 MiB, worker ~26 MiB.
+- CI has a third job, `docker` (build image + smoke script).
 - CI (Task 0.6): `.github/workflows/ci.yml`, jobs `checks` (install, format, typecheck, lint, test, build, e2e) and
   `secret-scan` (gitleaks v8.30.1 Docker image, full history). Actions pinned by commit SHA (ADR-018 "CI tooling").
   Repository settings to apply by hand: `docs/runbooks/github-repository-settings.md`.
@@ -60,6 +76,10 @@ Updated: 2026-10-18 by Claude (end of session 2 — handoff; M0 closed; Task 1.1
   D2 deny by default: `web` serves only its `SITE` host, no `/admin`, `/api` only `/api/ready` (+ `/api/dev/*` locally);
      `cms` serves admin + hooks hosts, hooks host only `/api/webhooks/*`; path rules apply per host kind in every role;
   D3 base image `node:24.22.0-trixie-slim` pinned by digest (1.1b); D4 `esbuild@0.28.2` devDependency bundles the worker (1.1b).
+- Task 1.1b: PR stacked on PR #9 (supervisor, 2026-10-19). E2E keeps `next start` (Next warns it "does not work"
+  with standalone, but it does in 16.3.8): the standalone server cannot run natively on Windows (EPERM on pnpm
+  symlinks), so the image is tested by the Docker smoke test instead. Next.js exits 143 after a graceful SIGTERM
+  drain: expected, asserted by the smoke test.
 - Route rules match a canonical path (percent-decoded, lowercased, repeated slashes collapsed); malformed encoding and
   `.`/`..` segments are refused.
 - Host allowlist: `www.*` and bare `localhost` are refused (404) by the app; Caddy redirects `www` (Task 1.4).
@@ -94,13 +114,15 @@ Updated: 2026-10-18 by Claude (end of session 2 — handoff; M0 closed; Task 1.1
 - First `pnpm lint` after a fresh install can take minutes on Windows (antivirus); later runs ~25 s. Watch it in CI.
 - Free-text scrubbing is best-effort (patterns); the rule stays "structured fields, never interpolate personal data".
 - Client-side-only errors are not reported to the server yet (Sentry, Task 1.6).
-- **Disk space on the supervisor's machine is tight** (about 5 GB free on 2026-10-18). This project's own footprint is
-  ~2.5 GB (repo incl. `node_modules`/`.next`/`.turbo` ~1.1 GB, pnpm store ~0.6 GB, Playwright shell ~0.3 GB, Docker
-  images ~0.15 GB). Task 1.1b builds Docker images: prune the build cache after testing (`docker builder prune`
-  removes all unused build cache, including other projects': ask first), and never keep more than one local image tag.
+- `next start` + standalone prints a warning in e2e; if a later Next.js version really stops supporting it, e2e must
+  move to the Docker image or run on Linux only.
+- No ISR/data-cache writes exist yet; when they do (M3+), check they stay inside `.next/cache` (tmpfs, read-only image).
+- Disk space: the supervisor freed space on 2026-10-19 (~79 GB free). Still keep one local image tag only, and ask
+  before `docker builder prune` (it removes other projects' build cache too).
 
 ## Waiting on human / PO
-- Supervisor: manual test of Task 1.1a.
+- Supervisor: review of Task 1.1b (PR #10); merge PR #9 first (or ask the agent to squash-merge it).
+- Supervisor: add the `docker` check to both rulesets (`docs/runbooks/github-repository-settings.md` §3).
 - Supervisor: confirm the repository settings runbook was applied (`docs/runbooks/github-repository-settings.md`).
 - Supervisor: concrete database choice (ADR-005), at the latest before M3.
 - Supervisor: confirm ADR-019.
@@ -117,9 +139,6 @@ Updated: 2026-10-18 by Claude (end of session 2 — handoff; M0 closed; Task 1.1
 - Large `docker`/Windows disk checks are slow here (antivirus): scan targeted folders, not the whole drive.
 
 ## Next step (exact)
-1. Supervisor tests Task 1.1a manually (steps in the PR / task report).
-2. After merge: sync `develop`, delete `feat/m1-role-host-routing` (§4b).
-3. Then Task 1.1b — `apps/web/Dockerfile` (multi-stage, standalone output with `outputFileTracingRoot`, non-root,
-   healthcheck script per role), entrypoint by `APP_ROLE`, `src/jobs/worker.ts` placeholder bundled by esbuild,
-   `infra/local/compose.roles.yaml` (web-upwilling :3001, cms :3002, worker), CI `docker` job (build + smoke),
-   ADR-018 rows (image digest, esbuild). Post the plan first; do not start unasked.
+1. Supervisor merges PR #9 (1.1a), then PR #10 (1.1b, retargeted to `develop`) after review.
+2. After each merge: sync `develop`, delete the branch (§4b).
+3. Then Task 1.2 — Branded "under construction" pages (TR-13). Post the plan first; do not start unasked.
