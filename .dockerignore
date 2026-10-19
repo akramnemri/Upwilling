@@ -1,0 +1,34 @@
+# Build context for apps/web/Dockerfile is the repository root. Send only what the build needs:
+# a smaller context builds faster, and secrets or local state must never reach an image (the image is public).
+
+# Dependencies and build output: installed and built inside the image
+**/node_modules
+**/.next
+**/dist
+**/.turbo
+**/*.tsbuildinfo
+**/next-env.d.ts
+
+# Tests output
+**/coverage
+**/playwright-report
+**/blob-report
+**/test-results
+
+# Environment files and keys: never in an image
+**/.env
+**/.env.*
+**/*.pem
+**/*.key
+**/*.p12
+**/*.crt
+
+# Not needed to build the app
+.git
+.github
+docs
+infra
+**/*.log
+CLAUDE.md
+apps/web/AGENTS.md
+apps/web/CLAUDE.md
