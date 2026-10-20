@@ -21,7 +21,7 @@ const LIVENESS_PATH = "/api/health";
 
 // API endpoints a public site may expose. Everything else under /api (Payload's REST and GraphQL APIs
 // from Milestone 3, webhooks, internal routes) is refused on public hosts: deny by default.
-const SITE_PUBLIC_API_PATHS = new Set(["/api/ready"]);
+const SITE_PUBLIC_API_PATHS = new Set(["/api/ready", "/api/version"]);
 
 /** Derives the role from a validated environment. */
 export function roleFromEnv(env: Pick<Env, "APP_ROLE" | "SITE">): AppRole {

@@ -17,6 +17,11 @@ const envSchema = z
     APP_ROLE: z.enum(["web", "cms", "worker"]).optional(),
     // The one site a `web` container serves.
     SITE: z.enum(TENANT_SLUGS).optional(),
+    // Commit the image was built from, baked in by the publish workflow (Task 1.5). Never set by hand.
+    APP_VERSION: z
+      .string()
+      .regex(/^([0-9a-f]{40}|local)$/, "must be a full commit SHA or local")
+      .default("local"),
   })
   .superRefine((env, ctx) => {
     // A deployed container without a role would serve every host: the opposite of fault isolation.

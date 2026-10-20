@@ -4,7 +4,11 @@ import { EnvValidationError, parseEnv } from "./env";
 
 describe("parseEnv", () => {
   it("accepts a valid environment and applies defaults", () => {
-    expect(parseEnv({ DEPLOY_ENV: "local" })).toEqual({ DEPLOY_ENV: "local", LOG_LEVEL: "info" });
+    expect(parseEnv({ DEPLOY_ENV: "local" })).toEqual({
+      DEPLOY_ENV: "local",
+      LOG_LEVEL: "info",
+      APP_VERSION: "local",
+    });
   });
 
   it("ignores variables it does not know", () => {
@@ -12,6 +16,7 @@ describe("parseEnv", () => {
       DEPLOY_ENV: "production",
       LOG_LEVEL: "info",
       APP_ROLE: "cms",
+      APP_VERSION: "local",
     });
   });
 
@@ -94,6 +99,24 @@ describe("parseEnv — container role (APP_ROLE, SITE)", () => {
     );
     expect(() => parseEnv({ DEPLOY_ENV: "local", APP_ROLE: "web", SITE: "vlab" })).toThrow(
       /SITE is invalid: expected one of "upwilling", "careerboost"/,
+    );
+  });
+});
+
+describe("parseEnv — APP_VERSION (baked into the image, Task 1.5)", () => {
+  it("accepts a full commit SHA", () => {
+    const sha = "0123456789abcdef0123456789abcdef01234567";
+    expect(parseEnv({ DEPLOY_ENV: "recette", APP_ROLE: "cms", APP_VERSION: sha }).APP_VERSION).toBe(
+      sha,
+    );
+  });
+
+  it("refuses anything else, so /api/version never echoes an arbitrary value", () => {
+    expect(() => parseEnv({ DEPLOY_ENV: "local", APP_VERSION: "0123abc" })).toThrow(
+      /APP_VERSION is invalid: must be a full commit SHA or local/,
+    );
+    expect(() => parseEnv({ DEPLOY_ENV: "local", APP_VERSION: "<script>" })).toThrow(
+      /APP_VERSION is invalid/,
     );
   });
 });

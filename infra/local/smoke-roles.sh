@@ -6,6 +6,7 @@
 #   docker build -f apps/web/Dockerfile -t upwilling-web:local .
 #   bash infra/local/smoke-roles.sh           # run, then remove the containers
 #   bash infra/local/smoke-roles.sh --keep    # leave the containers running afterwards
+# EXPECTED_VERSION=<commit SHA> checks /api/version when the image was built with that APP_VERSION (CI does).
 set -euo pipefail
 
 COMPOSE_FILE="$(cd "$(dirname "$0")" && pwd)/compose.roles.yaml"
@@ -57,6 +58,8 @@ expect_body 3001 upwilling.localhost / "Notre nouveau site arrive bientôt."
 # Files from apps/web/public are copied into the image separately: check the brand icon is served.
 expect_status 200 3001 upwilling.localhost /brands/upwilling/icon.svg
 expect_status 200 3001 upwilling.localhost /api/ready
+# The commit baked in by the publish workflow; "local" for a hand-made build (Task 1.5).
+expect_body 3001 upwilling.localhost /api/version "{\"version\":\"${EXPECTED_VERSION:-local}\"}"
 # Client assets are copied into the image separately from the standalone server: check one is served.
 asset=$(curl -s --max-time 10 -H "Host: upwilling.localhost" http://127.0.0.1:3001/ | grep -oE '/_next/static/[^"]+\.js' | head -n 1 || true)
 if [[ -n $asset ]]; then expect_status 200 3001 upwilling.localhost "$asset"; else fail "no /_next/static script referenced by the home page"; fi

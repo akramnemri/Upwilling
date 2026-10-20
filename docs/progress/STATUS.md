@@ -1,33 +1,28 @@
 # STATUS
 
-Updated: 2026-10-20 by Claude (session 4 — PR #12 merged; Task 1.4 implemented as files tested locally, PR open,
-waiting for the supervisor's review; no server available yet)
-
-> This file is updated on the task branch. Until the Task 1.4 PR is merged, `develop` is behind: start a new session
-> from `feat/m1-compose-caddy` (or after the merge, from `develop`).
+Updated: 2026-10-20 by Claude (session 4 — Tasks 1.3, 1.4 and 1.5a merged; next: the first publish on develop,
+then Task 1.5b. A good moment to start a fresh session.)
 
 ## Handoff for the next session (read first)
-- **Task 1.4 PR is open** (`feat/m1-compose-caddy`). The real start on a server (the roadmap's manual step) waits for
-  a server; everything else is tested locally and in CI by `infra/server/test/smoke-stacks.sh`.
-- **No server for now.** The supervisor has no card available for Oracle Cloud's sign-up verification (2026-10-20),
-  so the ADR-021 VM cannot be created yet. ADR-021 stays the plan for when a card is available.
-  Blocked until then: the real run of the 1.3 scripts, starting recette (1.4 manual step), deployments (1.5),
-  the real restore test (1.6).
-- **Not blocked:** Milestone 2 (design system) needs no hosting. Task 1.5's workflow files could be written and
-  partly tested without a server, but their real test needs one. The supervisor decides the order.
-- **No-card options mentioned to the supervisor** (not decided, verify terms before relying on them): a developer
-  machine + Cloudflare Tunnel (free; sites online only while the machine runs; fine for PO demos, not for automatic
-  deployments); Azure for Students if someone has a student email (credit without a card, to be confirmed).
+- **Hosting for the test phase** (supervisor, 2026-10-20): the domain and the server are not ready, so the
+  **supervisor's machine is the server**, and public access must be free with no bank card. Agent's choice,
+  accepted with the "go" for Task 1.5: **Tailscale Funnel** for public HTTPS names (`<name>.<tailnet>.ts.net`),
+  Caddy mapping them to the ADR-022 recette hosts so the app does not change; **pull-based deploys** (an agent
+  on the machine follows tags in GHCR) instead of SSH, because nothing can connect in. Self-hosted GitHub
+  runner rejected (public repo: fork PRs could run code on the machine). To be recorded in ADR-024 with 1.5b.
+- **Task 1.5 split** (agent, accepted with "go"): 1.5a image published to GHCR + `GET /api/version` (merged);
+  1.5b deploy agent on the local machine + promotion/rollback workflows; 1.5c Tailscale Funnel ingress.
+- **Tailscale:** the supervisor installed Tailscale on the laptop (2026-10-20) and pasted an auth key in the chat.
+  The agent did not use or store it and asked the supervisor to **revoke it**. In 1.5c the supervisor creates the
+  right kind of key and writes it straight into the local `.env`; never ask for a secret in the chat.
+- Oracle Cloud (ADR-021) and the Cloudflare setup (ADR-023) stay the plan once a card / the domain are available.
 
 ## Current position
 - Milestone: M1 — Deployment chain (Essai 1). M0 is complete.
-- Task: 1.4 — Compose projects & Caddy — state: **done, manual test waived** (supervisor, 2026-10-20). Files and a
-  local smoke test (64 checks, also in CI); the [HUMAN] start of recette on a server is deferred (no server).
-  Supervisor decisions (2026-10-20): PostgreSQL confirmed (ADR-005 accepted); separate edge (Caddy) compose project
-  OK; basic auth on `recette-admin` until Cloudflare Access; ADR-023 accepted.
-- Hosting (supervisor, 2026-10-20): domain and server are not ready; use the **local machine as the server** and a
-  free public-access method that needs no bank card, chosen by the agent. Next task left to the agent's judgment.
-- Branch / PR: `feat/m1-compose-caddy` → `develop`.
+- Task: 1.5a — Image publishing — state: **merged** (supervisor reviewed, "merge", 2026-10-20). The first real
+  publish runs on the push to `develop`; then the supervisor makes the package public
+  (`docs/runbooks/image-publishing.md` §2).
+- Branch / PR: none open.
 
 ## Last completed tasks
 - 0.1 — Verify versions and record foundational ADRs — merged 2026-10-18 (PR #1, `efd7107`)
@@ -42,6 +37,10 @@ waiting for the supervisor's review; no server available yet)
   manual test (phone width, Lighthouse) not reported; PO inputs still open (contact emails, academy logo, copy)
 - 1.3 — Server provisioning runbook & scripts — merged 2026-10-20 (PR #12, `b04c200`), manual test waived, real run
   deferred (no server). Merged despite SonarCloud's `docker:S6471` at the supervisor's request ("merge").
+- 1.4 — Compose projects & Caddy — merged 2026-10-20 (PR #13, `2c4cc44`), manual test waived (no server).
+  Supervisor decisions: PostgreSQL confirmed (ADR-005), separate edge project, basic auth on recette-admin, ADR-023 accepted.
+- 1.5a — Image publishing to GHCR, `GET /api/version` — merged 2026-10-20 (PR #14), reviewed by the supervisor;
+  the publish itself is checked on the first push to develop.
 
 ## What exists now (so a new session does not have to rediscover it)
 - pnpm 11 workspace + Turborepo: `apps/web` (Next.js 16.3.8, App Router, `src/`), `packages/config`
@@ -60,7 +59,9 @@ waiting for the supervisor's review; no server available yet)
   `routing/route-rules.ts`: `roleFromEnv()`, `resolveRoute()` (role layer: which hosts; host-kind layer: which paths).
 - `apps/web/src/proxy.ts`: request ID per request + plain-text 404 whenever `resolveRoute()` refuses (`/api/health` exempt).
 - `apps/web/src/instrumentation{,.node}.ts`: env check at startup (exit 1 if invalid), console scrubbing, `onRequestError` logging.
-- Routes: `/` (brand page per site, simple page on the admin host), `/api/health`, `/api/ready`, local-only `/api/dev/test-error` and `/dev/test-error`;
+- Routes: `/` (brand page per site, simple page on the admin host), `/api/health`, `/api/ready`, `/api/version`
+  (commit baked into the image as `APP_VERSION`, "local" otherwise; public on site hosts, Task 1.5a),
+  local-only `/api/dev/test-error` and `/dev/test-error`;
   `error.tsx`, `global-error.tsx`, `not-found.tsx` (French).
 - Tests (Task 0.5): Vitest 4.1.12 projects in `apps/web/vitest.config.ts`: `unit` (`src/**/*.test.ts`,
   `tests/factories/**/*.test.ts`) and `integration` (`tests/integration/`, one placeholder until ADR-005); 200 tests.
@@ -103,7 +104,9 @@ waiting for the supervisor's review; no server available yet)
   web ~55–61 MiB, cms ~56–59 MiB, worker ~23 MiB, postgres ~39 MiB, caddy ~14 MiB.
 - CI: `.github/workflows/ci.yml`, jobs `checks` (install, format, typecheck, lint, test, build, e2e),
   `secret-scan` (gitleaks v8.30.1 Docker image, full history), `docker` (image build + `smoke-roles.sh` + `smoke-stacks.sh`, Tasks 1.1b/1.4),
-  `shellcheck` (v0.11.0 image, every `*.sh`, Task 1.3). Actions and images pinned (ADR-018 "CI tooling").
+  `shellcheck` (v0.11.0 image, every `*.sh`, Task 1.3), `image` (PRs: amd64 + arm64 native builds, `/api/version`
+  check), `publish` + `publish-manifest` (pushes to develop/main, after every other job: GHCR, Task 1.5a).
+  Actions and images pinned (ADR-018 "CI tooling"). The docker job bakes the commit in (`APP_VERSION`).
   Repository settings to apply by hand: `docs/runbooks/github-repository-settings.md`.
   A third check, **SonarCloud Code Analysis**, also runs on PRs: it comes from a GitHub App on the repository,
   not from this repo's files (not set up by the agent; confirm with the supervisor before relying on it).
@@ -223,10 +226,10 @@ waiting for the supervisor's review; no server available yet)
 - Large `docker`/Windows disk checks are slow here (antivirus): scan targeted folders, not the whole drive.
 
 ## Next step (exact)
-1. PR #13 (Task 1.4): manual test waived; merge when the supervisor says so (squash, sync `develop`, delete the
-   branch, §4b).
-2. Next task (agent's choice, plan posted 2026-10-20, waiting for "go"): Task 1.5 adapted to the local machine as
-   the server — split into 1.5a (image published to GHCR per commit, `GET /api/version`), 1.5b (pull-based deploy
-   agent on the local machine + promotion/rollback workflows), 1.5c (public access through Tailscale Funnel, ADR-024).
+1. Check the first CI run on `develop` after PR #14: jobs `publish (amd64)`, `publish (arm64)`, `publish-manifest`.
+   Then the supervisor makes the package public (`docs/runbooks/image-publishing.md` §2) and confirms the
+   Tailscale key from the chat was revoked.
+2. Then Task 1.5b (plan first): pull-based deploy agent on the supervisor's machine, `recette`/`production` tags,
+   promotion with GitHub environment approval, rollback workflow, ADR-024. Then 1.5c (Tailscale Funnel).
 3. When a card is available: human creates the Oracle VM (runbook §11) and runs §3–§6, then
    `docs/runbooks/compose-stacks.md`; the server-dependent steps of 1.4–1.6 resume.
