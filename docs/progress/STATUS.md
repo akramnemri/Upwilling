@@ -1,37 +1,31 @@
 # STATUS
 
-Updated: 2026-10-20 by Claude (end of session 3 — handoff. PR #11 merged; Task 1.3 in PR #12, waiting for one
-decision; no server available yet)
+Updated: 2026-10-20 by Claude (session 4 — PR #12 merged; Task 1.4 implemented as files tested locally, PR open,
+waiting for the supervisor's review; no server available yet)
 
-> This file is updated on the task branch. Until PR #12 is merged, `develop` is behind: start a new session from
-> `feat/m1-server-provisioning` (or after the merge, from `develop`).
+> This file is updated on the task branch. Until the Task 1.4 PR is merged, `develop` is behind: start a new session
+> from `feat/m1-compose-caddy` (or after the merge, from `develop`).
 
 ## Handoff for the next session (read first)
-- **PR #12 (Task 1.3) is not merged.** CI: `checks`, `secret-scan`, `docker`, `shellcheck` all green. SonarCloud's
-  quality gate fails on a single finding, `docker:S6471` (`infra/server/test/Dockerfile` runs as root, by design: it
-  stands in for a whole server). Waiting for the supervisor: either "merge anyway", or they mark the finding "Safe"
-  in SonarCloud first. Then squash-merge, sync `develop`, delete the branch (§4b).
+- **Task 1.4 PR is open** (`feat/m1-compose-caddy`). The real start on a server (the roadmap's manual step) waits for
+  a server; everything else is tested locally and in CI by `infra/server/test/smoke-stacks.sh`.
 - **No server for now.** The supervisor has no card available for Oracle Cloud's sign-up verification (2026-10-20),
   so the ADR-021 VM cannot be created yet. ADR-021 stays the plan for when a card is available.
   Blocked until then: the real run of the 1.3 scripts, starting recette (1.4 manual step), deployments (1.5),
   the real restore test (1.6).
-- **Not blocked, proposed order:** Task 1.4 as files tested locally (compose projects + Caddy run in Docker on the
-  developer machine, like `smoke-roles.sh`); then Milestone 2 (design system), which needs no hosting.
-  Plan first, as always; the supervisor decides.
+- **Not blocked:** Milestone 2 (design system) needs no hosting. Task 1.5's workflow files could be written and
+  partly tested without a server, but their real test needs one. The supervisor decides the order.
 - **No-card options mentioned to the supervisor** (not decided, verify terms before relying on them): a developer
   machine + Cloudflare Tunnel (free; sites online only while the machine runs; fine for PO demos, not for automatic
   deployments); Azure for Students if someone has a student email (credit without a card, to be confirmed).
-- This session was long: start the next one fresh from this file.
 
 ## Current position
-- Milestone: M1 — Deployment chain (Essai 1). M0 is complete (database parts deferred by ADR-005).
-- Task: 1.3 — Server provisioning runbook & scripts [HUMAN] — state: **done on the agent side** (scripts and runbooks
-  tested in Ubuntu 26.04/24.04 containers). Manual test **waived** by the supervisor (2026-10-20). The real run is
-  deferred: no server yet ("we will first use free solutions to test and switch to others when we decide to start
-  accepting traffic"). Test-phase hosting decided: **Oracle Cloud Always Free Arm VM** (ADR-021, supervisor 2026-10-20);
-  the scripts detect Oracle's image and use its iptables rules instead of ufw.
-  The supervisor asked for "common sense and standard practice" (2026-10-20): choices recorded in ADR-020 (proposed).
-- Branch / PR: `feat/m1-server-provisioning` → `develop` (PR #12; was stacked on PR #11, retargeted after its merge).
+- Milestone: M1 — Deployment chain (Essai 1). M0 is complete.
+- Task: 1.4 — Compose projects & Caddy — state: **implemented, waiting for the supervisor's review**. Files and a
+  local smoke test (64 checks, also in CI); the [HUMAN] start of recette on a server is deferred (no server).
+  Supervisor decisions (2026-10-20): PostgreSQL confirmed (ADR-005 accepted); separate edge (Caddy) compose project
+  OK; basic auth on `recette-admin` until Cloudflare Access.
+- Branch / PR: `feat/m1-compose-caddy` → `develop`.
 
 ## Last completed tasks
 - 0.1 — Verify versions and record foundational ADRs — merged 2026-10-18 (PR #1, `efd7107`)
@@ -44,6 +38,8 @@ decision; no server available yet)
 - 1.1b — Docker image with container roles — merged 2026-10-19 (PR #10, `29fa6df`), manual test waived
 - 1.2 — Branded "under construction" pages — merged 2026-10-20 (PR #11, `7745d4d`) at the supervisor's request,
   manual test (phone width, Lighthouse) not reported; PO inputs still open (contact emails, academy logo, copy)
+- 1.3 — Server provisioning runbook & scripts — merged 2026-10-20 (PR #12, `b04c200`), manual test waived, real run
+  deferred (no server). Merged despite SonarCloud's `docker:S6471` at the supervisor's request ("merge").
 
 ## What exists now (so a new session does not have to rediscover it)
 - pnpm 11 workspace + Turborepo: `apps/web` (Next.js 16.3.8, App Router, `src/`), `packages/config`
@@ -89,8 +85,22 @@ decision; no server available yet)
   `infra/server/test/test-in-container.sh` (privileged systemd container, Ubuntu 26.04 and 24.04, `--oci` mode with an
   Oracle-style `rules.v4` fixture; swap/time skipped; checks container egress through Oracle's FORWARD REJECT).
   Runbooks: `docs/runbooks/server-setup.md`, `docs/runbooks/cloudflare-dns.md`. Decisions: ADR-020.
+  `/srv/upwilling-edge` added to the layout in Task 1.4.
+- Server stacks (Task 1.4, ADR-023): `infra/server/compose.edge.yaml` (project `upwilling-edge`: Caddy 2.11.7, the only
+  published port, 443 → 8443 inside, runs as the deploy uid, read-only; owns the internal networks
+  `upwilling-edge-prod` / `upwilling-edge-recette`), `compose.base.yaml` (shared `app` and `postgres` definitions,
+  used through `extends`), `compose.production.yaml` (`upwilling-prod`) and `compose.recette.yaml`
+  (`upwilling-recette`): web-upwilling, web-careerboost, cms, worker, postgres 18.6 (uid 999, read-only, volume
+  `/var/lib/postgresql`, database `app`). Web/cms join the edge network with aliases `prod-*` / `recette-*`.
+  `infra/server/caddy/Caddyfile`: host routing (§5.2 + ADR-022 recette hosts), Cloudflare origin certificate +
+  Authenticated Origin Pulls (client certificate required), strict SNI, security headers (no HSTS yet), basic auth on
+  recette (not on `recette-hooks`), webhook-only hooks hosts, `www` → apex, catch-all 404, Cloudflare `trusted_proxies`.
+  Env templates: `infra/server/.env.{edge,production,recette}.example`. Runbook: `docs/runbooks/compose-stacks.md`.
+  Test: `infra/server/test/smoke-stacks.sh` (test project names, throwaway certificates in the git-ignored
+  `infra/server/test/.work/`, requests from a `curlimages/curl` container). Measured idle RAM with the 1.4 image:
+  web ~55–61 MiB, cms ~56–59 MiB, worker ~23 MiB, postgres ~39 MiB, caddy ~14 MiB.
 - CI: `.github/workflows/ci.yml`, jobs `checks` (install, format, typecheck, lint, test, build, e2e),
-  `secret-scan` (gitleaks v8.30.1 Docker image, full history), `docker` (image build + `smoke-roles.sh`, Task 1.1b),
+  `secret-scan` (gitleaks v8.30.1 Docker image, full history), `docker` (image build + `smoke-roles.sh` + `smoke-stacks.sh`, Tasks 1.1b/1.4),
   `shellcheck` (v0.11.0 image, every `*.sh`, Task 1.3). Actions and images pinned (ADR-018 "CI tooling").
   Repository settings to apply by hand: `docs/runbooks/github-repository-settings.md`.
   A third check, **SonarCloud Code Analysis**, also runs on PRs: it comes from a GitHub App on the repository,
@@ -98,7 +108,8 @@ decision; no server available yet)
 
 ## Decisions since last milestone
 - ADR-001…ADR-017 recorded from `docs/ai/01_ARCHITECTURE.md` §3 (see `docs/decisions/README.md`).
-- ADR-005 — Database is a **placeholder** (supervisor, 2026-10-18): implement last or when a concrete DB is given.
+- ADR-005 — Database: **PostgreSQL, accepted** (supervisor, 2026-10-20; placeholder since 2026-10-18). Major 18
+  (`postgres:18.6-trixie`); Payload compatibility with 18 is verified in Task 3.1 (fallback 17 before real data).
 - ADR-018 — Pinned versions, accepted. Exact pins (no `^`). Notable: ESLint 9.39.5 (not 10: Next's bundled plugins stop at 9);
   pino 9.14.0 (the version Payload 3.91.0 pins); Zod 4.6.7; Vitest 4.1.12; Mailpit v1.31.6.
 - ADR-019 — TypeScript strictness (proposed): `strict`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`; re-check in Task 3.1.
@@ -131,9 +142,13 @@ decision; no server available yet)
   linux/arm64 (Task 1.5). Risk: idle reclamation (7 days < 20% CPU, network, memory) → upgrade to Pay As You Go.
 - ADR-022 (accepted, test phase only): recette on first-level hosts of upwilling.fr (`recette`, `recette-careerboost`,
   `recette-admin`, `recette-hooks`, later `recette-stats`), host-only cookies only, no real users; hard switch to a
-  separate recette domain before accepting traffic. Task 1.4 adds these hosts to the `recette` allowlist and Caddy.
-- Database: the supervisor mentioned having Oracle Database 11g (2026-10-20). Not usable: Payload supports only
-  PostgreSQL, MongoDB and SQLite, and 11g has had no security fixes since 2020. ADR-005 stays open.
+  separate recette domain before accepting traffic. Task 1.4 added these hosts (not `recette-stats`, which goes to
+  Umami) to the `recette` allowlist and Caddy.
+- ADR-023 (proposed, Task 1.4): Cloudflare origin certificate + zone-level Authenticated Origin Pulls with our own
+  CA (origin only reachable through Cloudflare, so Access cannot be bypassed); Caddy publishes 443 only (no port 80,
+  no HTTP/3); separate edge compose project (supervisor-approved 2026-10-20); basic auth on every recette host
+  except hooks, standing in for Cloudflare Access on `recette-admin` (supervisor, 2026-10-20). HSTS waits for launch.
+- Database: Oracle Database 11g (mentioned 2026-10-20) is not usable; PostgreSQL was confirmed instead.
 - Route rules match a canonical path (percent-decoded, lowercased, repeated slashes collapsed); malformed encoding and
   `.`/`..` segments are refused.
 - Host allowlist: `www.*` and bare `localhost` are refused (404) by the app; Caddy redirects `www` (Task 1.4).
@@ -154,16 +169,18 @@ decision; no server available yet)
 - Each task is verified from a **fresh clone** with `pnpm install --frozen-lockfile` before the PR is opened.
   **Delete the clone right after** (disk space is tight, see below); never leave clones in the scratchpad.
 
-## Deferred because of the database placeholder (ADR-005)
-- Task 0.3: no Postgres container in `infra/local/compose.yaml`. Done that way.
+## Deferred database work (PostgreSQL now confirmed, ADR-005) — picked up in Task 3.1
+- Task 0.3: no Postgres container in `infra/local/compose.yaml` yet.
 - Task 0.4: `/api/ready` reports `database: "not_configured"`; the "stop the DB, ready fails" manual step waits for the DB.
 - Task 0.5: no database-backed integration tests yet (placeholder `tests/integration/environment.test.ts`).
-- Task 0.6: CI without a Postgres service container and without a migration check. Docker image build comes in Task 1.1b.
-- Revisit before M3: Payload cannot start without a database adapter.
+- Task 0.6: CI without a Postgres service container and without a migration check.
+- Task 1.4: the server stacks run Postgres with its `postgres` superuser only; the app's own non-superuser role and
+  `DATABASE_URL` come with Task 3.1. Backups: Task 1.6.
 
 ## Open issues / risks
-- **Before M3 (Task 3.1):** concrete database needed, or an approved temporary adapter (e.g. SQLite) via a new ADR.
-- Recette host map is still empty: Task 1.4 fills it with the ADR-022 hosts.
+- Task 3.1: verify Payload against PostgreSQL 18 (ADR-005); fall back to 17 before real data if needed.
+- `X-Frame-Options: DENY` from Caddy will block Payload's live preview (admin frames the sites): revisit in M5.
+- The server stacks have never run on a real server or on arm64; the first real start is the deferred 1.4 manual step.
 - Node 26 becomes LTS on 2026-10-28; we stay on 24 until Payload builds with 26 (ADR-018).
 - First `pnpm lint` after a fresh install can take minutes on Windows (antivirus); later runs ~25 s. Watch it in CI.
 - Free-text scrubbing is best-effort (patterns); the rule stays "structured fields, never interpolate personal data".
@@ -180,14 +197,15 @@ decision; no server available yet)
   `apps/web/src/modules/content/under-construction.ts`. **Before go-live** the two `contactEmail: null` must be filled.
 - Human (test phase, ADR-021, **blocked: no card for Oracle's verification yet**): create the Oracle Cloud account
   (EU home region, consider Pay As You Go + budget alert), the VCN and the Arm VM (`docs/runbooks/server-setup.md` §11), then run §3–§6 and send the `verify.sh` output. Apply the Cloudflare zone settings
-  (`docs/runbooks/cloudflare-dns.md` §1); records come with Tasks 1.4/5.9/9.5. Confirm or amend ADR-020.
-- Supervisor: in SonarCloud, mark issue docker:S6471 on `infra/server/test/Dockerfile` as "Safe" (the test image
-  stands in for a whole server and must run as root); SonarCloud is not configured from this repository.
+  (`docs/runbooks/cloudflare-dns.md` §1); records come with Tasks 1.4/1.5/5.9/9.5. Confirm or amend ADR-020.
+- Human (when the server exists): Task 1.4's manual step, `docs/runbooks/compose-stacks.md` (origin certificate,
+  Authenticated Origin Pulls, `.env` files, start edge + recette, recette DNS records, checks). Confirm or amend ADR-023.
+- Supervisor (optional): in SonarCloud, mark docker:S6471 on `infra/server/test/Dockerfile` as "Safe"; PR #12 was
+  merged without it, so the finding stays open on `develop` until then.
 - Supervisor: add the `docker` and `shellcheck` checks to both rulesets (`docs/runbooks/github-repository-settings.md` §3).
 - Supervisor: GitHub auto-merge is disabled in the repository settings (an attempt on PR #10 was refused); enable it
   only if you want the agent to use it.
 - Supervisor: confirm the repository settings runbook was applied (`docs/runbooks/github-repository-settings.md`).
-- Supervisor: concrete database choice (ADR-005), at the latest before M3.
 - Supervisor: confirm ADR-019.
 - PO items listed in `docs/ai/01_ARCHITECTURE.md` §17 (shared accounts, brand files, …). Recette domain: postponed
   until accepting traffic (ADR-022).
@@ -203,10 +221,9 @@ decision; no server available yet)
 - Large `docker`/Windows disk checks are slow here (antivirus): scan targeted folders, not the whole drive.
 
 ## Next step (exact)
-1. Get the supervisor's answer on PR #12 (merge despite `docker:S6471`, or after they mark it "Safe"); squash-merge,
-   sync `develop`, delete `feat/m1-server-provisioning` (§4b).
-2. Next task: Task 1.4 — Compose projects & Caddy, **as files tested locally** (recette hosts from ADR-022; the start
-   on a real server waits for a card / server). Post the plan first; do not start unasked. Alternative if the
-   supervisor prefers: start Milestone 2 (Task 2.1).
-3. When a card is available: human creates the Oracle VM (runbook §11) and runs §3–§6, then Task 1.3's real run is
-   reported and the server-dependent steps of 1.4–1.6 resume.
+1. Supervisor reviews the Task 1.4 PR (CI green incl. `smoke-stacks.sh`) and decides on the manual test (deferred
+   until a server exists, or waived). On "merge": squash-merge, sync `develop`, delete `feat/m1-compose-caddy` (§4b).
+2. Next task, the supervisor chooses: Task 1.5 (deployment workflows; files only until a server exists) or
+   Milestone 2 (Task 2.1, no hosting needed). Post the plan first; do not start unasked.
+3. When a card is available: human creates the Oracle VM (runbook §11) and runs §3–§6, then
+   `docs/runbooks/compose-stacks.md`; the server-dependent steps of 1.4–1.6 resume.
