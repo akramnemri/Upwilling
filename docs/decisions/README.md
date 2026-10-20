@@ -29,3 +29,4 @@ and setting the old one's status to "Superseded by ADR-YYY".
 | [021](ADR-021-test-phase-hosting-oracle.md) | Test phase on an Oracle Cloud Always Free Arm VM | Accepted (test phase only; amends 003) |
 | [022](ADR-022-test-phase-recette-hosts.md) | Test-phase recette hosts under upwilling.fr | Accepted (test phase only; amends 017) |
 | [023](ADR-023-edge-tls-cloudflare-caddy.md) | Edge TLS: Cloudflare origin certificate + Authenticated Origin Pulls | Accepted |
+| [024](ADR-024-pull-based-deploys.md) | Pull-based deploys: image tags + deploy agent | Proposed (Task 1.5b) |
