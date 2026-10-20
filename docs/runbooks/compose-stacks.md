@@ -16,8 +16,8 @@
 | `upwilling-prod` | `/srv/upwilling-prod` | same | none |
 
 Cloudflare → Caddy (origin certificate, Cloudflare's client certificate checked) → the web/cms containers over the
-internal networks `upwilling-edge-prod` / `upwilling-edge-recette`. The edge project creates those networks:
-**start it first.** Each stack has its own database container and volume.
+internal networks `upwilling-edge-prod` / `upwilling-edge-recette`. Those networks are created once, beforehand
+(§5), so each project can start on its own. Each stack has its own database container and volume.
 
 ## 1. Certificates (on YOUR computer, once)
 
@@ -103,10 +103,16 @@ echo "APP_IMAGE=upwilling-web:$sha"   # put this line in /srv/upwilling-recette/
 As `deploy` (`sudo -iu deploy`):
 
 ```bash
+# The internal edge networks, once (the deploy agent also creates them when missing, Task 1.5b):
+docker network create --internal upwilling-edge-prod
+docker network create --internal upwilling-edge-recette
 cd /srv/upwilling-edge && docker compose -f compose.edge.yaml up -d --wait
 cd /srv/upwilling-recette && docker compose -f compose.recette.yaml up -d --wait
 docker ps --format '{{.Names}}\t{{.Status}}\t{{.Ports}}'
 ```
+
+From Task 1.5b on, the stacks are started and updated by the deploy agent (`docs/runbooks/local-server.md`,
+ADR-024) rather than by hand; §4 and the recette command above are then only needed without the agent.
 
 Every container should say `healthy`. Only `upwilling-edge-caddy-1` shows a published port (`0.0.0.0:443->8443/tcp`).
 Then run `sudo /path/to/verify.sh` again: it must not report any other public port.
@@ -135,7 +141,7 @@ Then run `sudo /path/to/verify.sh` again: it must not report any other public po
 | Stop a stack (data kept) | `docker compose -f compose.<name>.yaml down` |
 
 - **Never** `down -v` / `--volumes` on recette or production: it deletes that stack's database volume.
-- Stop recette or production before the edge project; start the edge project first.
+- The projects no longer depend on each other to start: the edge networks exist on their own (§5).
 - Memory: limits are in the compose files (production per 01_ARCHITECTURE.md §5.1, recette about 60 %).
   `docker stats --no-stream` shows real use; tune after measuring (Task 1.7).
 
