@@ -5,6 +5,7 @@ import { withErrorHandling } from "../../lib/http/route-handler";
 import { GET as testErrorGet } from "./dev/test-error/route";
 import { GET as healthGet } from "./health/route";
 import { GET as readyGet } from "./ready/route";
+import { GET as versionGet } from "./version/route";
 
 function requestWithId(url: string, requestId = "req-test") {
   return new Request(url, { headers: { "x-request-id": requestId } });
@@ -27,6 +28,15 @@ describe("GET /api/ready", () => {
       status: "ready",
       checks: { config: "ok", database: "not_configured" },
     });
+    expect(response.headers.get("cache-control")).toBe("no-store");
+  });
+});
+
+describe("GET /api/version", () => {
+  it('returns the version baked into the image ("local" outside a published image), without caching', async () => {
+    const response = versionGet();
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ version: "local" });
     expect(response.headers.get("cache-control")).toBe("no-store");
   });
 });

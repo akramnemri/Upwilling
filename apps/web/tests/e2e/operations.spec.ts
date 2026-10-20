@@ -34,3 +34,12 @@ test("a failing page shows the safe French error page with a reference, never th
   // The thrown message contains a fake secret: it must stay in the (redacted) server log only.
   expect(await page.content()).not.toContain("fake-secret-456");
 });
+
+test('/api/version reports the build ("local" when the image was not published)', async ({
+  page,
+}) => {
+  const response = await page.goto(localUrl("careerboost.localhost", "/api/version"));
+
+  expect(response?.status()).toBe(200);
+  expect(await response?.json()).toEqual({ version: "local" });
+});
