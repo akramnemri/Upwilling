@@ -38,9 +38,9 @@ Rules to tick in both:
   - Required approvals: **0** while there is one human reviewer (set to 1 when a second developer joins).
   - Allowed merge methods: `develop` → Squash only; `main` → Merge only.
 - [x] Require status checks to pass
-  - Add the checks **`checks`**, **`secret-scan`** and **`docker`** (source: GitHub Actions).
+  - Add the checks **`checks`**, **`secret-scan`**, **`docker`** and **`shellcheck`** (source: GitHub Actions).
     They can only be picked once the CI workflow has run at least once (the Task 0.6 PR does that;
-    `docker` exists from the Task 1.1b PR on: add it to both rulesets then).
+    `docker` exists from the Task 1.1b PR on, `shellcheck` from the Task 1.3 PR on: add them to both rulesets then).
   - "Require branches to be up to date before merging": off for now (one developer; avoids extra CI runs).
 
 Leave "Require linear history" **off**: `develop → main` uses merge commits.
