@@ -1,9 +1,9 @@
 # Quality gate for every pull request and every push to develop/main (03_GIT_TESTING_PIPELINE.md §12).
-# The repository is public: this workflow gets a read-only token and no secrets.
+# Pushes to develop/main also publish the image to GHCR once every check passed (jobs publish and
+# publish-manifest, Task 1.5): the only jobs with a write permission (packages). Everything else gets a
+# read-only token, and no job gets secrets: the repository is public.
 #
-# Not here yet, on purpose:
-# - Postgres service container and migration check: the database is a placeholder (ADR-005).
-# - Pushing the image to GHCR: deployment workflows, Task 1.5.
+# Not here yet, on purpose: Postgres service container and migration check (Task 3.1, ADR-005).
 #
 # Actions are pinned to full commit SHAs (a tag can be moved; a SHA cannot). Versions: ADR-018.
 name: CI
@@ -23,6 +23,8 @@ concurrency:
 
 env:
   TURBO_TELEMETRY_DISABLED: 1
+  # Published image (Task 1.5). GHCR names must be lowercase: the owner of this repository already is.
+  IMAGE: ghcr.io/${{ github.repository_owner }}/upwilling-web
 
 jobs:
   checks:
@@ -110,11 +112,18 @@ jobs:
           persist-credentials: false
 
       # Plain docker CLI (BuildKit is the default builder on the runner): no extra third-party action.
+      # The commit is baked in as for a published image, so the smoke test can check /api/version.
       - name: Build the production image
-        run: docker build --progress=plain -f apps/web/Dockerfile -t upwilling-web:local .
+        env:
+          APP_VERSION: ${{ github.sha }}
+        run: >-
+          docker build --progress=plain -f apps/web/Dockerfile
+          --build-arg "APP_VERSION=$APP_VERSION" -t upwilling-web:local .
 
       # Runs the three roles from infra/local/compose.roles.yaml and checks hosts, paths, hardening, shutdown.
       - name: Smoke test the container roles
+        env:
+          EXPECTED_VERSION: ${{ github.sha }}
         run: bash infra/local/smoke-roles.sh
 
       # Edge (Caddy) + production + recette stacks from infra/server, with throwaway test certificates:
@@ -137,3 +146,83 @@ jobs:
           docker run --rm -v "$GITHUB_WORKSPACE:/mnt" -w /mnt
           koalaman/shellcheck:v0.11.0@sha256:61862eba1fcf09a484ebcc6feea46f1782532571a34ed51fedf90dd25f925a8d
           -x $(git ls-files '*.sh')
+
+  # Pull requests: build the image natively on both architectures and check it serves its commit. amd64 runs
+  # the local machine and most VPSs; arm64 runs the Oracle Cloud VM (ADR-021). Nothing is published here, and
+  # the job only gets the workflow's read-only token.
+  image:
+    name: image (${{ matrix.arch }})
+    if: github.event_name == 'pull_request'
+    strategy:
+      matrix:
+        include:
+          - { arch: amd64, runner: ubuntu-24.04 }
+          - { arch: arm64, runner: ubuntu-24.04-arm }
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build and check the image
+        env:
+          APP_VERSION: ${{ github.sha }}
+        run: bash infra/ci/build-and-check-image.sh "upwilling-web:$APP_VERSION" "$APP_VERSION"
+
+  # Pushes to develop/main, once every other job passed: the same build, then pushed to GHCR as
+  # <image>:<commit>-<arch> (Task 1.5). The repository is public, so the image is public: it never contains
+  # secrets (.dockerignore, Dockerfile). Only this job and publish-manifest may write packages.
+  publish:
+    name: publish (${{ matrix.arch }})
+    if: github.event_name == 'push'
+    needs: [checks, secret-scan, docker, shellcheck]
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        include:
+          - { arch: amd64, runner: ubuntu-24.04 }
+          - { arch: arm64, runner: ubuntu-24.04-arm }
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    env:
+      APP_VERSION: ${{ github.sha }}
+      ARCH: ${{ matrix.arch }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build and check the image
+        run: bash infra/ci/build-and-check-image.sh "$IMAGE:$APP_VERSION-$ARCH" "$APP_VERSION"
+      - name: Push it to GHCR
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          echo "$GITHUB_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+          docker push "$IMAGE:$APP_VERSION-$ARCH"
+          docker logout ghcr.io
+
+  # One multi-architecture tag, <image>:<commit>, pointing at both builds: what servers pull (Task 1.5).
+  publish-manifest:
+    name: publish-manifest
+    needs: [publish]
+    permissions:
+      contents: read
+      packages: write
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    env:
+      APP_VERSION: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Create the multi-architecture tag
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          echo "$GITHUB_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+          docker buildx imagetools create --tag "$IMAGE:$APP_VERSION" "$IMAGE:$APP_VERSION-amd64" "$IMAGE:$APP_VERSION-arm64"
+          docker buildx imagetools inspect "$IMAGE:$APP_VERSION"
+          docker logout ghcr.io
