@@ -1,6 +1,6 @@
 # Edge proxy shared by both stacks (Task 1.4; 01_ARCHITECTURE.md §5.1; ADR-003, ADR-023).
 # Its own compose project because only one container can publish port 443, and it serves production and
-# recette. It also owns the two edge networks the stacks join, so start it first.
+# recette. It joins the two edge networks the stacks also join (created beforehand, see networks below).
 # On the server: /srv/upwilling-edge (this file, caddy/Caddyfile, certs/, .env). Runbook: docs/runbooks/compose-stacks.md
 #   docker compose -f compose.edge.yaml up -d --wait
 # Local test: infra/server/test/smoke-stacks.sh
@@ -59,10 +59,14 @@ services:
 networks:
   # Ingress only. Published ports need a non-internal network.
   default: {}
-  # Caddy <-> the web and cms containers of each stack. Internal: nothing reaches the internet through them.
+  # Caddy <-> the web and cms containers of each stack. Created beforehand, once, as internal networks (nothing
+  # reaches the internet through them), so each project can start on its own (Task 1.5b):
+  #   docker network create --internal upwilling-edge-prod
+  #   docker network create --internal upwilling-edge-recette
+  # The deploy agent creates them when missing. Only the smoke tests override the names.
   prod:
-    name: upwilling-edge-prod
-    internal: true
+    name: ${EDGE_NETWORK_PROD:-upwilling-edge-prod}
+    external: true
   recette:
-    name: upwilling-edge-recette
-    internal: true
+    name: ${EDGE_NETWORK_RECETTE:-upwilling-edge-recette}
+    external: true

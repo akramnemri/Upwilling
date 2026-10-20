@@ -1,0 +1,62 @@
+# Marks a published image as the one a stack must run (Task 1.5b, ADR-024): moves the tag `recette` or
+# `production` of ghcr.io/<owner>/upwilling-web to the multi-arch image of a commit. Nothing is rebuilt.
+# The deploy agent on the server sees the tag move and deploys within about a minute; it reports success or
+# failure in its own log (the server is not reachable from GitHub). Runbook: docs/runbooks/local-server.md
+#
+# Called by ci.yml (deploy-recette on develop, deploy-production on main) and by rollback.yml. The job runs in
+# the GitHub environment named after the stack: `production` requires the supervisor's approval.
+name: Promote
+
+on:
+  workflow_call:
+    inputs:
+      stack:
+        description: recette or production
+        required: true
+        type: string
+      sha:
+        description: Full commit SHA of an image published by CI
+        required: true
+        type: string
+
+permissions: {}
+
+jobs:
+  promote:
+    name: promote ${{ inputs.stack }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: ${{ inputs.stack }}
+    permissions:
+      contents: read
+      packages: write
+    # One promotion per stack at a time, in order: a newer one waits instead of racing.
+    concurrency:
+      group: promote-${{ inputs.stack }}
+      cancel-in-progress: false
+    env:
+      # GHCR names must be lowercase: the owner of this repository already is.
+      IMAGE: ghcr.io/${{ github.repository_owner }}/upwilling-web
+      STACK: ${{ inputs.stack }}
+      SHA: ${{ inputs.sha }}
+    steps:
+      - name: Check the inputs
+        run: |
+          case $STACK in recette | production) ;; *) echo "::error::unknown stack '$STACK'"; exit 1 ;; esac
+          [[ $SHA =~ ^[0-9a-f]{40}$ ]] || { echo "::error::'$SHA' is not a full commit SHA"; exit 1; }
+
+      - name: Move the tag
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          echo "$GITHUB_TOKEN" | docker login ghcr.io --username "$GITHUB_ACTOR" --password-stdin
+          # Fails when CI never published this commit (only pushes to develop/main publish).
+          docker buildx imagetools inspect "$IMAGE:$SHA" >/dev/null
+          docker buildx imagetools create --tag "$IMAGE:$STACK" "$IMAGE:$SHA"
+          docker logout ghcr.io
+          {
+            echo "### $STACK → \`$SHA\`"
+            echo
+            echo "\`$IMAGE:$STACK\` now points to this commit's image. The deploy agent picks it up within about"
+            echo "a minute; check its log on the server (docs/runbooks/local-server.md)."
+          } >>"$GITHUB_STEP_SUMMARY"

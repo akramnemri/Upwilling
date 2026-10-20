@@ -1,6 +1,7 @@
 # Quality gate for every pull request and every push to develop/main (03_GIT_TESTING_PIPELINE.md §12).
 # Pushes to develop/main also publish the image to GHCR once every check passed (jobs publish and
-# publish-manifest, Task 1.5): the only jobs with a write permission (packages). Everything else gets a
+# publish-manifest, Task 1.5a) and promote the image (deploy-recette on develop, deploy-production on main after
+# approval, Task 1.5b): the only jobs with a write permission (packages). Everything else gets a
 # read-only token, and no job gets secrets: the repository is public.
 #
 # Not here yet, on purpose: Postgres service container and migration check (Task 3.1, ADR-005).
@@ -131,6 +132,11 @@ jobs:
       - name: Smoke test the server stacks
         run: bash infra/server/test/smoke-stacks.sh
 
+      # Deploy agent against a throwaway local registry: deploy, next release, bad release restored, rollback
+      # (Task 1.5b).
+      - name: Smoke test the deploy agent
+        run: bash infra/server/test/smoke-deploy.sh
+
   shellcheck:
     name: shellcheck
     runs-on: ubuntu-latest
@@ -226,3 +232,30 @@ jobs:
           docker buildx imagetools create --tag "$IMAGE:$APP_VERSION" "$IMAGE:$APP_VERSION-amd64" "$IMAGE:$APP_VERSION-arm64"
           docker buildx imagetools inspect "$IMAGE:$APP_VERSION"
           docker logout ghcr.io
+
+  # Merges to develop go to recette with no manual step; merges to main go to production after the supervisor
+  # approves the `production` environment (Task 1.5b, ADR-024). Both only move an image tag (promote.yml);
+  # the deploy agent on the server does the rest.
+  deploy-recette:
+    name: deploy-recette
+    if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+    needs: [publish-manifest]
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/promote.yml
+    with:
+      stack: recette
+      sha: ${{ github.sha }}
+
+  deploy-production:
+    name: deploy-production
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [publish-manifest]
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/promote.yml
+    with:
+      stack: production
+      sha: ${{ github.sha }}

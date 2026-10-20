@@ -1,7 +1,7 @@
 # Recette stack (Task 1.4; ADR-017, ADR-022; 01_ARCHITECTURE.md §5.1, §16). Compose project `upwilling-recette`:
 # same services as production, its own network, database, volume and .env, about 60 % of production's memory.
-# On the server: /srv/upwilling-recette (this file, compose.base.yaml, .env). Start the edge project first:
-# it creates the network this stack joins. Runbook: docs/runbooks/compose-stacks.md
+# On the server: /srv/upwilling-recette (this file, compose.base.yaml, .env). The edge network must exist first
+# (see compose.edge.yaml). Deployed by the deploy agent (Task 1.5b). Runbook: docs/runbooks/compose-stacks.md
 #   docker compose -f compose.recette.yaml up -d --wait
 # Nothing here publishes a port: Caddy (compose.edge.yaml) is the only way in, with basic auth.
 name: upwilling-recette
@@ -67,7 +67,8 @@ networks:
   # The stack's own network: app <-> postgres, and outbound calls (Stripe test mode, Brevo...).
   default: {}
   edge:
-    name: upwilling-edge-recette
+    # Created beforehand (see compose.edge.yaml). Only the smoke tests override the name.
+    name: ${EDGE_NETWORK_RECETTE:-upwilling-edge-recette}
     external: true
 
 volumes:
