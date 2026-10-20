@@ -127,7 +127,7 @@ If the provider offers snapshots, take one now ("baseline after Task 1.3").
 | Logs | `/etc/systemd/journald.conf.d/50-upwilling.conf` (500 MB, 1 month); container logs 3 × 10 MB |
 | Swap | `/swapfile` (2 GB unless a swap already existed), `/etc/fstab`, `/etc/sysctl.d/60-upwilling-swap.conf` |
 | Time | time zone UTC, NTP on |
-| Layout | `/srv/upwilling-prod`, `/srv/upwilling-recette` (owner `deploy`, mode 750) |
+| Layout | `/srv/upwilling-edge` (Caddy), `/srv/upwilling-prod`, `/srv/upwilling-recette` (owner `deploy`, mode 750) |
 
 ## 8. Routine maintenance (monthly, or when an alert says so)
 
@@ -136,14 +136,16 @@ If the provider offers snapshots, take one now ("baseline after Task 1.3").
   Containers come back by themselves (`restart: unless-stopped`, Task 1.4).
 - `sudo fail2ban-client status sshd`, `df -h`, `sudo docker system df`.
 - Re-run `verify.sh` after any manual change.
+- Compare Cloudflare's IP ranges (https://www.cloudflare.com/ips/) with `trusted_proxies` in `infra/server/caddy/Caddyfile`;
+  if they changed, update the file through a PR. Check the origin certificate's expiry date (`docs/runbooks/compose-stacks.md`).
 
 ## 9. Important rules
 
-- **Docker bypasses ufw for published ports.** Only Caddy may publish ports (80/443, Task 1.4). Never add `ports:` to
+- **Docker bypasses ufw for published ports.** Only Caddy may publish a port (443, Task 1.4, ADR-023). Never add `ports:` to
   Postgres, Umami or app containers: they talk over internal Docker networks. `verify.sh` fails on any other public port.
 - The `docker` group is equivalent to root. That is why the deploy key gets restricted in Task 1.5
   (`restrict` options in `authorized_keys`) and its private part lives only in GitHub secrets.
-- `.env` files for the compose projects are created by the human in Task 1.4, mode 600, owner `deploy`.
+- `.env` files for the compose projects are created by the human (Task 1.4, `docs/runbooks/compose-stacks.md`), mode 600, owner `deploy`.
 
 ## 10. If you are locked out
 

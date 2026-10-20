@@ -66,6 +66,14 @@ with the version in a trailing comment. Upgrades are `chore(ci)` PRs that update
 |---|---|---|---|
 | Node.js | **`node:24.22.0-trixie-slim`** | `sha256:7f486cabe892bff8fef04c0f7da8dba84a560be3e4e2740b7a86afc57ebec315` | Build and runtime stages of `apps/web/Dockerfile` (decision D3). Debian 13 slim; 24.22.0 is the latest Node 24 release (2026-10-14). Upgrades are `chore(deps)` PRs that change tag and digest together. |
 
+### Server stack images (added in Task 1.4, verified 2026-10-20)
+
+| Image | Tag | Digest (multi-arch index) | Notes |
+|---|---|---|---|
+| Caddy | **`caddy:2.11.7-alpine`** | `sha256:d8542f48d34a9cf4e4c11a478865229840e87e4c96ea3f439101f31a5d35f75f` | Edge proxy, `infra/server/compose.edge.yaml` (ADR-023). Latest release (2026-10-03). Stock image: no plugins needed. |
+| PostgreSQL | **`postgres:18.6-trixie`** | `sha256:74935e72241653ca55e0414067e6d8763aceb8a810eb51b452253ec3dcfc4336` | One per stack, `infra/server/compose.base.yaml` (ADR-005). 18.6 is the current minor of the current major. |
+| curl (test only) | **`curlimages/curl:8.23.0`** | `sha256:a134550be58ab783810e613ae96fd253c38f7bdd16d9bf9be350700c7a29ac06` | Client of `infra/server/test/smoke-stacks.sh` (presents the test client certificate). Never deployed. |
+
 ## Consequences
 
 - Dependabot or manual upgrade PRs must keep `@payloadcms/*` in lockstep and stay inside Payload's

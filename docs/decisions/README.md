@@ -10,7 +10,7 @@ and setting the old one's status to "Superseded by ADR-YYY".
 | [002](ADR-002-single-multitenant-app.md) | One Next.js + Payload app serves both sites | Accepted (Essai 4 confirms) |
 | [003](ADR-003-single-vps-docker-caddy-cloudflare.md) | One VPS, Docker Compose, Caddy, Cloudflare | Accepted |
 | [004](ADR-004-one-image-container-roles.md) | One image, several container roles | Accepted |
-| [005](ADR-005-database.md) | Database: PostgreSQL | **Proposed — placeholder** |
+| [005](ADR-005-database.md) | PostgreSQL 18 (one container per stack) | Accepted (2026-10-20; compatibility re-checked in Task 3.1) |
 | [006](ADR-006-accounts-sessions.md) | Accounts, sessions, admin access | Accepted (PO decision pending) |
 | [007](ADR-007-jobs-queue.md) | Payload Jobs Queue in the worker | Accepted |
 | [008](ADR-008-object-storage-r2.md) | Files and backups on Cloudflare R2 | Accepted |
@@ -28,3 +28,4 @@ and setting the old one's status to "Superseded by ADR-YYY".
 | [020](ADR-020-server-baseline.md) | Server baseline: OS, access, hardening | Proposed (supervisor to confirm) |
 | [021](ADR-021-test-phase-hosting-oracle.md) | Test phase on an Oracle Cloud Always Free Arm VM | Accepted (test phase only; amends 003) |
 | [022](ADR-022-test-phase-recette-hosts.md) | Test-phase recette hosts under upwilling.fr | Accepted (test phase only; amends 017) |
+| [023](ADR-023-edge-tls-cloudflare-caddy.md) | Edge TLS: Cloudflare origin certificate + Authenticated Origin Pulls | Proposed (Task 1.4) |
