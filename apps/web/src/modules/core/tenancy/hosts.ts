@@ -18,8 +18,14 @@ const HOSTS_BY_ENV: Readonly<Record<DeployEnv, ReadonlyMap<string, HostTarget>>>
     ["careerboost.localhost", { kind: "site", tenant: "careerboost" }],
     ["admin.localhost", { kind: "admin" }],
   ]),
-  // The recette domain is not bought yet (ADR-017). Its hosts are added in Task 1.4.
-  recette: new Map<string, HostTarget>(),
+  // Test phase only (ADR-022): first-level hosts of upwilling.fr, so cookies must stay host-only.
+  // Remove these when recette moves to its own domain (ADR-017), before accepting traffic.
+  recette: new Map<string, HostTarget>([
+    ["recette.upwilling.fr", { kind: "site", tenant: "upwilling" }],
+    ["recette-careerboost.upwilling.fr", { kind: "site", tenant: "careerboost" }],
+    ["recette-admin.upwilling.fr", { kind: "admin" }],
+    ["recette-hooks.upwilling.fr", { kind: "hooks" }],
+  ]),
   production: new Map<string, HostTarget>([
     ["upwilling.fr", { kind: "site", tenant: "upwilling" }],
     ["careerboost.upwilling.fr", { kind: "site", tenant: "careerboost" }],

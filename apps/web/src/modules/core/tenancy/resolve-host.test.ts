@@ -82,9 +82,29 @@ describe("resolveHost — environments are isolated", () => {
     expect(resolveHost("vlab.upwilling.fr", "production")).toBeNull();
   });
 
-  it("serves nothing on recette until its domain is configured (Task 1.4)", () => {
-    expect(resolveHost("upwilling.localhost", "recette")).toBeNull();
+  it("resolves the test-phase recette hosts on recette only (ADR-022)", () => {
+    expect(resolveHost("recette.upwilling.fr", "recette")).toEqual({
+      kind: "site",
+      tenant: "upwilling",
+    });
+    expect(resolveHost("recette-careerboost.upwilling.fr", "recette")).toEqual({
+      kind: "site",
+      tenant: "careerboost",
+    });
+    expect(resolveHost("recette-admin.upwilling.fr", "recette")).toEqual({ kind: "admin" });
+    expect(resolveHost("recette-hooks.upwilling.fr", "recette")).toEqual({ kind: "hooks" });
+    expect(resolveHost("recette.upwilling.fr", "production")).toBeNull();
+    expect(resolveHost("recette-admin.upwilling.fr", "production")).toBeNull();
+  });
+
+  it("refuses production and local hosts on recette", () => {
     expect(resolveHost("upwilling.fr", "recette")).toBeNull();
+    expect(resolveHost("admin.upwilling.fr", "recette")).toBeNull();
+    expect(resolveHost("upwilling.localhost", "recette")).toBeNull();
+  });
+
+  it("refuses the recette stats host, which Caddy routes to Umami, not to the app", () => {
+    expect(resolveHost("recette-stats.upwilling.fr", "recette")).toBeNull();
   });
 });
 
