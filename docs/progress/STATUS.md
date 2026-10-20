@@ -10,7 +10,8 @@ Updated: 2026-10-20 by Claude (session 3 — Task 1.2 in review (PR #11); Task 1
 - Task: 1.3 — Server provisioning runbook & scripts [HUMAN] — state: **done on the agent side** (scripts and runbooks
   tested in Ubuntu 26.04/24.04 containers). Manual test **waived** by the supervisor (2026-10-20). The real run is
   deferred: no server yet ("we will first use free solutions to test and switch to others when we decide to start
-  accepting traffic"). Hosting for the test phase: decision pending (see "Waiting on human / PO").
+  accepting traffic"). Test-phase hosting decided: **Oracle Cloud Always Free Arm VM** (ADR-021, supervisor 2026-10-20);
+  the scripts detect Oracle's image and use its iptables rules instead of ufw.
   The supervisor asked for "common sense and standard practice" (2026-10-20): choices recorded in ADR-020 (proposed).
 - Branch / PR: `feat/m1-server-provisioning` → `feat/m1-brand-pages` (stacked on PR #11, like 1.1b on #9).
 - Task 1.2 (PR #11, `feat/m1-brand-pages` → `develop`): waiting for the supervisor's manual test and PO inputs.
@@ -66,7 +67,8 @@ Updated: 2026-10-20 by Claude (session 3 — Task 1.2 in review (PR #11); Task 1
   Runbook: `docs/runbooks/local-container-roles.md`. Measured idle RAM: web ~52 MiB, cms ~52 MiB, worker ~26 MiB.
 - Server (Task 1.3): `infra/server/scripts/provision.sh` (idempotent steps, `--dry-run`, `--only`; SSH step last,
   with lockout guards), `verify.sh` (read-only PASS/WARN/FAIL + versions), `lib.sh`. Tested by
-  `infra/server/test/test-in-container.sh` (privileged systemd container, Ubuntu 26.04 and 24.04; swap/time skipped).
+  `infra/server/test/test-in-container.sh` (privileged systemd container, Ubuntu 26.04 and 24.04, `--oci` mode with an
+  Oracle-style `rules.v4` fixture; swap/time skipped; checks container egress through Oracle's FORWARD REJECT).
   Runbooks: `docs/runbooks/server-setup.md`, `docs/runbooks/cloudflare-dns.md`. Decisions: ADR-020.
 - CI: `.github/workflows/ci.yml`, jobs `checks` (install, format, typecheck, lint, test, build, e2e),
   `secret-scan` (gitleaks v8.30.1 Docker image, full history), `docker` (image build + `smoke-roles.sh`, Task 1.1b),
@@ -104,6 +106,12 @@ Updated: 2026-10-20 by Claude (session 3 — Task 1.2 in review (PR #11); Task 1
   (Docker bypasses ufw; `verify.sh` fails on other public ports); fail2ban sshd; security updates daily, no auto
   reboot; Docker from its apt repo (key fingerprint checked), `daemon.json` log caps + `live-restore` +
   `no-new-privileges`; 2 GB swap; UTC; journal 500 MB. Deploy key restriction is due in Task 1.5.
+- ADR-021 (accepted, test phase only): Oracle Cloud Always Free `VM.Standard.A1.Flex` 2 OCPU / 12 GB, EU home
+  region, Ubuntu 26.04 aarch64. VCN security list = outer firewall (22/80/443); never ufw on Oracle images.
+  Synthetic data only; move to a paid EU VPS **before accepting traffic**. The app image must be built for
+  linux/arm64 (Task 1.5). Risk: idle reclamation (7 days < 20% CPU, network, memory) → upgrade to Pay As You Go.
+- Database: the supervisor mentioned having Oracle Database 11g (2026-10-20). Not usable: Payload supports only
+  PostgreSQL, MongoDB and SQLite, and 11g has had no security fixes since 2020. ADR-005 stays open.
 - Route rules match a canonical path (percent-decoded, lowercased, repeated slashes collapsed); malformed encoding and
   `.`/`..` segments are refused.
 - Host allowlist: `www.*` and bare `localhost` are refused (404) by the app; Caddy redirects `www` (Task 1.4).
@@ -149,9 +157,8 @@ Updated: 2026-10-20 by Claude (session 3 — Task 1.2 in review (PR #11); Task 1
 - PO: public contact address for each site (organization mailbox, e.g. a `contact@` address); academy logo files
   (SVG, + favicon); vector source of the Career Boost logo; validation of the French copy in
   `apps/web/src/modules/content/under-construction.ts`. **Before go-live** the two `contactEmail: null` must be filled.
-- Supervisor: hosting for the test phase. The VPS purchase is postponed until real traffic (2026-10-20); a free option
-  is wanted first. Agent's recommendation: Oracle Cloud Always Free Arm VM (needs an ADR, an arm64 image, and the
-  account created by the human). Then follow `docs/runbooks/server-setup.md` on that VM. Apply the Cloudflare zone settings
+- Human (test phase, ADR-021): create the Oracle Cloud account (EU home region, consider Pay As You Go + budget
+  alert), the VCN and the Arm VM (`docs/runbooks/server-setup.md` §11), then run §3–§6 and send the `verify.sh` output. Apply the Cloudflare zone settings
   (`docs/runbooks/cloudflare-dns.md` §1); records come with Tasks 1.4/5.9/9.5. Confirm or amend ADR-020.
 - Supervisor: add the `docker` and `shellcheck` checks to both rulesets (`docs/runbooks/github-repository-settings.md` §3).
 - Supervisor: GitHub auto-merge is disabled in the repository settings (an attempt on PR #10 was refused); enable it
@@ -173,6 +180,6 @@ Updated: 2026-10-20 by Claude (session 3 — Task 1.2 in review (PR #11); Task 1
 
 ## Next step (exact)
 1. Supervisor tests Task 1.2 manually (PR #11), then merges it; then reviews the Task 1.3 PR (retargeted to `develop`).
-2. Supervisor decides the test-phase hosting; the human then runs the Task 1.3 runbook on that server.
+2. Human creates the Oracle Cloud VM and runs the Task 1.3 runbook on it (§11, then §3–§6).
 3. After each merge: sync `develop`, delete the branch (§4b).
 4. Then Task 1.4 — Compose projects & Caddy (needs the VPS and, for recette, the recette domain). Post the plan first.
