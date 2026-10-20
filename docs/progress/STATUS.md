@@ -13,8 +13,7 @@ Updated: 2026-10-20 by Claude (session 3 — Task 1.2 in review (PR #11); Task 1
   accepting traffic"). Test-phase hosting decided: **Oracle Cloud Always Free Arm VM** (ADR-021, supervisor 2026-10-20);
   the scripts detect Oracle's image and use its iptables rules instead of ufw.
   The supervisor asked for "common sense and standard practice" (2026-10-20): choices recorded in ADR-020 (proposed).
-- Branch / PR: `feat/m1-server-provisioning` → `feat/m1-brand-pages` (stacked on PR #11, like 1.1b on #9).
-- Task 1.2 (PR #11, `feat/m1-brand-pages` → `develop`): waiting for the supervisor's manual test and PO inputs.
+- Branch / PR: `feat/m1-server-provisioning` → `develop` (PR #12; was stacked on PR #11, retargeted after its merge).
 
 ## Last completed tasks
 - 0.1 — Verify versions and record foundational ADRs — merged 2026-10-18 (PR #1, `efd7107`)
@@ -25,6 +24,8 @@ Updated: 2026-10-20 by Claude (session 3 — Task 1.2 in review (PR #11); Task 1
 - 0.6 — CI pipeline — merged 2026-10-18 (PR #8, `60e3ad9`), manual test passed (M0 closed)
 - 1.1a — Role and host routing — merged 2026-10-19 (PR #9, `58acca2`), manual test waived by the supervisor
 - 1.1b — Docker image with container roles — merged 2026-10-19 (PR #10, `29fa6df`), manual test waived
+- 1.2 — Branded "under construction" pages — merged 2026-10-20 (PR #11, `7745d4d`) at the supervisor's request,
+  manual test (phone width, Lighthouse) not reported; PO inputs still open (contact emails, academy logo, copy)
 
 ## What exists now (so a new session does not have to rediscover it)
 - pnpm 11 workspace + Turborepo: `apps/web` (Next.js 16.3.8, App Router, `src/`), `packages/config`
@@ -110,6 +111,9 @@ Updated: 2026-10-20 by Claude (session 3 — Task 1.2 in review (PR #11); Task 1
   region, Ubuntu 26.04 aarch64. VCN security list = outer firewall (22/80/443); never ufw on Oracle images.
   Synthetic data only; move to a paid EU VPS **before accepting traffic**. The app image must be built for
   linux/arm64 (Task 1.5). Risk: idle reclamation (7 days < 20% CPU, network, memory) → upgrade to Pay As You Go.
+- ADR-022 (accepted, test phase only): recette on first-level hosts of upwilling.fr (`recette`, `recette-careerboost`,
+  `recette-admin`, `recette-hooks`, later `recette-stats`), host-only cookies only, no real users; hard switch to a
+  separate recette domain before accepting traffic. Task 1.4 adds these hosts to the `recette` allowlist and Caddy.
 - Database: the supervisor mentioned having Oracle Database 11g (2026-10-20). Not usable: Payload supports only
   PostgreSQL, MongoDB and SQLite, and 11g has had no security fixes since 2020. ADR-005 stays open.
 - Route rules match a canonical path (percent-decoded, lowercased, repeated slashes collapsed); malformed encoding and
@@ -141,7 +145,7 @@ Updated: 2026-10-20 by Claude (session 3 — Task 1.2 in review (PR #11); Task 1
 
 ## Open issues / risks
 - **Before M3 (Task 3.1):** concrete database needed, or an approved temporary adapter (e.g. SQLite) via a new ADR.
-- Recette host map is empty until the recette domain is bought (ADR-017, Task 1.4).
+- Recette host map is still empty: Task 1.4 fills it with the ADR-022 hosts.
 - Node 26 becomes LTS on 2026-10-28; we stay on 24 until Payload builds with 26 (ADR-018).
 - First `pnpm lint` after a fresh install can take minutes on Windows (antivirus); later runs ~25 s. Watch it in CI.
 - Free-text scrubbing is best-effort (patterns); the rule stays "structured fields, never interpolate personal data".
@@ -153,20 +157,22 @@ Updated: 2026-10-20 by Claude (session 3 — Task 1.2 in review (PR #11); Task 1
   before `docker builder prune` (it removes other projects' build cache too).
 
 ## Waiting on human / PO
-- Supervisor: manual test of Task 1.2 (both hosts, phone width, Lighthouse in Chrome DevTools).
 - PO: public contact address for each site (organization mailbox, e.g. a `contact@` address); academy logo files
   (SVG, + favicon); vector source of the Career Boost logo; validation of the French copy in
   `apps/web/src/modules/content/under-construction.ts`. **Before go-live** the two `contactEmail: null` must be filled.
 - Human (test phase, ADR-021): create the Oracle Cloud account (EU home region, consider Pay As You Go + budget
   alert), the VCN and the Arm VM (`docs/runbooks/server-setup.md` §11), then run §3–§6 and send the `verify.sh` output. Apply the Cloudflare zone settings
   (`docs/runbooks/cloudflare-dns.md` §1); records come with Tasks 1.4/5.9/9.5. Confirm or amend ADR-020.
+- Supervisor: in SonarCloud, mark issue docker:S6471 on `infra/server/test/Dockerfile` as "Safe" (the test image
+  stands in for a whole server and must run as root); SonarCloud is not configured from this repository.
 - Supervisor: add the `docker` and `shellcheck` checks to both rulesets (`docs/runbooks/github-repository-settings.md` §3).
 - Supervisor: GitHub auto-merge is disabled in the repository settings (an attempt on PR #10 was refused); enable it
   only if you want the agent to use it.
 - Supervisor: confirm the repository settings runbook was applied (`docs/runbooks/github-repository-settings.md`).
 - Supervisor: concrete database choice (ADR-005), at the latest before M3.
 - Supervisor: confirm ADR-019.
-- PO items listed in `docs/ai/01_ARCHITECTURE.md` §17 (recette domain, shared accounts, brand files, …).
+- PO items listed in `docs/ai/01_ARCHITECTURE.md` §17 (shared accounts, brand files, …). Recette domain: postponed
+  until accepting traffic (ADR-022).
 
 ## Supervisor's machine (Windows 11) — notes for the agent
 - Node.js 24.20.0 (winget), pnpm 11.28.6 via Corepack (`corepack enable pnpm` was run as admin), GitHub CLI 2.102.0
@@ -179,7 +185,7 @@ Updated: 2026-10-20 by Claude (session 3 — Task 1.2 in review (PR #11); Task 1
 - Large `docker`/Windows disk checks are slow here (antivirus): scan targeted folders, not the whole drive.
 
 ## Next step (exact)
-1. Supervisor tests Task 1.2 manually (PR #11), then merges it; then reviews the Task 1.3 PR (retargeted to `develop`).
+1. PR #12 (Task 1.3) merged at the supervisor's request once CI is green (SonarCloud: see "Waiting on human").
 2. Human creates the Oracle Cloud VM and runs the Task 1.3 runbook on it (§11, then §3–§6).
 3. After each merge: sync `develop`, delete the branch (§4b).
 4. Then Task 1.4 — Compose projects & Caddy (needs the VPS and, for recette, the recette domain). Post the plan first.

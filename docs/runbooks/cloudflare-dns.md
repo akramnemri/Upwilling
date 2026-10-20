@@ -40,22 +40,36 @@
 The production stack runs on a non-public test hostname before each launch (01_ARCHITECTURE.md §16).
 Its name is chosen in Task 1.5. Until then, do not add other records for the VPS.
 
-## 4. Recette zone (separate domain, ADR-017; example `upwilling-recette.fr`)
+## 4. Recette during the test phase (ADR-022): hosts in the `upwilling.fr` zone
+
+Free while we test. First-level names only: Cloudflare's free certificate does not cover `a.b.upwilling.fr`.
+
+| Name | Type | Content | Proxy | When |
+|---|---|---|---|---|
+| `recette` | A / AAAA | server IP | Proxied | Task 1.4 |
+| `recette-careerboost` | A / AAAA | server IP | Proxied | Task 1.4 |
+| `recette-admin` | A / AAAA | server IP | Proxied + Cloudflare Access | Task 1.4 |
+| `recette-hooks` | A / AAAA | server IP | Proxied | Task 1.4 |
+| `recette-stats` | A / AAAA | server IP | Proxied + Cloudflare Access | Task 5.8 |
+
+Before accepting traffic: buy the recette domain, create §5's records, then delete these `recette*` records.
+
+## 5. Recette zone after the test phase (separate domain, ADR-017; example `upwilling-recette.fr`)
 
 Bought by the human (PO decision, 01_ARCHITECTURE.md §17). Never a `*.upwilling.fr` name: production session
 cookies would reach it.
 
 | Name | Type | Content | Proxy | When |
 |---|---|---|---|---|
-| `@` / `www` | A / AAAA, CNAME | VPS IP / apex | Proxied | Task 1.4 |
-| `careerboost` | A / AAAA | VPS IP | Proxied | Task 1.4 |
-| `admin` | A / AAAA | VPS IP | Proxied + Cloudflare Access | Task 1.4 |
-| `hooks` | A / AAAA | VPS IP | Proxied | Task 1.4 |
+| `@` / `www` | A / AAAA, CNAME | VPS IP / apex | Proxied | Before accepting traffic |
+| `careerboost` | A / AAAA | VPS IP | Proxied | Before accepting traffic |
+| `admin` | A / AAAA | VPS IP | Proxied + Cloudflare Access | Before accepting traffic |
+| `hooks` | A / AAAA | VPS IP | Proxied | Before accepting traffic |
 | `stats` | A / AAAA | VPS IP | Proxied + Cloudflare Access | Task 5.8 |
 
 Every recette host is protected (basic auth in Caddy or Cloudflare Access) and sends `X-Robots-Tag: noindex, nofollow`.
 
-## 5. Report to the agent
+## 6. Report to the agent
 
 Send: the zone settings applied (screenshot or list), the names of the records created (not the IP), and the
 recette domain once bought. The agent adds the recette hosts to the app's allowlist in Task 1.4.
