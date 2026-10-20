@@ -53,7 +53,8 @@ COPY --from=build /repo/apps/web/.next/standalone ./
 # Next.js leaves client assets out of the standalone folder (it expects a CDN); server.js serves them from here.
 COPY --from=build /repo/apps/web/.next/static ./apps/web/.next/static
 COPY --from=build /repo/apps/web/dist ./apps/web/dist
-# apps/web/public does not exist yet (Task 1.2 adds the favicon): copy it to ./apps/web/public then.
+# Static files (brand logos, favicons, Open Graph images): also left out of standalone, served by server.js.
+COPY --from=build /repo/apps/web/public ./apps/web/public
 COPY --chmod=755 apps/web/docker/entrypoint.sh /usr/local/bin/upwilling-entrypoint
 
 # Next.js writes its data cache here at runtime: the one writable app path (compose mounts a tmpfs on it).

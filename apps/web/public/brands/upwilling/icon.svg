@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <!-- PLACEHOLDER (Task 1.2): simple sun-and-mountains mark until the PO sends the academy logo files. -->
+  <rect width="64" height="64" rx="12" fill="#ffffff"/>
+  <circle cx="32" cy="26" r="16" fill="#F89808"/>
+  <path d="M4 54 L22 22 L34 42 L42 30 L60 54 Z" fill="#389840"/>
+</svg>
