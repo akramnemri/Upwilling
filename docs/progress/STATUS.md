@@ -7,8 +7,10 @@ Updated: 2026-10-20 by Claude (session 3 — Task 1.2 in review (PR #11); Task 1
 
 ## Current position
 - Milestone: M1 — Deployment chain (Essai 1). M0 is complete (database parts deferred by ADR-005).
-- Task: 1.3 — Server provisioning runbook & scripts [HUMAN] — state: **scripts and runbooks written and tested in
-  containers; waiting for the human to buy the VPS and run them** (`docs/runbooks/server-setup.md`).
+- Task: 1.3 — Server provisioning runbook & scripts [HUMAN] — state: **done on the agent side** (scripts and runbooks
+  tested in Ubuntu 26.04/24.04 containers). Manual test **waived** by the supervisor (2026-10-20). The real run is
+  deferred: no server yet ("we will first use free solutions to test and switch to others when we decide to start
+  accepting traffic"). Hosting for the test phase: decision pending (see "Waiting on human / PO").
   The supervisor asked for "common sense and standard practice" (2026-10-20): choices recorded in ADR-020 (proposed).
 - Branch / PR: `feat/m1-server-provisioning` → `feat/m1-brand-pages` (stacked on PR #11, like 1.1b on #9).
 - Task 1.2 (PR #11, `feat/m1-brand-pages` → `develop`): waiting for the supervisor's manual test and PO inputs.
@@ -147,8 +149,9 @@ Updated: 2026-10-20 by Claude (session 3 — Task 1.2 in review (PR #11); Task 1
 - PO: public contact address for each site (organization mailbox, e.g. a `contact@` address); academy logo files
   (SVG, + favicon); vector source of the Career Boost logo; validation of the French copy in
   `apps/web/src/modules/content/under-construction.ts`. **Before go-live** the two `contactEmail: null` must be filled.
-- Human (Task 1.3): buy the VPS (8 GB, EU, Ubuntu 26.04 LTS), follow `docs/runbooks/server-setup.md`, send back the
-  `verify.sh` output and the SSH/hello-world confirmation. Apply the Cloudflare zone settings
+- Supervisor: hosting for the test phase. The VPS purchase is postponed until real traffic (2026-10-20); a free option
+  is wanted first. Agent's recommendation: Oracle Cloud Always Free Arm VM (needs an ADR, an arm64 image, and the
+  account created by the human). Then follow `docs/runbooks/server-setup.md` on that VM. Apply the Cloudflare zone settings
   (`docs/runbooks/cloudflare-dns.md` §1); records come with Tasks 1.4/5.9/9.5. Confirm or amend ADR-020.
 - Supervisor: add the `docker` and `shellcheck` checks to both rulesets (`docs/runbooks/github-repository-settings.md` §3).
 - Supervisor: GitHub auto-merge is disabled in the repository settings (an attempt on PR #10 was refused); enable it
@@ -170,6 +173,6 @@ Updated: 2026-10-20 by Claude (session 3 — Task 1.2 in review (PR #11); Task 1
 
 ## Next step (exact)
 1. Supervisor tests Task 1.2 manually (PR #11), then merges it; then reviews the Task 1.3 PR (retargeted to `develop`).
-2. Human runs the Task 1.3 runbook on the real VPS and reports `verify.sh` output (Task 1.3 is done only then).
+2. Supervisor decides the test-phase hosting; the human then runs the Task 1.3 runbook on that server.
 3. After each merge: sync `develop`, delete the branch (§4b).
 4. Then Task 1.4 — Compose projects & Caddy (needs the VPS and, for recette, the recette domain). Post the plan first.
