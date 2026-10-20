@@ -1,33 +1,28 @@
 # STATUS
 
-Updated: 2026-10-20 by Claude (session 4 — Task 1.4 done (PR #13, not merged yet); Task 1.5a implemented, PR
-stacked on PR #13, waiting for the supervisor's review)
-
-> This file is updated on the task branch. Until PRs #13 and the 1.5a PR are merged, `develop` is behind: start a
-> new session from `feat/m1-image-publish` (or after the merges, from `develop`).
+Updated: 2026-10-20 by Claude (session 4 — Tasks 1.3, 1.4 and 1.5a merged; next: the first publish on develop,
+then Task 1.5b. A good moment to start a fresh session.)
 
 ## Handoff for the next session (read first)
-- **Two PRs open, stacked:** #13 (Task 1.4, `feat/m1-compose-caddy` → `develop`, manual test waived, waiting for
-  "merge") and the Task 1.5a PR (`feat/m1-image-publish` → `feat/m1-compose-caddy`; retarget to `develop`
-  after #13 is merged).
 - **Hosting for the test phase** (supervisor, 2026-10-20): the domain and the server are not ready, so the
   **supervisor's machine is the server**, and public access must be free with no bank card. Agent's choice,
   accepted with the "go" for Task 1.5: **Tailscale Funnel** for public HTTPS names (`<name>.<tailnet>.ts.net`),
   Caddy mapping them to the ADR-022 recette hosts so the app does not change; **pull-based deploys** (an agent
   on the machine follows tags in GHCR) instead of SSH, because nothing can connect in. Self-hosted GitHub
   runner rejected (public repo: fork PRs could run code on the machine). To be recorded in ADR-024 with 1.5b.
-- **Task 1.5 split** (agent, accepted with "go"): 1.5a image published to GHCR + `GET /api/version` (this PR);
+- **Task 1.5 split** (agent, accepted with "go"): 1.5a image published to GHCR + `GET /api/version` (merged);
   1.5b deploy agent on the local machine + promotion/rollback workflows; 1.5c Tailscale Funnel ingress.
+- **Tailscale:** the supervisor installed Tailscale on the laptop (2026-10-20) and pasted an auth key in the chat.
+  The agent did not use or store it and asked the supervisor to **revoke it**. In 1.5c the supervisor creates the
+  right kind of key and writes it straight into the local `.env`; never ask for a secret in the chat.
 - Oracle Cloud (ADR-021) and the Cloudflare setup (ADR-023) stay the plan once a card / the domain are available.
 
 ## Current position
 - Milestone: M1 — Deployment chain (Essai 1). M0 is complete.
-- Task: 1.5a — Image publishing — state: **implemented, waiting for the supervisor's review**. CI builds the image
-  natively on amd64 and arm64 and checks `/api/version` on PRs; on pushes to develop/main, after every other job
-  passed, pushes `<sha>-<arch>` and the multi-arch `ghcr.io/akramnemri/upwilling-web:<sha>`. The real publish can
-  only be observed after the merge to `develop` (push event); then the supervisor makes the package public
+- Task: 1.5a — Image publishing — state: **merged** (supervisor reviewed, "merge", 2026-10-20). The first real
+  publish runs on the push to `develop`; then the supervisor makes the package public
   (`docs/runbooks/image-publishing.md` §2).
-- Branch / PR: `feat/m1-image-publish` → `feat/m1-compose-caddy` (stacked).
+- Branch / PR: none open.
 
 ## Last completed tasks
 - 0.1 — Verify versions and record foundational ADRs — merged 2026-10-18 (PR #1, `efd7107`)
@@ -42,8 +37,10 @@ stacked on PR #13, waiting for the supervisor's review)
   manual test (phone width, Lighthouse) not reported; PO inputs still open (contact emails, academy logo, copy)
 - 1.3 — Server provisioning runbook & scripts — merged 2026-10-20 (PR #12, `b04c200`), manual test waived, real run
   deferred (no server). Merged despite SonarCloud's `docker:S6471` at the supervisor's request ("merge").
-- 1.4 — Compose projects & Caddy — done 2026-10-20 (PR #13, not merged yet), manual test waived (no server).
+- 1.4 — Compose projects & Caddy — merged 2026-10-20 (PR #13, `2c4cc44`), manual test waived (no server).
   Supervisor decisions: PostgreSQL confirmed (ADR-005), separate edge project, basic auth on recette-admin, ADR-023 accepted.
+- 1.5a — Image publishing to GHCR, `GET /api/version` — merged 2026-10-20 (PR #14), reviewed by the supervisor;
+  the publish itself is checked on the first push to develop.
 
 ## What exists now (so a new session does not have to rediscover it)
 - pnpm 11 workspace + Turborepo: `apps/web` (Next.js 16.3.8, App Router, `src/`), `packages/config`
@@ -229,11 +226,10 @@ stacked on PR #13, waiting for the supervisor's review)
 - Large `docker`/Windows disk checks are slow here (antivirus): scan targeted folders, not the whole drive.
 
 ## Next step (exact)
-1. Supervisor: "merge" PR #13 (Task 1.4, manual test waived) → squash, sync `develop`, delete the branch (§4b);
-   then retarget the 1.5a PR to `develop`.
-2. Supervisor reviews the 1.5a PR. After it is merged: watch the first `publish` / `publish-manifest` run on
-   `develop`, then the supervisor makes the package public (`docs/runbooks/image-publishing.md` §2).
-3. Then Task 1.5b (plan first): pull-based deploy agent on the supervisor's machine, `recette`/`production` tags,
+1. Check the first CI run on `develop` after PR #14: jobs `publish (amd64)`, `publish (arm64)`, `publish-manifest`.
+   Then the supervisor makes the package public (`docs/runbooks/image-publishing.md` §2) and confirms the
+   Tailscale key from the chat was revoked.
+2. Then Task 1.5b (plan first): pull-based deploy agent on the supervisor's machine, `recette`/`production` tags,
    promotion with GitHub environment approval, rollback workflow, ADR-024. Then 1.5c (Tailscale Funnel).
-4. When a card is available: human creates the Oracle VM (runbook §11) and runs §3–§6, then
+3. When a card is available: human creates the Oracle VM (runbook §11) and runs §3–§6, then
    `docs/runbooks/compose-stacks.md`; the server-dependent steps of 1.4–1.6 resume.
