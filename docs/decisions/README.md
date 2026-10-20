@@ -25,3 +25,4 @@ and setting the old one's status to "Superseded by ADR-YYY".
 | [017](ADR-017-recette-environment.md) | Recette on the same VPS, separate domain | Accepted |
 | [018](ADR-018-pinned-versions.md) | Pinned versions | Accepted |
 | [019](ADR-019-typescript-strictness.md) | TypeScript strictness options | Proposed (re-checked in Task 3.1) |
+| [020](ADR-020-server-baseline.md) | Server baseline: OS, access, hardening | Proposed (supervisor to confirm) |
