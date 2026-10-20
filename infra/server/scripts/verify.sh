@@ -10,7 +10,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 . "$SCRIPT_DIR/lib.sh"
 
 readonly DEPLOY_USER="deploy"
-readonly APP_DIRS=("/srv/upwilling-prod" "/srv/upwilling-recette")
+readonly APP_DIRS=("/srv/upwilling-edge" "/srv/upwilling-prod" "/srv/upwilling-recette")
 # TCP ports that may listen on a public interface (Caddy adds 80/443 in Task 1.4).
 readonly ALLOWED_PUBLIC_PORTS=(22 80 443)
 

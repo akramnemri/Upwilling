@@ -34,6 +34,8 @@ playwright/.cache/
 *.crt
 id_rsa*
 id_ed25519*
+# Throwaway certificates and env files of infra/server/test/smoke-stacks.sh
+infra/server/test/.work/
 
 # Database dumps and backups
 *.dump

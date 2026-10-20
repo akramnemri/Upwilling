@@ -1,0 +1,164 @@
+# Edge proxy for both stacks (Task 1.4; 01_ARCHITECTURE.md §5.1, §5.2; ADR-022, ADR-023).
+# Runs in compose.edge.yaml. Cloudflare is the only client: every DNS record is proxied, so visitors never
+# connect here directly. Runbook: docs/runbooks/compose-stacks.md
+#
+# Upstreams are reached by network alias (prod-*, recette-*), never by service name: both stacks have a
+# service called web-upwilling, and Caddy sits on both edge networks.
+{
+	# TLS uses the Cloudflare origin certificate (files below): no ACME, no port 80, no HTTP->HTTPS redirect
+	# here (Cloudflare's "Always Use HTTPS" does it). Inside the container Caddy runs as a non-root user,
+	# so it listens on 8443; compose publishes it as 443.
+	auto_https off
+	https_port 8443
+
+	servers {
+		# The real visitor IP comes from Cloudflare's header, trusted only from Cloudflare's published ranges
+		# (https://www.cloudflare.com/ips/, checked 2026-10-20; refresh during the monthly maintenance pass).
+		trusted_proxies static 173.245.48.0/20 103.21.244.0/22 103.22.200.0/22 103.31.4.0/22 141.101.64.0/18 108.162.192.0/18 190.93.240.0/20 188.114.96.0/20 197.234.240.0/22 198.41.128.0/17 162.158.0.0/15 104.16.0.0/13 104.24.0.0/14 172.64.0.0/13 131.0.72.0/22 2400:cb00::/32 2606:4700::/32 2803:f800::/32 2405:b500::/32 2405:8100::/32 2a06:98c0::/29 2c0f:f248::/32
+		client_ip_headers CF-Connecting-IP
+		# The firewall opens TCP 443 only, so no HTTP/3 (UDP).
+		protocols h1 h2
+		timeouts {
+			read_header 10s
+			idle 2m
+		}
+	}
+}
+
+# Cloudflare origin certificate + Authenticated Origin Pulls (ADR-023): the TLS handshake fails unless the
+# client presents a certificate signed by our own origin-pull CA, which only Cloudflare holds. A visitor who
+# finds the server's IP can therefore not bypass Cloudflare (and Cloudflare Access on the admin hosts).
+(origin_tls) {
+	tls /certs/origin.pem /certs/origin.key {
+		client_auth {
+			mode require_and_verify
+			trust_pool file /certs/origin-pull-ca.pem
+		}
+	}
+}
+
+# The app sets page-level headers itself (robots, and a Content-Security-Policy later). These apply to every
+# response. No Strict-Transport-Security yet: it is hard to undo and is enabled at each site's launch
+# (Task 5.9 / 9.5, docs/runbooks/cloudflare-dns.md §1).
+(security_headers) {
+	header {
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), browsing-topics=()"
+		# Payload's live preview (M5) frames the sites from the admin host: revisit then.
+		X-Frame-Options "DENY"
+		Cross-Origin-Opener-Policy "same-origin"
+		-Server
+		-X-Powered-By
+	}
+}
+
+# import proxy <upstream alias> <max request body>
+(proxy) {
+	request_body {
+		max_size {args[1]}
+	}
+	reverse_proxy {args[0]}:3000
+}
+
+# Webhooks only (01_ARCHITECTURE.md §5.2). The app enforces the same rule; this keeps everything else away
+# from the cms container. Providers cannot send basic auth, so this host has none.
+# import webhooks_only <upstream alias>
+(webhooks_only) {
+	@webhooks path /api/webhooks /api/webhooks/*
+	handle @webhooks {
+		import proxy {args[0]} 1MB
+	}
+	handle {
+		respond 404
+	}
+}
+
+# Every recette host (ADR-017, ADR-022). The hash is a bcrypt hash (caddy hash-password), never a password.
+# If either variable is empty Caddy refuses to start, so recette is never left open by mistake.
+(recette_noindex) {
+	header X-Robots-Tag "noindex, nofollow"
+}
+(recette_auth) {
+	basic_auth {
+		{$RECETTE_BASIC_AUTH_USER} {$RECETTE_BASIC_AUTH_HASH}
+	}
+}
+
+# ---------------------------------------------------------------- production (compose.production.yaml)
+# DNS records are created per site at launch (docs/runbooks/cloudflare-dns.md §3).
+
+https://upwilling.fr {
+	import origin_tls
+	import security_headers
+	import proxy prod-web-upwilling 2MB
+}
+
+https://www.upwilling.fr {
+	import origin_tls
+	import security_headers
+	redir https://upwilling.fr{uri} permanent
+}
+
+https://careerboost.upwilling.fr {
+	import origin_tls
+	import security_headers
+	import proxy prod-web-careerboost 2MB
+}
+
+# Behind Cloudflare Access (human setting, docs/runbooks/cloudflare-dns.md).
+https://admin.upwilling.fr {
+	import origin_tls
+	import security_headers
+	# Media uploads go through the admin.
+	import proxy prod-cms 50MB
+}
+
+https://hooks.upwilling.fr {
+	import origin_tls
+	import security_headers
+	import webhooks_only prod-cms
+}
+
+# ---------------------------------------------------------------- recette (compose.recette.yaml)
+# Test-phase hosts under upwilling.fr (ADR-022). They move to the recette domain before accepting traffic.
+
+https://recette.upwilling.fr {
+	import origin_tls
+	import security_headers
+	import recette_noindex
+	import recette_auth
+	import proxy recette-web-upwilling 2MB
+}
+
+https://recette-careerboost.upwilling.fr {
+	import origin_tls
+	import security_headers
+	import recette_noindex
+	import recette_auth
+	import proxy recette-web-careerboost 2MB
+}
+
+# Basic auth stands in until Cloudflare Access protects this host (supervisor, 2026-10-20).
+https://recette-admin.upwilling.fr {
+	import origin_tls
+	import security_headers
+	import recette_noindex
+	import recette_auth
+	import proxy recette-cms 50MB
+}
+
+https://recette-hooks.upwilling.fr {
+	import origin_tls
+	import security_headers
+	import recette_noindex
+	import webhooks_only recette-cms
+}
+
+# ---------------------------------------------------------------- anything else
+# A name the certificate covers but no block above serves (e.g. a stray *.upwilling.fr record).
+https:// {
+	import origin_tls
+	import security_headers
+	respond 404
+}
