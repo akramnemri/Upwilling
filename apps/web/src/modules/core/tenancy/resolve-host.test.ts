@@ -56,55 +56,36 @@ describe("resolveHost — local", () => {
 });
 
 describe("resolveHost — environments are isolated", () => {
-  it("resolves production hosts in production only", () => {
-    expect(resolveHost("upwilling.fr", "production")).toEqual({
-      kind: "site",
-      tenant: "upwilling",
-    });
-    expect(resolveHost("careerboost.upwilling.fr", "production")).toEqual({
-      kind: "site",
-      tenant: "careerboost",
-    });
-    expect(resolveHost("admin.upwilling.fr", "production")).toEqual({ kind: "admin" });
-    expect(resolveHost("hooks.upwilling.fr", "production")).toEqual({ kind: "hooks" });
-    expect(resolveHost("upwilling.fr", "local")).toBeNull();
+  const UPWILLING_SITE = { kind: "site", tenant: "upwilling" };
+  const CAREERBOOST_SITE = { kind: "site", tenant: "careerboost" };
+
+  it.each([
+    ["production", "upwilling.fr", UPWILLING_SITE],
+    ["production", "careerboost.upwilling.fr", CAREERBOOST_SITE],
+    ["production", "admin.upwilling.fr", { kind: "admin" }],
+    ["production", "hooks.upwilling.fr", { kind: "hooks" }],
+    // Test-phase recette hosts (ADR-022).
+    ["recette", "recette.upwilling.fr", UPWILLING_SITE],
+    ["recette", "recette-careerboost.upwilling.fr", CAREERBOOST_SITE],
+    ["recette", "recette-admin.upwilling.fr", { kind: "admin" }],
+    ["recette", "recette-hooks.upwilling.fr", { kind: "hooks" }],
+  ] as const)("%s: resolves %s", (deployEnv, host, expected) => {
+    expect(resolveHost(host, deployEnv)).toEqual(expected);
   });
 
-  it("refuses local hosts in production", () => {
-    expect(resolveHost("upwilling.localhost", "production")).toBeNull();
-  });
-
-  it("refuses www in production (redirected by Caddy)", () => {
-    expect(resolveHost("www.upwilling.fr", "production")).toBeNull();
-  });
-
-  it("refuses VLAB, which this project does not serve", () => {
-    expect(resolveHost("vlab.upwilling.fr", "production")).toBeNull();
-  });
-
-  it("resolves the test-phase recette hosts on recette only (ADR-022)", () => {
-    expect(resolveHost("recette.upwilling.fr", "recette")).toEqual({
-      kind: "site",
-      tenant: "upwilling",
-    });
-    expect(resolveHost("recette-careerboost.upwilling.fr", "recette")).toEqual({
-      kind: "site",
-      tenant: "careerboost",
-    });
-    expect(resolveHost("recette-admin.upwilling.fr", "recette")).toEqual({ kind: "admin" });
-    expect(resolveHost("recette-hooks.upwilling.fr", "recette")).toEqual({ kind: "hooks" });
-    expect(resolveHost("recette.upwilling.fr", "production")).toBeNull();
-    expect(resolveHost("recette-admin.upwilling.fr", "production")).toBeNull();
-  });
-
-  it("refuses production and local hosts on recette", () => {
-    expect(resolveHost("upwilling.fr", "recette")).toBeNull();
-    expect(resolveHost("admin.upwilling.fr", "recette")).toBeNull();
-    expect(resolveHost("upwilling.localhost", "recette")).toBeNull();
-  });
-
-  it("refuses the recette stats host, which Caddy routes to Umami, not to the app", () => {
-    expect(resolveHost("recette-stats.upwilling.fr", "recette")).toBeNull();
+  it.each([
+    ["production", "upwilling.localhost", "a local host"],
+    ["production", "www.upwilling.fr", "www (redirected by Caddy)"],
+    ["production", "vlab.upwilling.fr", "VLAB, which this project does not serve"],
+    ["production", "recette.upwilling.fr", "a recette host"],
+    ["production", "recette-admin.upwilling.fr", "a recette host"],
+    ["local", "upwilling.fr", "a production host"],
+    ["recette", "upwilling.fr", "a production host"],
+    ["recette", "admin.upwilling.fr", "a production host"],
+    ["recette", "upwilling.localhost", "a local host"],
+    ["recette", "recette-stats.upwilling.fr", "the stats host (Caddy routes it to Umami)"],
+  ] as const)("%s: refuses %s, %s", (deployEnv, host, _reason) => {
+    expect(resolveHost(host, deployEnv)).toBeNull();
   });
 });
 

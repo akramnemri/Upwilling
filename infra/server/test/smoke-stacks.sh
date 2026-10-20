@@ -127,6 +127,9 @@ https() { request "$@" -o /dev/null -w '%{http_code}'; }
 headers() { request "$@" -D - -o /dev/null | tr -d '\r'; }
 body() { request "$@"; }
 AUTH=(-u "$auth_user:$auth_password")
+# Caddy's own 404 has no request ID; a response from the app does (its proxy sets one on every response).
+REQUEST_ID='^x-request-id:'
+NOINDEX='^x-robots-tag: noindex, nofollow'
 
 expect_status() {
   local expected=$1 host=$2 path=$3 label=$4 actual
@@ -162,19 +165,18 @@ expect_status 200 recette.upwilling.fr / "academy site" "${AUTH[@]}"
 expect_body recette.upwilling.fr / "Notre nouveau site arrive bientôt." "${AUTH[@]}"
 expect_status 200 recette.upwilling.fr /api/ready "readiness" "${AUTH[@]}"
 expect_status 404 recette.upwilling.fr /admin "no admin on a site host" "${AUTH[@]}"
-expect_header recette.upwilling.fr / '^x-robots-tag: noindex, nofollow' present "${AUTH[@]}"
+expect_header recette.upwilling.fr / "$NOINDEX" present "${AUTH[@]}"
 # The 401 answer too, without credentials.
-expect_header recette.upwilling.fr / '^x-robots-tag: noindex, nofollow' present
+expect_header recette.upwilling.fr / "$NOINDEX" present
 expect_status 200 recette-careerboost.upwilling.fr / "Career Boost site" "${AUTH[@]}"
 expect_body recette-careerboost.upwilling.fr / "construire la vie que vous voulez demain" "${AUTH[@]}"
 expect_status 401 recette-admin.upwilling.fr / "admin without credentials"
 expect_status 200 recette-admin.upwilling.fr / "admin" "${AUTH[@]}"
 expect_body recette-admin.upwilling.fr / "espace d'administration" "${AUTH[@]}"
-# Caddy's own 404 has no request ID; a 404 from the app does (its proxy sets one on every response).
 expect_status 404 recette-hooks.upwilling.fr / "hooks host, no basic auth, root refused"
-expect_header recette-hooks.upwilling.fr /admin '^x-request-id:' absent
-expect_header recette-hooks.upwilling.fr /api/webhooks/smoke '^x-request-id:' present
-expect_header recette-hooks.upwilling.fr /api/webhooks/smoke '^x-robots-tag: noindex, nofollow' present
+expect_header recette-hooks.upwilling.fr /admin "$REQUEST_ID" absent
+expect_header recette-hooks.upwilling.fr /api/webhooks/smoke "$REQUEST_ID" present
+expect_header recette-hooks.upwilling.fr /api/webhooks/smoke "$NOINDEX" present
 # Dot segments must not walk out of the webhook prefix, raw or percent-encoded.
 expect_status 404 recette-hooks.upwilling.fr /api/webhooks/../admin "dot segments" --path-as-is
 expect_status 404 recette-hooks.upwilling.fr /api/webhooks/%2e%2e/admin "encoded dot segments" --path-as-is
@@ -189,8 +191,8 @@ expect_header upwilling.fr / '^x-robots-tag:' absent
 expect_status 301 www.upwilling.fr "/formations?ref=smoke" "www redirect"
 expect_header www.upwilling.fr "/formations?ref=smoke" '^location: https://upwilling.fr/formations\?ref=smoke$' present
 expect_status 404 hooks.upwilling.fr / "hooks host root"
-expect_header hooks.upwilling.fr /admin '^x-request-id:' absent
-expect_header hooks.upwilling.fr /api/webhooks/smoke '^x-request-id:' present
+expect_header hooks.upwilling.fr /admin "$REQUEST_ID" absent
+expect_header hooks.upwilling.fr /api/webhooks/smoke "$REQUEST_ID" present
 
 echo "== Security headers"
 for host in upwilling.fr careerboost.upwilling.fr admin.upwilling.fr; do
