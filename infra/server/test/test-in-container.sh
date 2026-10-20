@@ -114,7 +114,7 @@ fi
 
 echo "== Container networking (outbound traffic goes through the FORWARD chain)"
 if in_box "docker run --rm busybox:1.37@sha256:bdf57e528e45e4433820e045b29b4597825a1c9e38353532d90a01445013f82e \
-  wget -q --spider -T 10 http://download.docker.com/" >/dev/null 2>&1; then
+  wget -q --spider -T 10 https://download.docker.com/" >/dev/null 2>&1; then
   pass "a container can reach the internet"
 else
   fail "a container cannot reach the internet"

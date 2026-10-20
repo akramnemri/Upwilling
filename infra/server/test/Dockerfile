@@ -1,6 +1,8 @@
 # A throwaway "fresh VPS" for testing infra/server/scripts on a developer machine (see test-in-container.sh).
 # Ubuntu with systemd as PID 1, like a real server. Never deployed anywhere.
 ARG UBUNTU_IMAGE=ubuntu:26.04@sha256:c098726dd9b9733f3e885f8de0ef375206a311b0a317eadc40d347b1115fb944
+# Runs as root on purpose: it stands in for a whole server (systemd as PID 1), and provision.sh must run as root.
+# (SonarCloud rule docker:S6471 is reviewed as "safe" for this test-only image.)
 FROM ${UBUNTU_IMAGE}
 
 RUN apt-get update \

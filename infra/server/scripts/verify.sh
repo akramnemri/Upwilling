@@ -119,7 +119,10 @@ log "Listening ports (non-loopback TCP)"
 # Docker-published ports bypass ufw: anything listening publicly besides 22/80/443 is a finding.
 while read -r address; do
   port=${address##*:}
-  case $address in 127.* | \[::1\]:*) continue ;; esac
+  case $address in
+    127.* | \[::1\]:*) continue ;; # loopback: not reachable from outside
+    *) ;;
+  esac
   if [[ " ${ALLOWED_PUBLIC_PORTS[*]} " == *" $port "* ]]; then
     pass "port $port listening ($address)"
   else
