@@ -21,10 +21,12 @@ waiting for the supervisor's review; no server available yet)
 
 ## Current position
 - Milestone: M1 — Deployment chain (Essai 1). M0 is complete.
-- Task: 1.4 — Compose projects & Caddy — state: **implemented, waiting for the supervisor's review**. Files and a
+- Task: 1.4 — Compose projects & Caddy — state: **done, manual test waived** (supervisor, 2026-10-20). Files and a
   local smoke test (64 checks, also in CI); the [HUMAN] start of recette on a server is deferred (no server).
   Supervisor decisions (2026-10-20): PostgreSQL confirmed (ADR-005 accepted); separate edge (Caddy) compose project
-  OK; basic auth on `recette-admin` until Cloudflare Access.
+  OK; basic auth on `recette-admin` until Cloudflare Access; ADR-023 accepted.
+- Hosting (supervisor, 2026-10-20): domain and server are not ready; use the **local machine as the server** and a
+  free public-access method that needs no bank card, chosen by the agent. Next task left to the agent's judgment.
 - Branch / PR: `feat/m1-compose-caddy` → `develop`.
 
 ## Last completed tasks
@@ -144,7 +146,7 @@ waiting for the supervisor's review; no server available yet)
   `recette-admin`, `recette-hooks`, later `recette-stats`), host-only cookies only, no real users; hard switch to a
   separate recette domain before accepting traffic. Task 1.4 added these hosts (not `recette-stats`, which goes to
   Umami) to the `recette` allowlist and Caddy.
-- ADR-023 (proposed, Task 1.4): Cloudflare origin certificate + zone-level Authenticated Origin Pulls with our own
+- ADR-023 (accepted 2026-10-20, Task 1.4): Cloudflare origin certificate + zone-level Authenticated Origin Pulls with our own
   CA (origin only reachable through Cloudflare, so Access cannot be bypassed); Caddy publishes 443 only (no port 80,
   no HTTP/3); separate edge compose project (supervisor-approved 2026-10-20); basic auth on every recette host
   except hooks, standing in for Cloudflare Access on `recette-admin` (supervisor, 2026-10-20). HSTS waits for launch.
@@ -199,7 +201,7 @@ waiting for the supervisor's review; no server available yet)
   (EU home region, consider Pay As You Go + budget alert), the VCN and the Arm VM (`docs/runbooks/server-setup.md` §11), then run §3–§6 and send the `verify.sh` output. Apply the Cloudflare zone settings
   (`docs/runbooks/cloudflare-dns.md` §1); records come with Tasks 1.4/1.5/5.9/9.5. Confirm or amend ADR-020.
 - Human (when the server exists): Task 1.4's manual step, `docs/runbooks/compose-stacks.md` (origin certificate,
-  Authenticated Origin Pulls, `.env` files, start edge + recette, recette DNS records, checks). Confirm or amend ADR-023.
+  Authenticated Origin Pulls, `.env` files, start edge + recette, recette DNS records, checks).
 - Supervisor (optional): in SonarCloud, mark docker:S6471 on `infra/server/test/Dockerfile` as "Safe"; PR #12 was
   merged without it, so the finding stays open on `develop` until then.
 - Supervisor: add the `docker` and `shellcheck` checks to both rulesets (`docs/runbooks/github-repository-settings.md` §3).
@@ -221,9 +223,10 @@ waiting for the supervisor's review; no server available yet)
 - Large `docker`/Windows disk checks are slow here (antivirus): scan targeted folders, not the whole drive.
 
 ## Next step (exact)
-1. Supervisor reviews the Task 1.4 PR (CI green incl. `smoke-stacks.sh`) and decides on the manual test (deferred
-   until a server exists, or waived). On "merge": squash-merge, sync `develop`, delete `feat/m1-compose-caddy` (§4b).
-2. Next task, the supervisor chooses: Task 1.5 (deployment workflows; files only until a server exists) or
-   Milestone 2 (Task 2.1, no hosting needed). Post the plan first; do not start unasked.
+1. PR #13 (Task 1.4): manual test waived; merge when the supervisor says so (squash, sync `develop`, delete the
+   branch, §4b).
+2. Next task (agent's choice, plan posted 2026-10-20, waiting for "go"): Task 1.5 adapted to the local machine as
+   the server — split into 1.5a (image published to GHCR per commit, `GET /api/version`), 1.5b (pull-based deploy
+   agent on the local machine + promotion/rollback workflows), 1.5c (public access through Tailscale Funnel, ADR-024).
 3. When a card is available: human creates the Oracle VM (runbook §11) and runs §3–§6, then
    `docs/runbooks/compose-stacks.md`; the server-dependent steps of 1.4–1.6 resume.

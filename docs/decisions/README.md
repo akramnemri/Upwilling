@@ -28,4 +28,4 @@ and setting the old one's status to "Superseded by ADR-YYY".
 | [020](ADR-020-server-baseline.md) | Server baseline: OS, access, hardening | Proposed (supervisor to confirm) |
 | [021](ADR-021-test-phase-hosting-oracle.md) | Test phase on an Oracle Cloud Always Free Arm VM | Accepted (test phase only; amends 003) |
 | [022](ADR-022-test-phase-recette-hosts.md) | Test-phase recette hosts under upwilling.fr | Accepted (test phase only; amends 017) |
-| [023](ADR-023-edge-tls-cloudflare-caddy.md) | Edge TLS: Cloudflare origin certificate + Authenticated Origin Pulls | Proposed (Task 1.4) |
+| [023](ADR-023-edge-tls-cloudflare-caddy.md) | Edge TLS: Cloudflare origin certificate + Authenticated Origin Pulls | Accepted |

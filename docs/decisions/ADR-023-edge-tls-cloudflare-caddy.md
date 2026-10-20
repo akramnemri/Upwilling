@@ -1,6 +1,6 @@
 # ADR-023 — Edge: TLS between Cloudflare and Caddy, origin locked to Cloudflare
 
-- Status: Proposed (Task 1.4; the supervisor asked for standard practice, 2026-10-20)
+- Status: **Accepted** (supervisor, 2026-10-20; proposed in Task 1.4)
 - Date: 2026-10-20
 - Relates to: ADR-003 (one VPS, Caddy, Cloudflare), ADR-017/ADR-022 (recette hosts), ADR-020 (server baseline:
   "restricting 80/443 to Cloudflare, reconsider with the TLS decision of Task 1.4")
