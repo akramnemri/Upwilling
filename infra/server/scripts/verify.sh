@@ -36,6 +36,7 @@ sshd_option_is() {
 in_group() { id -nG "$1" 2>/dev/null | tr ' ' '\n' | grep -qx "$2"; }
 dir_is() { [[ -d $1 && "$(stat -c '%a %U:%G' "$1")" == "$2" ]]; }
 ufw_allows() { ufw status | grep -Eq "^$1/tcp +ALLOW"; }
+iptables_accepts() { iptables -S INPUT | grep -Eq -- "--dport $1( |$).*-j ACCEPT"; }
 
 while [[ $# -gt 0 ]]; do
   case $1 in
@@ -78,13 +79,24 @@ check "public keys only" sshd_option_is authenticationmethods publickey
 check "only $ADMIN_USER and $DEPLOY_USER may log in" sshd_option_is allowusers "$ADMIN_USER $DEPLOY_USER"
 
 log "Firewall and intrusion prevention"
-check "ufw active" bash -c "ufw status | grep -q '^Status: active'"
-check "ufw denies incoming by default" bash -c "ufw status verbose | grep -q 'deny (incoming)'"
-for port in "${ALLOWED_PUBLIC_PORTS[@]}"; do
-  check "ufw allows $port/tcp" ufw_allows "$port"
-done
-extra_rules=$(ufw status | grep -E 'ALLOW' | grep -Ev '^(22|80|443)/tcp( \(v6\))? +ALLOW' || true)
-if [[ -n $extra_rules ]]; then fail "ufw has other ALLOW rules: $(echo "$extra_rules" | paste -sd ';')"; else pass "no other ufw ALLOW rules"; fi
+if is_oracle_cloud_image; then
+  info "Oracle Cloud image: iptables rules from $OCI_RULES_FILE (ADR-021). Check the VCN security list by hand."
+  check "ufw inactive (Oracle: ufw can stop the instance from booting)" bash -c "! ufw status 2>/dev/null | grep -q '^Status: active'"
+  check "Oracle essential rules present (chain InstanceServices)" bash -c "iptables -S | grep -q -- '-N InstanceServices'"
+  for port in "${ALLOWED_PUBLIC_PORTS[@]}"; do
+    check "iptables accepts $port/tcp" iptables_accepts "$port"
+    check "rules.v4 keeps $port/tcp open after a reboot" grep -Eq -- "--dport $port( |$).*-j ACCEPT" "$OCI_RULES_FILE"
+  done
+  check "INPUT ends with a REJECT rule (deny by default)" bash -c "iptables -S INPUT | tail -n 1 | grep -q -- '-j REJECT'"
+else
+  check "ufw active" bash -c "ufw status | grep -q '^Status: active'"
+  check "ufw denies incoming by default" bash -c "ufw status verbose | grep -q 'deny (incoming)'"
+  for port in "${ALLOWED_PUBLIC_PORTS[@]}"; do
+    check "ufw allows $port/tcp" ufw_allows "$port"
+  done
+  extra_rules=$(ufw status | grep -E 'ALLOW' | grep -Ev '^(22|80|443)/tcp( \(v6\))? +ALLOW' || true)
+  if [[ -n $extra_rules ]]; then fail "ufw has other ALLOW rules: $(echo "$extra_rules" | paste -sd ';')"; else pass "no other ufw ALLOW rules"; fi
+fi
 check "fail2ban sshd jail running" fail2ban-client status sshd
 
 log "Automatic security updates"

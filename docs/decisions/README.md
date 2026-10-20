@@ -26,3 +26,4 @@ and setting the old one's status to "Superseded by ADR-YYY".
 | [018](ADR-018-pinned-versions.md) | Pinned versions | Accepted |
 | [019](ADR-019-typescript-strictness.md) | TypeScript strictness options | Proposed (re-checked in Task 3.1) |
 | [020](ADR-020-server-baseline.md) | Server baseline: OS, access, hardening | Proposed (supervisor to confirm) |
+| [021](ADR-021-test-phase-hosting-oracle.md) | Test phase on an Oracle Cloud Always Free Arm VM | Accepted (test phase only; amends 003) |

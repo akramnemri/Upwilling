@@ -7,6 +7,11 @@ readonly SUPPORTED_UBUNTU_VERSIONS=("24.04" "26.04")
 
 DRY_RUN=false
 
+# Oracle Cloud's Ubuntu platform images manage the host firewall with iptables-persistent and essential rules
+# (chain InstanceServices) that protect the boot volume. Oracle: never use ufw on them (ADR-021).
+OCI_RULES_FILE=/etc/iptables/rules.v4
+is_oracle_cloud_image() { [[ -f $OCI_RULES_FILE ]] && grep -q 'InstanceServices' "$OCI_RULES_FILE"; }
+
 log() { printf '\n==> %s\n' "$*"; }
 info() { printf '    %s\n' "$*"; }
 warn() { printf '    WARNING: %s\n' "$*" >&2; }

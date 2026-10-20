@@ -8,6 +8,9 @@
 
 ## 1. What to buy and choose (human)
 
+**Test phase (now, ADR-021): no purchase.** Create the free Oracle Cloud VM in §11 first, then continue at §2.
+The table below is for the paid VPS, before the sites accept real traffic.
+
 | Item | Choice |
 |---|---|
 | VPS | 8 GB RAM minimum (01_ARCHITECTURE.md §5.1), 4 vCPU, 80 GB+ SSD, IPv4 (+ IPv6 if offered) |
@@ -31,7 +34,8 @@ ssh-keygen -t ed25519 -C "upwilling-deploy" -f ~/.ssh/upwilling_deploy -N ""
 
 ## 3. Copy the public keys and the scripts to the server
 
-Log in with the access the provider gives (often `root` with a password, or `ubuntu` with a key):
+Log in with the access the provider gives (often `root` with a password, or `ubuntu` with a key; on Oracle Cloud:
+`ubuntu` with the admin key, then use `sudo` for the commands below and `/tmp` instead of `/root` for the copies):
 
 ```bash
 scp ~/.ssh/upwilling_admin.pub ~/.ssh/upwilling_deploy.pub root@<server-ip>:/root/
@@ -116,7 +120,7 @@ If the provider offers snapshots, take one now ("baseline after Task 1.3").
 |---|---|
 | Users | `<admin>` (sudo, password + key), `deploy` (docker group, key only, no sudo) |
 | SSH | `/etc/ssh/sshd_config.d/10-upwilling.conf` |
-| Firewall | `ufw`: deny incoming, allow 22, 80, 443 |
+| Firewall | `ufw`: deny incoming, allow 22, 80, 443. On Oracle Cloud: no ufw; ACCEPT 80/443 added to `/etc/iptables/rules.v4` (§11) |
 | fail2ban | `/etc/fail2ban/jail.d/50-upwilling.local` (sshd jail, 5 failures in 10 min → 1 h ban) |
 | Updates | `/etc/apt/apt.conf.d/20auto-upgrades`, `52upwilling-unattended-upgrades` (security only, no auto reboot) |
 | Docker | `/etc/apt/keyrings/docker.asc`, `/etc/apt/sources.list.d/docker.sources`, `/etc/docker/daemon.json` |
@@ -145,13 +149,38 @@ If the provider offers snapshots, take one now ("baseline after Task 1.3").
 
 Use the provider's web console or rescue mode, log in as `<admin>` with the password, then either fix the key in
 `~/.ssh/authorized_keys` or temporarily move `/etc/ssh/sshd_config.d/10-upwilling.conf` away and
-`sudo systemctl restart ssh`. If the firewall is the problem: `sudo ufw disable`. Re-run `provision.sh` afterwards.
+`sudo systemctl restart ssh`. If the firewall is the problem: `sudo ufw disable` (on Oracle Cloud: check the VCN security list and
+`/etc/iptables/rules.v4`, restore `rules.v4.before-upwilling` if needed, then reboot). Re-run `provision.sh` afterwards.
+
+## 11. Oracle Cloud Always Free (test phase, ADR-021) [HUMAN]
+
+1. **Account.** Sign up at https://cloud.oracle.com (card verification). The **home region is permanent**: choose an
+   EU one (France Central – Paris, France South – Marseille or Germany Central – Frankfurt).
+   Recommended: upgrade the tenancy to **Pay As You Go** and set a budget alert at €1. It stays €0 inside the free
+   allowance and is reported to stop the reclamation of idle free VMs (ADR-021). Check Oracle's current terms when you do it.
+2. **Network.** Networking → Virtual cloud networks → "Start VCN Wizard" → "Create VCN with Internet Connectivity".
+   In the public subnet's **security list**, keep only these ingress rules (TCP, source `0.0.0.0/0`, or your own IP for 22):
+   22, 80, 443. This list is the outer firewall, and the only one in front of ports Docker publishes.
+3. **VM.** Compute → Instances → Create:
+   - Image: **Canonical Ubuntu 26.04** (or 24.04), aarch64.
+   - Shape: **VM.Standard.A1.Flex**, 2 OCPU, 12 GB memory (the whole free allowance).
+   - Networking: the public subnet above, with a public IPv4 address.
+   - SSH keys: paste `~/.ssh/upwilling_admin.pub` (it is installed for the `ubuntu` user).
+   - Boot volume: 100 GB (the free total is 200 GB; keep room for backups).
+   - "Out of capacity": retry later or pick another availability domain. Never change the home region.
+4. **Provision.** Continue with §3–§6, logging in as `ubuntu` and using `sudo`. `provision.sh` detects Oracle's image
+   (its `InstanceServices` firewall rules): it keeps Oracle's iptables rules, opens 80/443 in `/etc/iptables/rules.v4`
+   (backup: `rules.v4.before-upwilling`) and **never enables ufw**. Oracle documents that ufw can stop the instance
+   from booting. After the `ssh` step, only `<admin>` and `deploy` can log in; `ubuntu` cannot (expected).
+5. **Never** run `ufw enable`, `iptables -F` or `iptables-restore` by hand on this VM: the first two can remove
+   Oracle's essential rules, and a manual restore also wipes Docker's rules until Docker restarts.
 
 ## For developers: testing the scripts without a server
 
 ```bash
-bash infra/server/test/test-in-container.sh        # Ubuntu 26.04
+bash infra/server/test/test-in-container.sh              # Ubuntu 26.04
 bash infra/server/test/test-in-container.sh 24.04
+bash infra/server/test/test-in-container.sh 26.04 --oci  # Oracle Cloud image (fixture: infra/server/test/oci-rules.v4)
 ```
 
 It runs the scripts for real in a throwaway privileged container with systemd. Swap and time are skipped because

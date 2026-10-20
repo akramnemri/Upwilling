@@ -19,7 +19,7 @@ The human runs the provisioning; the agent writes it. It must be repeatable, rev
 | Users | `<admin>` (human: SSH key + password for sudo) and `deploy` (CI: SSH key only, docker group, no sudo) | Root login disabled; every action is traceable to a named user |
 | SSH | Keys only (`AuthenticationMethods publickey`), no root, `AllowUsers <admin> deploy`, no forwarding, port 22 | Removes password guessing entirely; port 22 per roadmap (a different port only hides it) |
 | Lockout guards | The SSH step refuses to run without an admin key and password; `sshd -t` before reload, rollback if invalid | A typo must not lock the human out |
-| Firewall | `ufw`: deny incoming; allow 22, 80, 443 | Simple and standard on Ubuntu |
+| Firewall | `ufw`: deny incoming; allow 22, 80, 443. **Oracle Cloud images: no ufw**, Oracle's iptables rules + 80/443 (ADR-021) | Simple and standard on Ubuntu; Oracle documents that ufw breaks its images |
 | Docker vs ufw | Ports published by Docker bypass ufw: **only Caddy publishes ports**; `verify.sh` fails on any other public port | Documented Docker behaviour; checked rather than worked around |
 | Brute force | fail2ban, sshd jail, systemd backend, 5 failures / 10 min → 1 h ban | Roadmap item; mostly cuts log noise since passwords are off |
 | Updates | `unattended-upgrades` for the Ubuntu security pocket only, daily; **no automatic reboot**; other upgrades (Docker included) by hand, monthly | Security fixes without surprise restarts of the stack |

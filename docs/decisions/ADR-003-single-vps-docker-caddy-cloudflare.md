@@ -1,6 +1,6 @@
 # ADR-003 — One VPS with Docker Compose, Caddy and Cloudflare in front
 
-- Status: Accepted
+- Status: Accepted. Amended by ADR-021: during the test phase the server is an Oracle Cloud Always Free VM.
 - Date: 2026-10-18
 - Source: `docs/ai/01_ARCHITECTURE.md` §3, §5
 

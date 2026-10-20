@@ -306,6 +306,10 @@ EOF
 }
 
 step_firewall() {
+  if is_oracle_cloud_image; then
+    step_firewall_oracle
+    return
+  fi
   log "Firewall: deny incoming except SSH (22), HTTP (80) and HTTPS (443)"
   run ufw default deny incoming
   run ufw default allow outgoing
@@ -314,6 +318,44 @@ step_firewall() {
   run ufw allow 443/tcp comment 'HTTPS (Caddy)'
   run ufw --force enable
   info "Reminder: ports published by Docker bypass ufw. Only Caddy may publish ports (Task 1.4, ADR-020)."
+}
+
+# Oracle Cloud images (ADR-021): keep Oracle's iptables rules, insert ACCEPT rules for 80/443 before the INPUT
+# REJECT rule, in rules.v4 (persistent) and live. Never `iptables-restore` here: it would flush Docker's rules.
+step_firewall_oracle() {
+  log "Firewall (Oracle Cloud image): keep Oracle's iptables rules, open 80 and 443 (no ufw on these images)"
+  if ufw status 2>/dev/null | grep -q '^Status: active'; then
+    die "ufw is active on an Oracle Cloud image; Oracle says this can stop the instance from booting. Run 'ufw disable', then re-run."
+  fi
+  grep -q '^-A INPUT -j REJECT' "$OCI_RULES_FILE" ||
+    die "$OCI_RULES_FILE has no '-A INPUT -j REJECT' line: not the expected Oracle layout. Open 80/443 by hand (runbook §11)."
+
+  local port rule position tmp
+  for port in 80 443; do
+    rule="-A INPUT -p tcp -m state --state NEW -m tcp --dport $port -j ACCEPT"
+    if grep -qxF -- "$rule" "$OCI_RULES_FILE"; then
+      info "rules.v4 already accepts $port/tcp"
+    elif [[ $DRY_RUN == true ]]; then
+      info "[dry-run] insert '$rule' before the INPUT REJECT rule in $OCI_RULES_FILE"
+    else
+      [[ -f $OCI_RULES_FILE.before-upwilling ]] || cp -p "$OCI_RULES_FILE" "$OCI_RULES_FILE.before-upwilling"
+      tmp=$(mktemp)
+      awk -v rule="$rule" '!done && /^-A INPUT -j REJECT/ { print rule; done = 1 } { print }' "$OCI_RULES_FILE" >"$tmp"
+      # `cat >` keeps the file's owner and mode.
+      cat "$tmp" >"$OCI_RULES_FILE"
+      rm -f "$tmp"
+      info "rules.v4 now accepts $port/tcp (backup: $OCI_RULES_FILE.before-upwilling)"
+    fi
+
+    if iptables -S INPUT | grep -Eq -- "--dport $port( |$).*-j ACCEPT"; then
+      info "live firewall already accepts $port/tcp"
+    else
+      position=$(iptables -L INPUT --line-numbers -n | awk '$2 == "REJECT" { print $1; exit }')
+      run iptables -I INPUT "${position:-1}" -p tcp -m state --state NEW -m tcp --dport "$port" -j ACCEPT
+    fi
+  done
+  info "Also open 80 and 443 in the VCN security list (runbook §11): it is the outer firewall, and the only one"
+  info "that applies to ports published by Docker."
 }
 
 step_ssh() {
