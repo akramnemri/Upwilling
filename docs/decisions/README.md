@@ -25,3 +25,6 @@ and setting the old one's status to "Superseded by ADR-YYY".
 | [017](ADR-017-recette-environment.md) | Recette on the same VPS, separate domain | Accepted |
 | [018](ADR-018-pinned-versions.md) | Pinned versions | Accepted |
 | [019](ADR-019-typescript-strictness.md) | TypeScript strictness options | Proposed (re-checked in Task 3.1) |
+| [020](ADR-020-server-baseline.md) | Server baseline: OS, access, hardening | Proposed (supervisor to confirm) |
+| [021](ADR-021-test-phase-hosting-oracle.md) | Test phase on an Oracle Cloud Always Free Arm VM | Accepted (test phase only; amends 003) |
+| [022](ADR-022-test-phase-recette-hosts.md) | Test-phase recette hosts under upwilling.fr | Accepted (test phase only; amends 017) |

@@ -1,15 +1,37 @@
 # STATUS
 
-Updated: 2026-10-19 by Claude (session 3 — Tasks 1.1a/1.1b merged; Task 1.2 implemented, in review)
+Updated: 2026-10-20 by Claude (end of session 3 — handoff. PR #11 merged; Task 1.3 in PR #12, waiting for one
+decision; no server available yet)
 
-> This file is updated on the task branch. Until the Task 1.2 PR is merged, `develop` still says 1.1b is in review:
-> start a new session from `feat/m1-brand-pages` (or after the merge, from `develop`).
+> This file is updated on the task branch. Until PR #12 is merged, `develop` is behind: start a new session from
+> `feat/m1-server-provisioning` (or after the merge, from `develop`).
+
+## Handoff for the next session (read first)
+- **PR #12 (Task 1.3) is not merged.** CI: `checks`, `secret-scan`, `docker`, `shellcheck` all green. SonarCloud's
+  quality gate fails on a single finding, `docker:S6471` (`infra/server/test/Dockerfile` runs as root, by design: it
+  stands in for a whole server). Waiting for the supervisor: either "merge anyway", or they mark the finding "Safe"
+  in SonarCloud first. Then squash-merge, sync `develop`, delete the branch (§4b).
+- **No server for now.** The supervisor has no card available for Oracle Cloud's sign-up verification (2026-10-20),
+  so the ADR-021 VM cannot be created yet. ADR-021 stays the plan for when a card is available.
+  Blocked until then: the real run of the 1.3 scripts, starting recette (1.4 manual step), deployments (1.5),
+  the real restore test (1.6).
+- **Not blocked, proposed order:** Task 1.4 as files tested locally (compose projects + Caddy run in Docker on the
+  developer machine, like `smoke-roles.sh`); then Milestone 2 (design system), which needs no hosting.
+  Plan first, as always; the supervisor decides.
+- **No-card options mentioned to the supervisor** (not decided, verify terms before relying on them): a developer
+  machine + Cloudflare Tunnel (free; sites online only while the machine runs; fine for PO demos, not for automatic
+  deployments); Azure for Students if someone has a student email (credit without a card, to be confirmed).
+- This session was long: start the next one fresh from this file.
 
 ## Current position
 - Milestone: M1 — Deployment chain (Essai 1). M0 is complete (database parts deferred by ADR-005).
-- Task: 1.2 — Branded "under construction" pages (TR-13) — state: **implemented, waiting for the supervisor's
-  manual test** (mobile width, Lighthouse) and for PO inputs (contact emails, academy logo, copy validation).
-- Branch / PR: `feat/m1-brand-pages` → `develop`.
+- Task: 1.3 — Server provisioning runbook & scripts [HUMAN] — state: **done on the agent side** (scripts and runbooks
+  tested in Ubuntu 26.04/24.04 containers). Manual test **waived** by the supervisor (2026-10-20). The real run is
+  deferred: no server yet ("we will first use free solutions to test and switch to others when we decide to start
+  accepting traffic"). Test-phase hosting decided: **Oracle Cloud Always Free Arm VM** (ADR-021, supervisor 2026-10-20);
+  the scripts detect Oracle's image and use its iptables rules instead of ufw.
+  The supervisor asked for "common sense and standard practice" (2026-10-20): choices recorded in ADR-020 (proposed).
+- Branch / PR: `feat/m1-server-provisioning` → `develop` (PR #12; was stacked on PR #11, retargeted after its merge).
 
 ## Last completed tasks
 - 0.1 — Verify versions and record foundational ADRs — merged 2026-10-18 (PR #1, `efd7107`)
@@ -20,6 +42,8 @@ Updated: 2026-10-19 by Claude (session 3 — Tasks 1.1a/1.1b merged; Task 1.2 im
 - 0.6 — CI pipeline — merged 2026-10-18 (PR #8, `60e3ad9`), manual test passed (M0 closed)
 - 1.1a — Role and host routing — merged 2026-10-19 (PR #9, `58acca2`), manual test waived by the supervisor
 - 1.1b — Docker image with container roles — merged 2026-10-19 (PR #10, `29fa6df`), manual test waived
+- 1.2 — Branded "under construction" pages — merged 2026-10-20 (PR #11, `7745d4d`) at the supervisor's request,
+  manual test (phone width, Lighthouse) not reported; PO inputs still open (contact emails, academy logo, copy)
 
 ## What exists now (so a new session does not have to rediscover it)
 - pnpm 11 workspace + Turborepo: `apps/web` (Next.js 16.3.8, App Router, `src/`), `packages/config`
@@ -38,12 +62,12 @@ Updated: 2026-10-19 by Claude (session 3 — Tasks 1.1a/1.1b merged; Task 1.2 im
   `routing/route-rules.ts`: `roleFromEnv()`, `resolveRoute()` (role layer: which hosts; host-kind layer: which paths).
 - `apps/web/src/proxy.ts`: request ID per request + plain-text 404 whenever `resolveRoute()` refuses (`/api/health` exempt).
 - `apps/web/src/instrumentation{,.node}.ts`: env check at startup (exit 1 if invalid), console scrubbing, `onRequestError` logging.
-- Routes: `/` (temporary tenant page), `/api/health`, `/api/ready`, local-only `/api/dev/test-error` and `/dev/test-error`;
+- Routes: `/` (brand page per site, simple page on the admin host), `/api/health`, `/api/ready`, local-only `/api/dev/test-error` and `/dev/test-error`;
   `error.tsx`, `global-error.tsx`, `not-found.tsx` (French).
 - Tests (Task 0.5): Vitest 4.1.12 projects in `apps/web/vitest.config.ts`: `unit` (`src/**/*.test.ts`,
-  `tests/factories/**/*.test.ts`) and `integration` (`tests/integration/`, one placeholder until ADR-005); 153 tests.
+  `tests/factories/**/*.test.ts`) and `integration` (`tests/integration/`, one placeholder until ADR-005); 200 tests.
   Env for tests: `DEPLOY_ENV=local`, `LOG_LEVEL=fatal`. Scripts in `apps/web`: `test:unit`, `test:integration`.
-- E2E: Playwright 1.64.1, Chromium headless shell only, `apps/web/playwright.config.ts`, `tests/e2e/*.spec.ts` (11 tests).
+- E2E: Playwright 1.64.1, Chromium headless shell only, `apps/web/playwright.config.ts`, `tests/e2e/*.spec.ts` (19 tests).
   Runs `next start --port 3100` (`DEPLOY_ENV=local`); Turbo `e2e` depends on `build`. Report + traces on failure.
 - Test data: `apps/web/tests/factories/person.ts` (`buildPerson`), emails restricted to `example.test` / `example.com`.
 - `infra/local/compose.yaml`: Mailpit v1.31.6 only (no database, ADR-005).
@@ -60,9 +84,14 @@ Updated: 2026-10-19 by Claude (session 3 — Tasks 1.1a/1.1b merged; Task 1.2 im
 - `infra/local/compose.roles.yaml` (project `upwilling-roles`): web-upwilling :3001, cms :3002, worker; `init`,
   `read_only` + tmpfs, memory limits, log rotation. `infra/local/smoke-roles.sh`: 29 checks, used locally and in CI.
   Runbook: `docs/runbooks/local-container-roles.md`. Measured idle RAM: web ~52 MiB, cms ~52 MiB, worker ~26 MiB.
-- CI has a third job, `docker` (build image + smoke script).
-- CI (Task 0.6): `.github/workflows/ci.yml`, jobs `checks` (install, format, typecheck, lint, test, build, e2e) and
-  `secret-scan` (gitleaks v8.30.1 Docker image, full history). Actions pinned by commit SHA (ADR-018 "CI tooling").
+- Server (Task 1.3): `infra/server/scripts/provision.sh` (idempotent steps, `--dry-run`, `--only`; SSH step last,
+  with lockout guards), `verify.sh` (read-only PASS/WARN/FAIL + versions), `lib.sh`. Tested by
+  `infra/server/test/test-in-container.sh` (privileged systemd container, Ubuntu 26.04 and 24.04, `--oci` mode with an
+  Oracle-style `rules.v4` fixture; swap/time skipped; checks container egress through Oracle's FORWARD REJECT).
+  Runbooks: `docs/runbooks/server-setup.md`, `docs/runbooks/cloudflare-dns.md`. Decisions: ADR-020.
+- CI: `.github/workflows/ci.yml`, jobs `checks` (install, format, typecheck, lint, test, build, e2e),
+  `secret-scan` (gitleaks v8.30.1 Docker image, full history), `docker` (image build + `smoke-roles.sh`, Task 1.1b),
+  `shellcheck` (v0.11.0 image, every `*.sh`, Task 1.3). Actions and images pinned (ADR-018 "CI tooling").
   Repository settings to apply by hand: `docs/runbooks/github-repository-settings.md`.
   A third check, **SonarCloud Code Analysis**, also runs on PRs: it comes from a GitHub App on the repository,
   not from this repo's files (not set up by the agent; confirm with the supervisor before relying on it).
@@ -91,6 +120,20 @@ Updated: 2026-10-19 by Claude (session 3 — Tasks 1.1a/1.1b merged; Task 1.2 im
   channel). Text green is `#2E7D34` (raw `#389840` is 3.7:1 on white). Contrast test lives in `apps/web` until the
   design-system package gets its own tests (Task 2.1). No dependency added. Contact details are never taken from
   personal profiles (the supervisor suggested LinkedIn; declined, CLAUDE.md personal-data rule).
+- Task 1.3 (ADR-020, proposed): Ubuntu 26.04 LTS (24.04 accepted); users `<admin>` (key + password, sudo) and
+  `deploy` (key, docker group, no sudo); SSH keys only, no root; ufw 22/80/443 and **only Caddy publishes ports**
+  (Docker bypasses ufw; `verify.sh` fails on other public ports); fail2ban sshd; security updates daily, no auto
+  reboot; Docker from its apt repo (key fingerprint checked), `daemon.json` log caps + `live-restore` +
+  `no-new-privileges`; 2 GB swap; UTC; journal 500 MB. Deploy key restriction is due in Task 1.5.
+- ADR-021 (accepted, test phase only): Oracle Cloud Always Free `VM.Standard.A1.Flex` 2 OCPU / 12 GB, EU home
+  region, Ubuntu 26.04 aarch64. VCN security list = outer firewall (22/80/443); never ufw on Oracle images.
+  Synthetic data only; move to a paid EU VPS **before accepting traffic**. The app image must be built for
+  linux/arm64 (Task 1.5). Risk: idle reclamation (7 days < 20% CPU, network, memory) → upgrade to Pay As You Go.
+- ADR-022 (accepted, test phase only): recette on first-level hosts of upwilling.fr (`recette`, `recette-careerboost`,
+  `recette-admin`, `recette-hooks`, later `recette-stats`), host-only cookies only, no real users; hard switch to a
+  separate recette domain before accepting traffic. Task 1.4 adds these hosts to the `recette` allowlist and Caddy.
+- Database: the supervisor mentioned having Oracle Database 11g (2026-10-20). Not usable: Payload supports only
+  PostgreSQL, MongoDB and SQLite, and 11g has had no security fixes since 2020. ADR-005 stays open.
 - Route rules match a canonical path (percent-decoded, lowercased, repeated slashes collapsed); malformed encoding and
   `.`/`..` segments are refused.
 - Host allowlist: `www.*` and bare `localhost` are refused (404) by the app; Caddy redirects `www` (Task 1.4).
@@ -120,7 +163,7 @@ Updated: 2026-10-19 by Claude (session 3 — Tasks 1.1a/1.1b merged; Task 1.2 im
 
 ## Open issues / risks
 - **Before M3 (Task 3.1):** concrete database needed, or an approved temporary adapter (e.g. SQLite) via a new ADR.
-- Recette host map is empty until the recette domain is bought (ADR-017, Task 1.4).
+- Recette host map is still empty: Task 1.4 fills it with the ADR-022 hosts.
 - Node 26 becomes LTS on 2026-10-28; we stay on 24 until Payload builds with 26 (ADR-018).
 - First `pnpm lint` after a fresh install can take minutes on Windows (antivirus); later runs ~25 s. Watch it in CI.
 - Free-text scrubbing is best-effort (patterns); the rule stays "structured fields, never interpolate personal data".
@@ -132,17 +175,22 @@ Updated: 2026-10-19 by Claude (session 3 — Tasks 1.1a/1.1b merged; Task 1.2 im
   before `docker builder prune` (it removes other projects' build cache too).
 
 ## Waiting on human / PO
-- Supervisor: manual test of Task 1.2 (both hosts, phone width, Lighthouse in Chrome DevTools).
 - PO: public contact address for each site (organization mailbox, e.g. a `contact@` address); academy logo files
   (SVG, + favicon); vector source of the Career Boost logo; validation of the French copy in
   `apps/web/src/modules/content/under-construction.ts`. **Before go-live** the two `contactEmail: null` must be filled.
-- Supervisor: add the `docker` check to both rulesets (`docs/runbooks/github-repository-settings.md` §3).
+- Human (test phase, ADR-021, **blocked: no card for Oracle's verification yet**): create the Oracle Cloud account
+  (EU home region, consider Pay As You Go + budget alert), the VCN and the Arm VM (`docs/runbooks/server-setup.md` §11), then run §3–§6 and send the `verify.sh` output. Apply the Cloudflare zone settings
+  (`docs/runbooks/cloudflare-dns.md` §1); records come with Tasks 1.4/5.9/9.5. Confirm or amend ADR-020.
+- Supervisor: in SonarCloud, mark issue docker:S6471 on `infra/server/test/Dockerfile` as "Safe" (the test image
+  stands in for a whole server and must run as root); SonarCloud is not configured from this repository.
+- Supervisor: add the `docker` and `shellcheck` checks to both rulesets (`docs/runbooks/github-repository-settings.md` §3).
 - Supervisor: GitHub auto-merge is disabled in the repository settings (an attempt on PR #10 was refused); enable it
   only if you want the agent to use it.
 - Supervisor: confirm the repository settings runbook was applied (`docs/runbooks/github-repository-settings.md`).
 - Supervisor: concrete database choice (ADR-005), at the latest before M3.
 - Supervisor: confirm ADR-019.
-- PO items listed in `docs/ai/01_ARCHITECTURE.md` §17 (recette domain, shared accounts, brand files, …).
+- PO items listed in `docs/ai/01_ARCHITECTURE.md` §17 (shared accounts, brand files, …). Recette domain: postponed
+  until accepting traffic (ADR-022).
 
 ## Supervisor's machine (Windows 11) — notes for the agent
 - Node.js 24.20.0 (winget), pnpm 11.28.6 via Corepack (`corepack enable pnpm` was run as admin), GitHub CLI 2.102.0
@@ -155,6 +203,10 @@ Updated: 2026-10-19 by Claude (session 3 — Tasks 1.1a/1.1b merged; Task 1.2 im
 - Large `docker`/Windows disk checks are slow here (antivirus): scan targeted folders, not the whole drive.
 
 ## Next step (exact)
-1. Supervisor tests Task 1.2 manually (steps in the PR / task report).
-2. After merge: sync `develop`, delete `feat/m1-brand-pages` (§4b).
-3. Then Task 1.3 — Server provisioning runbook & scripts [HUMAN]. Post the plan first; do not start unasked.
+1. Get the supervisor's answer on PR #12 (merge despite `docker:S6471`, or after they mark it "Safe"); squash-merge,
+   sync `develop`, delete `feat/m1-server-provisioning` (§4b).
+2. Next task: Task 1.4 — Compose projects & Caddy, **as files tested locally** (recette hosts from ADR-022; the start
+   on a real server waits for a card / server). Post the plan first; do not start unasked. Alternative if the
+   supervisor prefers: start Milestone 2 (Task 2.1).
+3. When a card is available: human creates the Oracle VM (runbook §11) and runs §3–§6, then Task 1.3's real run is
+   reported and the server-dependent steps of 1.4–1.6 resume.

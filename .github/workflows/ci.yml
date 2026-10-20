@@ -116,3 +116,19 @@ jobs:
       # Runs the three roles from infra/local/compose.roles.yaml and checks hosts, paths, hardening, shutdown.
       - name: Smoke test the container roles
         run: bash infra/local/smoke-roles.sh
+
+  shellcheck:
+    name: shellcheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Every shell script in the repository (server provisioning, smoke tests, entrypoint). Version: ADR-018.
+      - name: Lint shell scripts
+        run: >-
+          docker run --rm -v "$GITHUB_WORKSPACE:/mnt" -w /mnt
+          koalaman/shellcheck:v0.11.0@sha256:61862eba1fcf09a484ebcc6feea46f1782532571a34ed51fedf90dd25f925a8d
+          -x $(git ls-files '*.sh')

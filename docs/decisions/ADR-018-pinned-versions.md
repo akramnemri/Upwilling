@@ -57,6 +57,7 @@ with the version in a trailing comment. Upgrades are `chore(ci)` PRs that update
 | `actions/setup-node` | **v7.1.0** | `949feb2413d6458794dcd2491c4babbbce0c15c1` | Node from `.nvmrc`; pnpm store cache. |
 | `actions/cache` | **v6.1.0** | `55cc8345863c7cc4c66a329aec7e433d2d1c52a9` | Turborepo local cache (`.turbo/cache`). |
 | `actions/upload-artifact` | **v7.0.2** | `cf430e030ddbb5b0abf93d22962f4752f3646cd9` | Playwright report, on failure only. |
+| shellcheck (Docker image `koalaman/shellcheck`) | **v0.11.0** | `sha256:61862eba1fcf09a484ebcc6feea46f1782532571a34ed51fedf90dd25f925a8d` | Lints every `*.sh` in the repository (Task 1.3). Latest release (2025-08-04). |
 | gitleaks (Docker image `ghcr.io/gitleaks/gitleaks`) | **v8.30.1** | `sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f` | Run directly instead of `gitleaks-action` (fewer third-party parts, no licence question). |
 
 ### Container base image (added in Task 1.1b, verified 2026-10-19)
