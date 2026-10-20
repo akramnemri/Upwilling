@@ -1,0 +1,49 @@
+# Deploy agent (Task 1.5b, ADR-024): deploys the stacks named in DEPLOY_STACKS whenever the promote workflow moves
+# their image tag. It has the Docker socket (root-equivalent on this machine), so it only ever runs images from
+# IMAGE_REPO, by exact digest. Runbook: docs/runbooks/local-server.md. Test: infra/server/test/smoke-deploy.sh
+#
+# On the server folder (C:\upwilling-server on the local machine, /srv later):
+#   agent/compose.deploy-agent.yaml + agent/deploy-agent/agent.sh   (copies of the repository files)
+#   recette/.env, production/.env                                   (one per stack, created by a human)
+#   cd agent && docker compose -f compose.deploy-agent.yaml up -d
+name: upwilling-deploy-agent
+
+services:
+  agent:
+    # Docker CLI with the compose and buildx plugins. Multi-arch digest.
+    image: docker:29.9.1-cli@sha256:6fae2214c3121a28d5aa639d09032f61310b7c9c75ffbad1025f261a1b621800
+    entrypoint: ["/bin/sh", "/agent/agent.sh"]
+    environment:
+      # recette, production, or both separated by a space.
+      DEPLOY_STACKS: ${DEPLOY_STACKS:-recette}
+      DEPLOY_INTERVAL: ${DEPLOY_INTERVAL:-60}
+      # The Docker CLI keeps its small config here (the root file system is read-only).
+      DOCKER_CONFIG: /tmp/.docker
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./deploy-agent:/agent:ro
+      # The server folder: each stack's .env (read-only for the agent).
+      - ${SERVER_DIR:-..}:/srv:ro
+      # Releases (compose files + image digest of the current and previous commit) and the deploy state.
+      - state:/state
+    read_only: true
+    tmpfs:
+      - /tmp
+    init: true
+    restart: unless-stopped
+    # Unhealthy when the loop has been stuck for 15 minutes (a deploy waits at most WAIT_TIMEOUT, 5 minutes).
+    healthcheck:
+      test: ["CMD-SHELL", "test $$(( $$(date +%s) - $$(stat -c %Y /tmp/heartbeat) )) -lt 900"]
+      interval: 60s
+      timeout: 5s
+      retries: 2
+      start_period: 30s
+    mem_limit: 128m
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  state: {}

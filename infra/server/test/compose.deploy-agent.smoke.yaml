@@ -1,0 +1,15 @@
+# Overrides for infra/server/test/smoke-deploy.sh only: a local test registry, compose files from this checkout,
+# test project and network names, a short interval. Never used on a server.
+services:
+  agent:
+    environment:
+      IMAGE_REPO: localhost:5005/upwilling-web
+      DEPLOY_STACKS: recette
+      DEPLOY_INTERVAL: "3"
+      WAIT_TIMEOUT: "180"
+      COMPOSE_SOURCE_DIR: /compose-src
+      PROJECT_PREFIX: smoke-
+      EDGE_NETWORK_RECETTE: upwilling-smoke-deploy-edge-recette
+    volumes:
+      # infra/server of this checkout (paths are relative to compose.deploy-agent.yaml).
+      - ./:/compose-src:ro
