@@ -1,9 +1,27 @@
 # STATUS
 
-Updated: 2026-10-20 by Claude (session 3 — Task 1.2 in review (PR #11); Task 1.3 written, stacked on it)
+Updated: 2026-10-20 by Claude (end of session 3 — handoff. PR #11 merged; Task 1.3 in PR #12, waiting for one
+decision; no server available yet)
 
-> This file is updated on the task branch. Until PRs #11 and the Task 1.3 PR are merged, `develop` is behind:
-> start a new session from `feat/m1-server-provisioning` (or after the merges, from `develop`).
+> This file is updated on the task branch. Until PR #12 is merged, `develop` is behind: start a new session from
+> `feat/m1-server-provisioning` (or after the merge, from `develop`).
+
+## Handoff for the next session (read first)
+- **PR #12 (Task 1.3) is not merged.** CI: `checks`, `secret-scan`, `docker`, `shellcheck` all green. SonarCloud's
+  quality gate fails on a single finding, `docker:S6471` (`infra/server/test/Dockerfile` runs as root, by design: it
+  stands in for a whole server). Waiting for the supervisor: either "merge anyway", or they mark the finding "Safe"
+  in SonarCloud first. Then squash-merge, sync `develop`, delete the branch (§4b).
+- **No server for now.** The supervisor has no card available for Oracle Cloud's sign-up verification (2026-10-20),
+  so the ADR-021 VM cannot be created yet. ADR-021 stays the plan for when a card is available.
+  Blocked until then: the real run of the 1.3 scripts, starting recette (1.4 manual step), deployments (1.5),
+  the real restore test (1.6).
+- **Not blocked, proposed order:** Task 1.4 as files tested locally (compose projects + Caddy run in Docker on the
+  developer machine, like `smoke-roles.sh`); then Milestone 2 (design system), which needs no hosting.
+  Plan first, as always; the supervisor decides.
+- **No-card options mentioned to the supervisor** (not decided, verify terms before relying on them): a developer
+  machine + Cloudflare Tunnel (free; sites online only while the machine runs; fine for PO demos, not for automatic
+  deployments); Azure for Students if someone has a student email (credit without a card, to be confirmed).
+- This session was long: start the next one fresh from this file.
 
 ## Current position
 - Milestone: M1 — Deployment chain (Essai 1). M0 is complete (database parts deferred by ADR-005).
@@ -160,8 +178,8 @@ Updated: 2026-10-20 by Claude (session 3 — Task 1.2 in review (PR #11); Task 1
 - PO: public contact address for each site (organization mailbox, e.g. a `contact@` address); academy logo files
   (SVG, + favicon); vector source of the Career Boost logo; validation of the French copy in
   `apps/web/src/modules/content/under-construction.ts`. **Before go-live** the two `contactEmail: null` must be filled.
-- Human (test phase, ADR-021): create the Oracle Cloud account (EU home region, consider Pay As You Go + budget
-  alert), the VCN and the Arm VM (`docs/runbooks/server-setup.md` §11), then run §3–§6 and send the `verify.sh` output. Apply the Cloudflare zone settings
+- Human (test phase, ADR-021, **blocked: no card for Oracle's verification yet**): create the Oracle Cloud account
+  (EU home region, consider Pay As You Go + budget alert), the VCN and the Arm VM (`docs/runbooks/server-setup.md` §11), then run §3–§6 and send the `verify.sh` output. Apply the Cloudflare zone settings
   (`docs/runbooks/cloudflare-dns.md` §1); records come with Tasks 1.4/5.9/9.5. Confirm or amend ADR-020.
 - Supervisor: in SonarCloud, mark issue docker:S6471 on `infra/server/test/Dockerfile` as "Safe" (the test image
   stands in for a whole server and must run as root); SonarCloud is not configured from this repository.
@@ -185,7 +203,10 @@ Updated: 2026-10-20 by Claude (session 3 — Task 1.2 in review (PR #11); Task 1
 - Large `docker`/Windows disk checks are slow here (antivirus): scan targeted folders, not the whole drive.
 
 ## Next step (exact)
-1. PR #12 (Task 1.3) merged at the supervisor's request once CI is green (SonarCloud: see "Waiting on human").
-2. Human creates the Oracle Cloud VM and runs the Task 1.3 runbook on it (§11, then §3–§6).
-3. After each merge: sync `develop`, delete the branch (§4b).
-4. Then Task 1.4 — Compose projects & Caddy (needs the VPS and, for recette, the recette domain). Post the plan first.
+1. Get the supervisor's answer on PR #12 (merge despite `docker:S6471`, or after they mark it "Safe"); squash-merge,
+   sync `develop`, delete `feat/m1-server-provisioning` (§4b).
+2. Next task: Task 1.4 — Compose projects & Caddy, **as files tested locally** (recette hosts from ADR-022; the start
+   on a real server waits for a card / server). Post the plan first; do not start unasked. Alternative if the
+   supervisor prefers: start Milestone 2 (Task 2.1).
+3. When a card is available: human creates the Oracle VM (runbook §11) and runs §3–§6, then Task 1.3's real run is
+   reported and the server-dependent steps of 1.4–1.6 resume.
