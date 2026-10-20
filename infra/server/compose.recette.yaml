@@ -1,0 +1,74 @@
+# Recette stack (Task 1.4; ADR-017, ADR-022; 01_ARCHITECTURE.md §5.1, §16). Compose project `upwilling-recette`:
+# same services as production, its own network, database, volume and .env, about 60 % of production's memory.
+# On the server: /srv/upwilling-recette (this file, compose.base.yaml, .env). Start the edge project first:
+# it creates the network this stack joins. Runbook: docs/runbooks/compose-stacks.md
+#   docker compose -f compose.recette.yaml up -d --wait
+# Nothing here publishes a port: Caddy (compose.edge.yaml) is the only way in, with basic auth.
+name: upwilling-recette
+
+services:
+  web-upwilling:
+    extends: { file: compose.base.yaml, service: app }
+    environment:
+      DEPLOY_ENV: recette
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      APP_ROLE: web
+      SITE: upwilling
+    mem_limit: 320m
+    networks:
+      default: {}
+      edge:
+        aliases: [recette-web-upwilling]
+
+  web-careerboost:
+    extends: { file: compose.base.yaml, service: app }
+    environment:
+      DEPLOY_ENV: recette
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      APP_ROLE: web
+      SITE: careerboost
+    mem_limit: 320m
+    networks:
+      default: {}
+      edge:
+        aliases: [recette-web-careerboost]
+
+  cms:
+    extends: { file: compose.base.yaml, service: app }
+    environment:
+      DEPLOY_ENV: recette
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      APP_ROLE: cms
+    mem_limit: 320m
+    networks:
+      default: {}
+      edge:
+        aliases: [recette-cms]
+
+  worker:
+    extends: { file: compose.base.yaml, service: app }
+    environment:
+      DEPLOY_ENV: recette
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      APP_ROLE: worker
+    mem_limit: 256m
+    # Serves no HTTP: not on the edge network.
+    networks:
+      default: {}
+
+  # Database `app` for Payload (Task 3.1); `umami` is added with Task 5.8. Synthetic data only.
+  postgres:
+    extends: { file: compose.base.yaml, service: postgres }
+    mem_limit: 640m
+    networks:
+      default: {}
+
+networks:
+  # The stack's own network: app <-> postgres, and outbound calls (Stripe test mode, Brevo...).
+  default: {}
+  edge:
+    name: upwilling-edge-recette
+    external: true
+
+volumes:
+  postgres-data: {}

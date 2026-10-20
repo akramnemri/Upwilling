@@ -71,6 +71,26 @@ describe("resolveRoute — production role/host matrix", () => {
   });
 });
 
+describe("resolveRoute — recette role/host matrix (test-phase hosts, ADR-022)", () => {
+  const rows: Row[] = [
+    ["web-upwilling", WEB_UPWILLING, "recette.upwilling.fr", "/", "allow"],
+    ["web-upwilling", WEB_UPWILLING, "recette-careerboost.upwilling.fr", "/", "not_found"],
+    ["web-upwilling", WEB_UPWILLING, "recette.upwilling.fr", "/admin", "not_found"],
+    ["web-upwilling", WEB_UPWILLING, "upwilling.fr", "/", "not_found"],
+    ["web-careerboost", WEB_CAREERBOOST, "recette-careerboost.upwilling.fr", "/", "allow"],
+    ["web-careerboost", WEB_CAREERBOOST, "recette.upwilling.fr", "/", "not_found"],
+    ["cms", CMS, "recette-admin.upwilling.fr", "/admin", "allow"],
+    ["cms", CMS, "recette-hooks.upwilling.fr", "/api/webhooks/stripe", "allow"],
+    ["cms", CMS, "recette-hooks.upwilling.fr", "/admin", "not_found"],
+    ["cms", CMS, "admin.upwilling.fr", "/admin", "not_found"],
+    ["web-upwilling", WEB_UPWILLING, "recette.upwilling.fr", "/api/dev/test-error", "not_found"],
+  ];
+
+  it.each(rows)("%s: %s%s → %s", (_label, role, host, path, expected) => {
+    expect(decide(role, host, path, "recette")).toBe(expected);
+  });
+});
+
 describe("resolveRoute — liveness", () => {
   it.each([WEB_UPWILLING, CMS, WORKER, ALL])(
     "serves /api/health on any host for role %o",

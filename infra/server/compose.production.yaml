@@ -1,0 +1,73 @@
+# Production stack (Task 1.4; 01_ARCHITECTURE.md §5.1, §16). Compose project `upwilling-prod`.
+# On the server: /srv/upwilling-prod (this file, compose.base.yaml, .env). Start the edge project first:
+# it creates the network this stack joins. Runbook: docs/runbooks/compose-stacks.md
+#   docker compose -f compose.production.yaml up -d --wait
+# Nothing here publishes a port: Caddy (compose.edge.yaml) is the only way in.
+name: upwilling-prod
+
+services:
+  web-upwilling:
+    extends: { file: compose.base.yaml, service: app }
+    environment:
+      DEPLOY_ENV: production
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      APP_ROLE: web
+      SITE: upwilling
+    mem_limit: 512m
+    networks:
+      default: {}
+      edge:
+        aliases: [prod-web-upwilling]
+
+  web-careerboost:
+    extends: { file: compose.base.yaml, service: app }
+    environment:
+      DEPLOY_ENV: production
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      APP_ROLE: web
+      SITE: careerboost
+    mem_limit: 512m
+    networks:
+      default: {}
+      edge:
+        aliases: [prod-web-careerboost]
+
+  cms:
+    extends: { file: compose.base.yaml, service: app }
+    environment:
+      DEPLOY_ENV: production
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      APP_ROLE: cms
+    mem_limit: 512m
+    networks:
+      default: {}
+      edge:
+        aliases: [prod-cms]
+
+  worker:
+    extends: { file: compose.base.yaml, service: app }
+    environment:
+      DEPLOY_ENV: production
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      APP_ROLE: worker
+    mem_limit: 384m
+    # Serves no HTTP: not on the edge network.
+    networks:
+      default: {}
+
+  # Database `app` for Payload (Task 3.1); `umami` is added with Task 5.8.
+  postgres:
+    extends: { file: compose.base.yaml, service: postgres }
+    mem_limit: 1g
+    networks:
+      default: {}
+
+networks:
+  # The stack's own network: app <-> postgres, and outbound calls (Stripe, Brevo, R2...).
+  default: {}
+  edge:
+    name: upwilling-edge-prod
+    external: true
+
+volumes:
+  postgres-data: {}

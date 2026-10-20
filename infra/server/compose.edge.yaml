@@ -1,0 +1,68 @@
+# Edge proxy shared by both stacks (Task 1.4; 01_ARCHITECTURE.md §5.1; ADR-003, ADR-023).
+# Its own compose project because only one container can publish port 443, and it serves production and
+# recette. It also owns the two edge networks the stacks join, so start it first.
+# On the server: /srv/upwilling-edge (this file, caddy/Caddyfile, certs/, .env). Runbook: docs/runbooks/compose-stacks.md
+#   docker compose -f compose.edge.yaml up -d --wait
+# Local test: infra/server/test/smoke-stacks.sh
+name: upwilling-edge
+
+services:
+  caddy:
+    image: caddy:2.11.7-alpine@sha256:d8542f48d34a9cf4e4c11a478865229840e87e4c96ea3f439101f31a5d35f75f
+    # The deploy user's uid/gid: they own the certificate files, and Caddy then runs without root.
+    user: "${CADDY_UID:?set CADDY_UID in .env}:${CADDY_GID:?set CADDY_GID in .env}"
+    # The only published port of the whole server (ADR-020). Caddy listens on 8443 inside (non-root).
+    ports:
+      - "${EDGE_HTTPS_PUBLISH:-443}:8443"
+    environment:
+      RECETTE_BASIC_AUTH_USER: ${RECETTE_BASIC_AUTH_USER:?set RECETTE_BASIC_AUTH_USER in .env}
+      RECETTE_BASIC_AUTH_HASH: ${RECETTE_BASIC_AUTH_HASH:?set RECETTE_BASIC_AUTH_HASH in .env}
+    volumes:
+      # A folder, not the single file: editors that replace the file would leave the container on the old one.
+      - ./caddy:/etc/caddy:ro
+      # Not under /etc/caddy: a mount point cannot be created inside the read-only mount above.
+      - ${CADDY_CERTS_DIR:-./certs}:/certs:ro
+    # Caddy's /data and /config only hold ACME certificates and autosaves; with file certificates nothing there
+    # needs to survive a restart.
+    read_only: true
+    tmpfs:
+      - /data:uid=${CADDY_UID},gid=${CADDY_GID}
+      - /config:uid=${CADDY_UID},gid=${CADDY_GID}
+    cap_drop:
+      - ALL
+    # The image marks the caddy binary with this file capability; without it in the bounding set the kernel
+    # refuses to start the binary at all. Caddy binds 8443 and needs no other capability.
+    cap_add:
+      - NET_BIND_SERVICE
+    security_opt:
+      - no-new-privileges:true
+    init: true
+    restart: unless-stopped
+    # Caddy's admin API listens on localhost inside the container only (used by `caddy reload`).
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:2019/config/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    mem_limit: 128m
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - default
+      - prod
+      - recette
+
+networks:
+  # Ingress only. Published ports need a non-internal network.
+  default: {}
+  # Caddy <-> the web and cms containers of each stack. Internal: nothing reaches the internet through them.
+  prod:
+    name: upwilling-edge-prod
+    internal: true
+  recette:
+    name: upwilling-edge-recette
+    internal: true

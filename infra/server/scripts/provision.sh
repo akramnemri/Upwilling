@@ -24,7 +24,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 readonly ALL_STEPS=(packages time journald swap users docker layout updates fail2ban firewall ssh)
 readonly DEPLOY_USER="deploy"
-readonly APP_DIRS=("/srv/upwilling-prod" "/srv/upwilling-recette")
+readonly APP_DIRS=("/srv/upwilling-edge" "/srv/upwilling-prod" "/srv/upwilling-recette")
 # Docker's apt signing key (https://download.docker.com/linux/ubuntu/gpg), checked before it is trusted.
 readonly DOCKER_KEY_FINGERPRINT="9DC858229FC7DD38854AE2D88D81803C0EBFCD88"
 
