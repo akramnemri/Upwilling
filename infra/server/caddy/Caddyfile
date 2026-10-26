@@ -48,6 +48,10 @@
 		# Payload's live preview (M5) frames the sites from the admin host: revisit then.
 		X-Frame-Options "DENY"
 		Cross-Origin-Opener-Policy "same-origin"
+	}
+	# Removing a header makes Caddy apply the whole block at the end, on proxied responses only (not on the 401 of
+	# basic auth): keep it separate from the headers above.
+	header {
 		-Server
 		-X-Powered-By
 	}
