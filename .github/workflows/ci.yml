@@ -137,6 +137,11 @@ jobs:
       - name: Smoke test the deploy agent
         run: bash infra/server/test/smoke-deploy.sh
 
+      # Test-phase public access: the ingress Caddy behind the Tailscale devices (Task 1.5c; Tailscale itself needs
+      # a real tailnet and is checked live, docs/runbooks/local-server.md).
+      - name: Smoke test the public access ingress
+        run: bash infra/server/test/smoke-funnel.sh
+
   shellcheck:
     name: shellcheck
     runs-on: ubuntu-latest

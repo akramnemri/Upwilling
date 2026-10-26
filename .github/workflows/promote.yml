@@ -1,7 +1,8 @@
 # Marks a published image as the one a stack must run (Task 1.5b, ADR-024): moves the tag `recette` or
 # `production` of ghcr.io/<owner>/upwilling-web to the multi-arch image of a commit. Nothing is rebuilt.
 # The deploy agent on the server sees the tag move and deploys within about a minute; it reports success or
-# failure in its own log (the server is not reachable from GitHub). Runbook: docs/runbooks/local-server.md
+# failure in its own log. For recette, once its public address is set, this workflow also waits for the new version
+# there (Task 1.5c). Runbook: docs/runbooks/local-server.md
 #
 # Called by ci.yml (deploy-recette on develop, deploy-production on main) and by rollback.yml. The job runs in
 # the GitHub environment named after the stack: `production` requires the supervisor's approval.
@@ -60,3 +61,25 @@ jobs:
             echo "\`$IMAGE:$STACK\` now points to this commit's image. The deploy agent picks it up within about"
             echo "a minute; check its log on the server (docs/runbooks/local-server.md)."
           } >>"$GITHUB_STEP_SUMMARY"
+
+      # Recette only, once its public address exists (Task 1.5c, ADR-025): wait until the server answers with the new
+      # commit. A warning, not a failure: during the test phase the server is a laptop that may simply be off.
+      # The address is an environment variable of `recette` (not a secret): it shows in this public log.
+      - name: Wait for the new version on the public address
+        if: inputs.stack == 'recette' && vars.RECETTE_PUBLIC_URL != ''
+        env:
+          PUBLIC_URL: ${{ vars.RECETTE_PUBLIC_URL }}
+        run: |
+          [[ $PUBLIC_URL =~ ^https://[a-z0-9.-]+$ ]] || { echo "::error::RECETTE_PUBLIC_URL must look like https://name.example"; exit 1; }
+          expected="{\"version\":\"$SHA\"}"
+          for _ in $(seq 1 30); do
+            body=$(curl -s --max-time 10 "$PUBLIC_URL/api/version" || true)
+            if [[ $body == "$expected" ]]; then
+              echo "Live on $PUBLIC_URL" | tee -a "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            sleep 10
+          done
+          # The answer itself is not printed: a response body must never be able to inject workflow commands.
+          echo "::warning::$PUBLIC_URL did not report $SHA within 5 minutes. Check the deploy agent's log."
+          echo "Not confirmed on $PUBLIC_URL within 5 minutes: check the deploy agent's log." >>"$GITHUB_STEP_SUMMARY"
