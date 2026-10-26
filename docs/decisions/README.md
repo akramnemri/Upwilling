@@ -30,4 +30,4 @@ and setting the old one's status to "Superseded by ADR-YYY".
 | [022](ADR-022-test-phase-recette-hosts.md) | Test-phase recette hosts under upwilling.fr | Accepted (test phase only; amends 017) |
 | [023](ADR-023-edge-tls-cloudflare-caddy.md) | Edge TLS: Cloudflare origin certificate + Authenticated Origin Pulls | Accepted |
 | [024](ADR-024-pull-based-deploys.md) | Pull-based deploys: image tags + deploy agent | Accepted |
-| [025](ADR-025-test-phase-public-access-tailscale.md) | Test-phase public access to recette through Tailscale Funnel | Proposed (Task 1.5c) |
+| [025](ADR-025-test-phase-public-access-tailscale.md) | Test-phase public access to recette through Tailscale Funnel | Accepted |

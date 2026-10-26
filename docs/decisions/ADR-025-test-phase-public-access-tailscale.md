@@ -1,6 +1,6 @@
 # ADR-025 — Test-phase public access to recette through Tailscale Funnel
 
-- Status: Proposed (Task 1.5c; the approach was accepted with the supervisor's "go" on 2026-10-20 and 2026-10-26)
+- Status: **Accepted** (supervisor, 2026-10-26; proposed in Task 1.5c)
 - Date: 2026-10-26
 - Relates to: ADR-022 (test-phase recette hosts), ADR-023 (edge TLS, kept for the real server), ADR-024 (deploys)
 - Sources checked 2026-10-26: Tailscale docs (Funnel, Docker parameters, policy syntax), Tailscale source v1.104.2
@@ -37,7 +37,8 @@ The app answers only its allowlisted hosts (`recette.upwilling.fr` etc., ADR-022
 ## Consequences
 
 - Recette is public (behind its password) only while the laptop runs. Funnel is in beta with unpublished
-  bandwidth limits: fine for demos, not for load.
+  bandwidth limits: fine for demos, not for load. Right after a device (re)starts, the first requests can time out
+  for a short while (seen on 2026-10-26, gone within a minute).
 - Enabling HTTPS certificates publishes the device names in Certificate Transparency logs; the public URL is also
   visible in the promote workflow's public log. Neither is secret; the password protects recette.
 - Absolute URLs the app builds from its own host would name `recette*.upwilling.fr`; none exist today (no auth or

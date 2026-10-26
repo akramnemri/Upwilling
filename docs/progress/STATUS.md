@@ -1,7 +1,7 @@
 # STATUS
 
 Updated: 2026-10-26 by Claude (session 4 — Tasks 1.3–1.5b merged; recette runs on the laptop via the deploy agent;
-Task 1.5c implemented, PR open; its live start waits for the supervisor's Tailscale console steps)
+Task 1.5c live and verified, ADR-025 accepted, PR #16 waiting for "merge")
 
 > This file is updated on the task branch. Until the 1.5c PR is merged, `develop` is behind: start a new session
 > from `feat/m1-funnel` (or after the merge, from `develop`).
@@ -9,21 +9,22 @@ Task 1.5c implemented, PR open; its live start waits for the supervisor's Tailsc
 ## Handoff for the next session (read first)
 - **Hosting for the test phase** (supervisor, 2026-10-20): the domain and the server are not ready, so the
   **supervisor's laptop is the server**, and public access must be free with no bank card. Pull-based deploys
-  (ADR-024, accepted); public access through Tailscale Funnel (ADR-025, proposed, Task 1.5c).
+  (ADR-024, accepted); public access through Tailscale Funnel (ADR-025, accepted, Task 1.5c).
 - **Recette runs on the laptop** since 2026-10-26: `C:\upwilling-server\agent` (deploy agent, `DEPLOY_STACKS=recette`
   by default) deployed `93903a4` automatically; `C:\upwilling-server\recette\.env` holds the generated database
   password (never displayed). Set up by the agent at the supervisor's request: agreed exception, ADR-025.
-- **Task 1.5c** files are written and tested; `C:\upwilling-server\funnel\` is prepared (copies of the files, `.env`
-  with `TS_AUTHKEY=` empty and the recette login, password generated and never displayed). Waiting for the
-  supervisor: Tailscale console steps (runbook `local-server.md` §9a), then the key pasted into `funnel\.env`.
+- **Recette is public** since 2026-10-26 behind its password: `https://{upwilling,careerboost,admin}-recette.
+  tail3810a7.ts.net` (`C:\upwilling-server\funnel`, project `upwilling-funnel`; tailnet policy per runbook
+  `local-server.md` §9a, including the grant for the Funnel relay). Login user `recette`; the password is in
+  `funnel\.env` (generated, never displayed). The auth key was removed and revoked; devices keep their identity.
 - **Tailscale secrets:** never ask for a key in the chat; the supervisor writes it into `.env` (an earlier key
   pasted in the chat was revoked, 2026-10-20).
 - Oracle Cloud (ADR-021) and the Cloudflare setup (ADR-023) stay the plan once a card / the domain are available.
 
 ## Current position
 - Milestone: M1 — Deployment chain (Essai 1). M0 is complete.
-- Task: 1.5c — Public access to recette through Tailscale Funnel — state: **implemented, waiting for the supervisor's
-  review and the live start**. `infra/server/compose.funnel.yaml` (ingress Caddy + 3 Tailscale devices),
+- Task: 1.5c — Public access to recette through Tailscale Funnel — state: **live and verified, ADR-025 accepted
+  (supervisor, 2026-10-26); PR #16 waiting for "merge"**. `infra/server/compose.funnel.yaml` (ingress Caddy + 3 Tailscale devices),
   `caddy/Caddyfile.funnel` (port per site, Host rewrite to the ADR-022 recette hosts, basic auth except
   `/api/version`, headers), `tailscale/serve-*.json`, `.env.funnel.example`; `promote.yml` polls
   `vars.RECETTE_PUBLIC_URL` after a recette promotion (warning only). Test: `infra/server/test/smoke-funnel.sh`
@@ -33,8 +34,10 @@ Task 1.5c implemented, PR open; its live start waits for the supervisor's Tailsc
   dropped by the packet filter otherwise), checked from outside through a Funnel relay: each of
   `https://{upwilling,careerboost,admin}-recette.tail3810a7.ts.net` answers 401 without / with a wrong password, 200
   and the right page with it; `/api/version` open (`93903a4`); security headers and noindex on 200 and 401 pages.
-  `X-Robots-Tag` appears twice (Caddy + the app): harmless. Pending: the supervisor removes and revokes the auth key,
-  `RECETTE_PUBLIC_URL` in the GitHub environment `recette`, ADR-025 confirmation.
+  `X-Robots-Tag` appears twice (Caddy + the app): harmless. Then: the supervisor removed the auth key from `.env`
+  and revoked it; the agent recreated the devices without it (they kept their identity; first requests after the
+  restart timed out briefly, then all answered) and set `RECETTE_PUBLIC_URL` in the GitHub environment `recette`
+  (`https://upwilling-recette.tail3810a7.ts.net`) at the supervisor's request.
 - 1.5b manual test: passed 2026-10-26 (agent started on the laptop, recette deployed and checked).
 - GitHub environments (checked 2026-10-26): `production` has the supervisor as required reviewer; the supervisor
   said the branch rules were fixed afterwards (not re-checked).
@@ -186,7 +189,7 @@ Task 1.5c implemented, PR open; its live start waits for the supervisor's Tailsc
   promote workflow moves the stack's image tag (production behind the `production` environment's approval), the
   deploy agent on the server pulls and deploys by digest. Amends the SSH deploy of 03 §12. Kept for the VPS later
   unless a reason appears (no inbound SSH, no deploy key in GitHub).
-- ADR-025 (proposed, Task 1.5c): test-phase public access to recette through Tailscale Funnel (3 tagged devices →
+- ADR-025 (accepted 2026-10-26, Task 1.5c): test-phase public access to recette through Tailscale Funnel (3 tagged devices →
   local ingress Caddy with Host rewrite to the ADR-022 hosts + basic auth); removed when the domain/server exist.
   Also records the agreed exception: the agent may run setup steps on the supervisor's laptop when asked, never on
   a real server, never entering a secret the human holds.
@@ -240,10 +243,8 @@ Task 1.5c implemented, PR open; its live start waits for the supervisor's Tailsc
 - Human (test phase, ADR-021, **blocked: no card for Oracle's verification yet**): create the Oracle Cloud account
   (EU home region, consider Pay As You Go + budget alert), the VCN and the Arm VM (`docs/runbooks/server-setup.md` §11), then run §3–§6 and send the `verify.sh` output. Apply the Cloudflare zone settings
   (`docs/runbooks/cloudflare-dns.md` §1); records come with Tasks 1.4/1.5/5.9/9.5. Confirm or amend ADR-020.
-- Supervisor (Task 1.5c): Tailscale console steps (`docs/runbooks/local-server.md` §9a), key into
-  `C:\upwilling-server\funnel\.env`; after the first start: remove and revoke the key, tell the agent the tailnet
-  name, add `RECETTE_PUBLIC_URL` to the GitHub environment `recette`. Confirm or amend ADR-025. Save the recette
-  and database passwords from the `.env` files in the password manager.
+- Supervisor: save the recette password (`C:\upwilling-server\funnel\.env`, `# Password:` line) and the database
+  password (`recette\.env`) in the password manager.
 - Supervisor: Docker Desktop "Start when you sign in" (`local-server.md` §2).
 - Human (when the server exists): Task 1.4's manual step, `docs/runbooks/compose-stacks.md` (origin certificate,
   Authenticated Origin Pulls, `.env` files, start edge + recette, recette DNS records, checks).
@@ -268,10 +269,10 @@ Task 1.5c implemented, PR open; its live start waits for the supervisor's Tailsc
 - Large `docker`/Windows disk checks are slow here (antivirus): scan targeted folders, not the whole drive.
 
 ## Next step (exact)
-1. Supervisor: Tailscale console steps and the key in `funnel\.env` (runbook §9a–b), then "done" in the chat.
-2. Agent: `docker compose -f compose.funnel.yaml up -d --wait` in `C:\upwilling-server\funnel` (agreed exception,
-   ADR-025); check the three addresses and `/api/version` once the supervisor gives the tailnet name.
-3. Supervisor reviews the 1.5c PR; "merge" → squash, sync `develop`, delete the branch (§4b). Then Task 1.6
-   (backups, restore, monitoring; plan first) or the supervisor's choice.
-4. When a card is available: human creates the Oracle VM (runbook §11) and runs §3–§6, then
+1. Supervisor: "merge" PR #16 → squash, sync `develop`, delete the branch (§4b). The merge itself is the first
+   end-to-end test of 1.5c: CI on develop → `deploy-recette` → the agent deploys → the promote job sees the new
+   commit on `RECETTE_PUBLIC_URL` (check the job summary).
+2. Then Task 1.6 (backups, restore, monitoring; plan first; Postgres runs on the laptop now) or Task 1.7 (Essai 1
+   report), the supervisor's choice.
+3. When a card is available: human creates the Oracle VM (runbook §11) and runs §3–§6, then
    `docs/runbooks/compose-stacks.md`; the server-dependent steps of 1.4–1.6 resume.
