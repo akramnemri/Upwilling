@@ -173,6 +173,8 @@ expect_status 404 recette.upwilling.fr /admin "no admin on a site host" "${AUTH[
 expect_header recette.upwilling.fr / "$NOINDEX" present "${AUTH[@]}"
 # The 401 answer too, without credentials.
 expect_header recette.upwilling.fr / "$NOINDEX" present
+expect_header recette.upwilling.fr / '^x-content-type-options: nosniff$' present
+expect_header recette.upwilling.fr / '^x-frame-options: DENY$' present
 expect_status 200 recette-careerboost.upwilling.fr / "Career Boost site" "${AUTH[@]}"
 expect_body recette-careerboost.upwilling.fr / "construire la vie que vous voulez demain" "${AUTH[@]}"
 expect_status 401 recette-admin.upwilling.fr / "admin without credentials"

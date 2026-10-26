@@ -74,6 +74,7 @@ with the version in a trailing comment. Upgrades are `chore(ci)` PRs that update
 | PostgreSQL | **`postgres:18.6-trixie`** | `sha256:74935e72241653ca55e0414067e6d8763aceb8a810eb51b452253ec3dcfc4336` | One per stack, `infra/server/compose.base.yaml` (ADR-005). 18.6 is the current minor of the current major. |
 | curl (test only) | **`curlimages/curl:8.23.0`** | `sha256:a134550be58ab783810e613ae96fd253c38f7bdd16d9bf9be350700c7a29ac06` | Client of `infra/server/test/smoke-stacks.sh` (presents the test client certificate). Never deployed. |
 | Docker CLI | **`docker:29.9.1-cli`** | `sha256:6fae2214c3121a28d5aa639d09032f61310b7c9c75ffbad1025f261a1b621800` | Deploy agent, `infra/server/compose.deploy-agent.yaml` (ADR-024; added 2026-10-20). Includes Compose v5.6.0 and buildx. |
+| Tailscale | **`tailscale/tailscale:v1.104.2`** | `sha256:b11583ad2e93e4671128538c88cf11f460444a5d7e449311dd1933a400ab849d` | Public access to recette in the test phase, `infra/server/compose.funnel.yaml` (ADR-025; added 2026-10-26). Latest stable (2026-10-21). |
 | Registry (test only) | **`registry:3.1.2`** | `sha256:ddf754342cfc8acc51a56d5d0ab6af06826461864460636d8bd5c546dab2a7b8` | Stand-in for GHCR in `infra/server/test/smoke-deploy.sh` (added 2026-10-20). Never deployed. |
 
 ## Consequences

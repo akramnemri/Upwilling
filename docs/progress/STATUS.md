@@ -1,33 +1,46 @@
 # STATUS
 
-Updated: 2026-10-26 by Claude (session 4 — Tasks 1.3, 1.4, 1.5a, 1.5b merged; ADR-024 accepted; next: the
-supervisor starts the deploy agent on the laptop, then Task 1.5c. A good moment to start a fresh session.)
+Updated: 2026-10-26 by Claude (session 4 — Task 1.5 complete: 1.5a–1.5c merged; recette deploys automatically to the
+laptop and is public behind its password. Next: Task 1.6 or 1.7. A good moment to start a fresh session.)
 
 ## Handoff for the next session (read first)
 - **Hosting for the test phase** (supervisor, 2026-10-20): the domain and the server are not ready, so the
-  **supervisor's machine is the server**, and public access must be free with no bank card. Agent's choice,
-  accepted with the "go" for Task 1.5: **Tailscale Funnel** for public HTTPS names (`<name>.<tailnet>.ts.net`),
-  Caddy mapping them to the ADR-022 recette hosts so the app does not change; **pull-based deploys** (an agent
-  on the machine follows tags in GHCR) instead of SSH, because nothing can connect in. Self-hosted GitHub
-  runner rejected (public repo: fork PRs could run code on the machine). Recorded in ADR-024 (accepted 2026-10-26).
-- **Task 1.5 split** (agent, accepted with "go"): 1.5a image published to GHCR + `GET /api/version` (merged);
-  1.5b deploy agent on the local machine + promotion/rollback workflows (merged); 1.5c Tailscale Funnel ingress.
-- **Tailscale:** the supervisor installed Tailscale on the laptop (2026-10-20) and pasted an auth key in the chat.
-  The agent did not use or store it; the supervisor **revoked it** (confirmed 2026-10-20). In 1.5c the supervisor creates the
-  right kind of key and writes it straight into the local `.env`; never ask for a secret in the chat.
+  **supervisor's laptop is the server**, and public access must be free with no bank card. Pull-based deploys
+  (ADR-024, accepted); public access through Tailscale Funnel (ADR-025, accepted, Task 1.5c).
+- **Recette runs on the laptop** since 2026-10-26: `C:\upwilling-server\agent` (deploy agent, `DEPLOY_STACKS=recette`
+  by default) deployed `93903a4` automatically; `C:\upwilling-server\recette\.env` holds the generated database
+  password (never displayed). Set up by the agent at the supervisor's request: agreed exception, ADR-025.
+- **Recette is public** since 2026-10-26 behind its password: `https://{upwilling,careerboost,admin}-recette.
+  tail3810a7.ts.net` (`C:\upwilling-server\funnel`, project `upwilling-funnel`; tailnet policy per runbook
+  `local-server.md` §9a, including the grant for the Funnel relay). Login user `recette`; the password is in
+  `funnel\.env` (generated, never displayed). The auth key was removed and revoked; devices keep their identity.
+- **Tailscale secrets:** never ask for a key in the chat; the supervisor writes it into `.env` (an earlier key
+  pasted in the chat was revoked, 2026-10-20).
 - Oracle Cloud (ADR-021) and the Cloudflare setup (ADR-023) stay the plan once a card / the domain are available.
 
 ## Current position
 - Milestone: M1 — Deployment chain (Essai 1). M0 is complete.
-- Task: 1.5b — Deploy agent + promotion/rollback workflows — state: **merged** (supervisor reviewed, accepted
-  ADR-024 and said "merge", 2026-10-26); manual test pending (the supervisor starts the agent). `promote.yml` moves the GHCR tag `recette`/`production`; `ci.yml` jobs `deploy-recette` (develop) and
-  `deploy-production` (main, environment approval); `rollback.yml`. The agent (`infra/server/deploy-agent/agent.sh`,
-  `compose.deploy-agent.yaml`) follows the tags, deploys by digest, checks, restores on failure. Tested by
-  `infra/server/test/smoke-deploy.sh` (local registry; also in CI). The first real deploy needs the supervisor:
-  the server folder `C:\upwilling-server` and the agent (`docs/runbooks/local-server.md` §2–§5).
-- GitHub environments (checked 2026-10-26): `production` has the supervisor as required reviewer and allows the
-  branches `main` and `develop` (runbook: `main` only); `recette` has no branch rule (runbook: `develop`). The
-  reviewer is the real guard; the branch rules are suggested to the supervisor, not blocking.
+- Task: 1.5c — Public access to recette through Tailscale Funnel — state: **merged** (PR #16, supervisor "merge"
+  2026-10-26), live and verified, ADR-025 accepted
+  (supervisor, 2026-10-26). `infra/server/compose.funnel.yaml` (ingress Caddy + 3 Tailscale devices),
+  `caddy/Caddyfile.funnel` (port per site, Host rewrite to the ADR-022 recette hosts, basic auth except
+  `/api/version`, headers), `tailscale/serve-*.json`, `.env.funnel.example`; `promote.yml` polls
+  `vars.RECETTE_PUBLIC_URL` after a recette promotion (warning only). Test: `infra/server/test/smoke-funnel.sh`
+  (also in CI). Also fixed for both Caddyfiles: security headers were missing on Caddy's own 401 page.
+- 1.5c live start 2026-10-26 (agent, agreed exception): the three devices joined tailnet `tail3810a7.ts.net`, got
+  certificates; after adding the grant `src: *` → `dst: tag:upwilling-recette` (the Funnel relay `tag:ingress` was
+  dropped by the packet filter otherwise), checked from outside through a Funnel relay: each of
+  `https://{upwilling,careerboost,admin}-recette.tail3810a7.ts.net` answers 401 without / with a wrong password, 200
+  and the right page with it; `/api/version` open (`93903a4`); security headers and noindex on 200 and 401 pages.
+  `X-Robots-Tag` appears twice (Caddy + the app): harmless. Then: the supervisor removed the auth key from `.env`
+  and revoked it; the agent recreated the devices without it (they kept their identity; first requests after the
+  restart timed out briefly, then all answered) and set `RECETTE_PUBLIC_URL` in the GitHub environment `recette`
+  (`https://upwilling-recette.tail3810a7.ts.net`) at the supervisor's request.
+- 1.5b manual test: passed 2026-10-26 (agent started on the laptop, recette deployed and checked).
+- GitHub environments (checked 2026-10-26): `production` has the supervisor as required reviewer; the supervisor
+  said the branch rules were fixed afterwards (not re-checked).
+- Docker Desktop starts only when the supervisor works on the project (supervisor, 2026-10-26): recette is offline
+  otherwise, the deploy check warns, and the agent catches up on the next start (runbook §2). Passwords saved.
 - Branch / PR: none open.
 
 ## Last completed tasks
@@ -49,7 +62,10 @@ supervisor starts the deploy agent on the laptop, then Task 1.5c. A good moment 
   publish verified 2026-10-20: CI on develop green, package made public by the supervisor, `imagetools inspect`
   shows linux/amd64 + linux/arm64 anonymously, and the pulled image reports its commit on `/api/version`.
 - 1.5b — Pull-based deploys (promote/rollback workflows, deploy agent) — merged 2026-10-26 (PR #15), reviewed by
-  the supervisor, ADR-024 accepted; manual test (agent started on the laptop) pending.
+  the supervisor, ADR-024 accepted; manual test passed 2026-10-26 (agent set up by the agent at the supervisor's
+  request, recette deployed `93903a4` automatically, version and readiness checked).
+- 1.5c — Test-phase public access to recette (Tailscale Funnel) — merged 2026-10-26 (PR #16), live start done by the
+  agent with the supervisor (console steps by the supervisor), checked from outside; ADR-025 accepted.
 
 ## What exists now (so a new session does not have to rediscover it)
 - pnpm 11 workspace + Turborepo: `apps/web` (Next.js 16.3.8, App Router, `src/`), `packages/config`
@@ -175,6 +191,10 @@ supervisor starts the deploy agent on the laptop, then Task 1.5c. A good moment 
   promote workflow moves the stack's image tag (production behind the `production` environment's approval), the
   deploy agent on the server pulls and deploys by digest. Amends the SSH deploy of 03 §12. Kept for the VPS later
   unless a reason appears (no inbound SSH, no deploy key in GitHub).
+- ADR-025 (accepted 2026-10-26, Task 1.5c): test-phase public access to recette through Tailscale Funnel (3 tagged devices →
+  local ingress Caddy with Host rewrite to the ADR-022 hosts + basic auth); removed when the domain/server exist.
+  Also records the agreed exception: the agent may run setup steps on the supervisor's laptop when asked, never on
+  a real server, never entering a secret the human holds.
 - Database: Oracle Database 11g (mentioned 2026-10-20) is not usable; PostgreSQL was confirmed instead.
 - Route rules match a canonical path (percent-decoded, lowercased, repeated slashes collapsed); malformed encoding and
   `.`/`..` segments are refused.
@@ -225,9 +245,6 @@ supervisor starts the deploy agent on the laptop, then Task 1.5c. A good moment 
 - Human (test phase, ADR-021, **blocked: no card for Oracle's verification yet**): create the Oracle Cloud account
   (EU home region, consider Pay As You Go + budget alert), the VCN and the Arm VM (`docs/runbooks/server-setup.md` §11), then run §3–§6 and send the `verify.sh` output. Apply the Cloudflare zone settings
   (`docs/runbooks/cloudflare-dns.md` §1); records come with Tasks 1.4/1.5/5.9/9.5. Confirm or amend ADR-020.
-- Supervisor (Task 1.5b): set up the local server folder and start the agent (`docs/runbooks/local-server.md`
-  §2–§5), report the result. Optional: tighten the environment branch rules (production: `main` only; recette:
-  `develop`).
 - Human (when the server exists): Task 1.4's manual step, `docs/runbooks/compose-stacks.md` (origin certificate,
   Authenticated Origin Pulls, `.env` files, start edge + recette, recette DNS records, checks).
 - Supervisor (optional): in SonarCloud, mark docker:S6471 on `infra/server/test/Dockerfile` as "Safe"; PR #12 was
@@ -251,10 +268,9 @@ supervisor starts the deploy agent on the laptop, then Task 1.5c. A good moment 
 - Large `docker`/Windows disk checks are slow here (antivirus): scan targeted folders, not the whole drive.
 
 ## Next step (exact)
-1. Check that CI on `develop` after the 1.5b merge ran `deploy-recette` (the `recette` tag moved).
-2. The supervisor sets up `C:\upwilling-server` and starts the agent (runbook §2–§5); the agent deploys recette;
-   check §5 and the agent log. That is Task 1.5b's manual test.
-3. Then Task 1.5c (plan first): public access to recette through Tailscale Funnel (the supervisor creates a new
-   Tailscale auth key of the kind the plan names and writes it into a local `.env` only).
-4. When a card is available: human creates the Oracle VM (runbook §11) and runs §3–§6, then
+1. Check the first end-to-end run of the PR #16 merge: CI on develop → `deploy-recette` → the agent deploys → the
+   promote job sees the new commit on `RECETTE_PUBLIC_URL` (job summary "Live on …").
+2. Then Task 1.6 (backups, restore, monitoring; plan first; Postgres runs on the laptop now) or Task 1.7 (Essai 1
+   report), the supervisor's choice.
+3. When a card is available: human creates the Oracle VM (runbook §11) and runs §3–§6, then
    `docs/runbooks/compose-stacks.md`; the server-dependent steps of 1.4–1.6 resume.

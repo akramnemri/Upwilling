@@ -1,0 +1,71 @@
+# Public access to recette during the test phase (Task 1.5c, ADR-025): Tailscale Funnel → this Caddy → recette.
+# Runs as the `ingress` service of compose.funnel.yaml, on internal networks only (no published port).
+# Each Tailscale device forwards its public HTTPS name to one port here; the port says which site was asked for,
+# so this file does not need to know the tailnet name. The app keeps seeing the ADR-022 recette hosts (its
+# allowlist does not change): the public *.ts.net name is replaced by the site's recette host on the way in.
+# Replaced by the edge Caddy (Caddyfile, ADR-023) once the domain and a real server exist.
+{
+	# Tailscale terminates TLS; plain HTTP inside the Docker network only.
+	auto_https off
+	servers {
+		timeouts {
+			read_header 10s
+			idle 2m
+		}
+	}
+}
+
+# The same response headers as the edge (Caddyfile), plus noindex: every host here is recette.
+(headers) {
+	# Set right away, so they are also on responses Caddy writes itself (the 401 of basic auth).
+	header {
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), browsing-topics=()"
+		X-Frame-Options "DENY"
+		Cross-Origin-Opener-Policy "same-origin"
+		X-Robots-Tag "noindex, nofollow"
+	}
+	# Removing a header makes Caddy apply the whole block at the end, on proxied responses only: keep it separate.
+	header {
+		-Server
+		-X-Powered-By
+	}
+}
+
+# Recette is password-protected (ADR-017). /api/version stays open: it only returns the commit SHA of a public
+# repository, and the deploy workflow reads it to confirm a deploy (promote.yml). If either variable is empty
+# Caddy refuses to start, so recette is never left open by mistake.
+(protected) {
+	@private not path /api/version
+	basic_auth @private {
+		{$RECETTE_BASIC_AUTH_USER} {$RECETTE_BASIC_AUTH_HASH}
+	}
+}
+
+# import site <upstream alias on the recette edge network> <recette host the app expects> <max request body>
+(site) {
+	import headers
+	import protected
+	request_body {
+		max_size {args[2]}
+	}
+	reverse_proxy {args[0]}:3000 {
+		header_up Host {args[1]}
+	}
+}
+
+# Academy site (Tailscale device upwilling-recette).
+http://:8081 {
+	import site recette-web-upwilling recette.upwilling.fr 2MB
+}
+
+# Career Boost site (Tailscale device careerboost-recette).
+http://:8082 {
+	import site recette-web-careerboost recette-careerboost.upwilling.fr 2MB
+}
+
+# Admin (Tailscale device admin-recette): basic auth stands in for Cloudflare Access, as on the edge.
+http://:8083 {
+	import site recette-cms recette-admin.upwilling.fr 50MB
+}
