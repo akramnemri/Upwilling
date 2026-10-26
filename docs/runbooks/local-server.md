@@ -138,6 +138,11 @@ They work only while this machine and Docker Desktop run.
    - in the rule that allows everything (`"src": ["*"]`, in `"grants"` or `"acls"`), replace `"*"` in **src** with
      `"autogroup:member"`. Your own devices keep full access; the tagged recette devices can no longer open
      connections to them.
+   - in `"grants"`, add this rule, which lets Tailscale's Funnel relay (and your devices) open connections **to** the
+     recette devices only; without it the relay's connections are dropped ("no rules matched" in the device logs):
+     ```json
+     {"src": ["*"], "dst": ["tag:upwilling-recette"], "ip": ["*"]},
+     ```
    - **Save**. The console refuses an invalid file.
 3. **Settings → Keys → Generate auth key**: Reusable **on**, Expiration 1 day is enough, Ephemeral **off**,
    Tags **on** → `tag:upwilling-recette`. Copy the key.

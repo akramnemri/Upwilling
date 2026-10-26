@@ -23,8 +23,11 @@ The app answers only its allowlisted hosts (`recette.upwilling.fr` etc., ADR-022
   auth (ADR-017), the edge's security headers and `X-Robots-Tag`, and **replaces the Host with the site's ADR-022
   recette host**, so the app and its allowlist do not change. `/api/version` stays open (a public commit SHA) so
   the promote workflow can confirm a deploy; that check warns instead of failing, as the laptop may be off.
-- The tailnet policy gives the Funnel attribute to `tag:upwilling-recette` only, and lets only tailnet members
-  (not tagged devices) open connections: a compromised container cannot reach the laptop through Tailscale.
+- The tailnet policy gives the Funnel attribute to `tag:upwilling-recette` only. Only tailnet members (not tagged
+  devices) may open connections to other devices, so a compromised container cannot reach the laptop through
+  Tailscale; a second grant (`src: *`, `dst: tag:upwilling-recette`) lets Tailscale's Funnel relay (a shared-in
+  node tagged `tag:ingress`) reach the recette devices. Found live on 2026-10-26: without it the relay's
+  connections are dropped by the devices' packet filter ("no rules matched").
 - No webhook host yet: nothing calls webhooks before the payment work.
 - **The agent may run setup steps on the supervisor's laptop when asked** (supervisor, 2026-10-26: "can you set it
   up for me?"). This exception to CLAUDE.md's "infra changes are files + runbooks; the human executes them"
