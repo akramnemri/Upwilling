@@ -1,10 +1,7 @@
 # STATUS
 
-Updated: 2026-10-26 by Claude (session 4 — Tasks 1.3–1.5b merged; recette runs on the laptop via the deploy agent;
-Task 1.5c live and verified, ADR-025 accepted, PR #16 waiting for "merge")
-
-> This file is updated on the task branch. Until the 1.5c PR is merged, `develop` is behind: start a new session
-> from `feat/m1-funnel` (or after the merge, from `develop`).
+Updated: 2026-10-26 by Claude (session 4 — Task 1.5 complete: 1.5a–1.5c merged; recette deploys automatically to the
+laptop and is public behind its password. Next: Task 1.6 or 1.7. A good moment to start a fresh session.)
 
 ## Handoff for the next session (read first)
 - **Hosting for the test phase** (supervisor, 2026-10-20): the domain and the server are not ready, so the
@@ -23,8 +20,9 @@ Task 1.5c live and verified, ADR-025 accepted, PR #16 waiting for "merge")
 
 ## Current position
 - Milestone: M1 — Deployment chain (Essai 1). M0 is complete.
-- Task: 1.5c — Public access to recette through Tailscale Funnel — state: **live and verified, ADR-025 accepted
-  (supervisor, 2026-10-26); PR #16 waiting for "merge"**. `infra/server/compose.funnel.yaml` (ingress Caddy + 3 Tailscale devices),
+- Task: 1.5c — Public access to recette through Tailscale Funnel — state: **merged** (PR #16, supervisor "merge"
+  2026-10-26), live and verified, ADR-025 accepted
+  (supervisor, 2026-10-26). `infra/server/compose.funnel.yaml` (ingress Caddy + 3 Tailscale devices),
   `caddy/Caddyfile.funnel` (port per site, Host rewrite to the ADR-022 recette hosts, basic auth except
   `/api/version`, headers), `tailscale/serve-*.json`, `.env.funnel.example`; `promote.yml` polls
   `vars.RECETTE_PUBLIC_URL` after a recette promotion (warning only). Test: `infra/server/test/smoke-funnel.sh`
@@ -41,7 +39,9 @@ Task 1.5c live and verified, ADR-025 accepted, PR #16 waiting for "merge")
 - 1.5b manual test: passed 2026-10-26 (agent started on the laptop, recette deployed and checked).
 - GitHub environments (checked 2026-10-26): `production` has the supervisor as required reviewer; the supervisor
   said the branch rules were fixed afterwards (not re-checked).
-- Branch / PR: `feat/m1-funnel` → `develop`.
+- Docker Desktop starts only when the supervisor works on the project (supervisor, 2026-10-26): recette is offline
+  otherwise, the deploy check warns, and the agent catches up on the next start (runbook §2). Passwords saved.
+- Branch / PR: none open.
 
 ## Last completed tasks
 - 0.1 — Verify versions and record foundational ADRs — merged 2026-10-18 (PR #1, `efd7107`)
@@ -64,6 +64,8 @@ Task 1.5c live and verified, ADR-025 accepted, PR #16 waiting for "merge")
 - 1.5b — Pull-based deploys (promote/rollback workflows, deploy agent) — merged 2026-10-26 (PR #15), reviewed by
   the supervisor, ADR-024 accepted; manual test passed 2026-10-26 (agent set up by the agent at the supervisor's
   request, recette deployed `93903a4` automatically, version and readiness checked).
+- 1.5c — Test-phase public access to recette (Tailscale Funnel) — merged 2026-10-26 (PR #16), live start done by the
+  agent with the supervisor (console steps by the supervisor), checked from outside; ADR-025 accepted.
 
 ## What exists now (so a new session does not have to rediscover it)
 - pnpm 11 workspace + Turborepo: `apps/web` (Next.js 16.3.8, App Router, `src/`), `packages/config`
@@ -243,9 +245,6 @@ Task 1.5c live and verified, ADR-025 accepted, PR #16 waiting for "merge")
 - Human (test phase, ADR-021, **blocked: no card for Oracle's verification yet**): create the Oracle Cloud account
   (EU home region, consider Pay As You Go + budget alert), the VCN and the Arm VM (`docs/runbooks/server-setup.md` §11), then run §3–§6 and send the `verify.sh` output. Apply the Cloudflare zone settings
   (`docs/runbooks/cloudflare-dns.md` §1); records come with Tasks 1.4/1.5/5.9/9.5. Confirm or amend ADR-020.
-- Supervisor: save the recette password (`C:\upwilling-server\funnel\.env`, `# Password:` line) and the database
-  password (`recette\.env`) in the password manager.
-- Supervisor: Docker Desktop "Start when you sign in" (`local-server.md` §2).
 - Human (when the server exists): Task 1.4's manual step, `docs/runbooks/compose-stacks.md` (origin certificate,
   Authenticated Origin Pulls, `.env` files, start edge + recette, recette DNS records, checks).
 - Supervisor (optional): in SonarCloud, mark docker:S6471 on `infra/server/test/Dockerfile` as "Safe"; PR #12 was
@@ -269,9 +268,8 @@ Task 1.5c live and verified, ADR-025 accepted, PR #16 waiting for "merge")
 - Large `docker`/Windows disk checks are slow here (antivirus): scan targeted folders, not the whole drive.
 
 ## Next step (exact)
-1. Supervisor: "merge" PR #16 → squash, sync `develop`, delete the branch (§4b). The merge itself is the first
-   end-to-end test of 1.5c: CI on develop → `deploy-recette` → the agent deploys → the promote job sees the new
-   commit on `RECETTE_PUBLIC_URL` (check the job summary).
+1. Check the first end-to-end run of the PR #16 merge: CI on develop → `deploy-recette` → the agent deploys → the
+   promote job sees the new commit on `RECETTE_PUBLIC_URL` (job summary "Live on …").
 2. Then Task 1.6 (backups, restore, monitoring; plan first; Postgres runs on the laptop now) or Task 1.7 (Essai 1
    report), the supervisor's choice.
 3. When a card is available: human creates the Oracle VM (runbook §11) and runs §3–§6, then

@@ -29,10 +29,17 @@ Repository **Settings → Environments → New environment**:
 Create `production` **before** anything is merged into `main`: GitHub creates a missing environment on first use,
 without protection.
 
-## 2. Docker Desktop (once)
+## 2. Docker Desktop (optional)
 
-Settings → General → **Start Docker Desktop when you sign in to your computer**: on. The containers restart by
-themselves once Docker Desktop runs.
+The stacks, the agent and public access run only while Docker Desktop runs; the containers restart by themselves
+when it starts. Starting it only when you work on the project is fine (supervisor's choice, 2026-10-26):
+
+- while it is off, recette is offline and the deploy workflow's public check ends with a warning (not a failure);
+- merges in the meantime are not lost: when Docker Desktop starts, the agent deploys the latest commit the
+  `recette` tag points to within about a minute.
+
+To keep recette always available instead: Settings → General → **Start Docker Desktop when you sign in to your
+computer**: on (and the machine must stay on).
 
 ## 3. The server folder (once)
 
