@@ -28,6 +28,13 @@ Task 1.5c implemented, PR open; its live start waits for the supervisor's Tailsc
   `/api/version`, headers), `tailscale/serve-*.json`, `.env.funnel.example`; `promote.yml` polls
   `vars.RECETTE_PUBLIC_URL` after a recette promotion (warning only). Test: `infra/server/test/smoke-funnel.sh`
   (also in CI). Also fixed for both Caddyfiles: security headers were missing on Caddy's own 401 page.
+- 1.5c live start 2026-10-26 (agent, agreed exception): the three devices joined tailnet `tail3810a7.ts.net`, got
+  certificates; after adding the grant `src: *` → `dst: tag:upwilling-recette` (the Funnel relay `tag:ingress` was
+  dropped by the packet filter otherwise), checked from outside through a Funnel relay: each of
+  `https://{upwilling,careerboost,admin}-recette.tail3810a7.ts.net` answers 401 without / with a wrong password, 200
+  and the right page with it; `/api/version` open (`93903a4`); security headers and noindex on 200 and 401 pages.
+  `X-Robots-Tag` appears twice (Caddy + the app): harmless. Pending: the supervisor removes and revokes the auth key,
+  `RECETTE_PUBLIC_URL` in the GitHub environment `recette`, ADR-025 confirmation.
 - 1.5b manual test: passed 2026-10-26 (agent started on the laptop, recette deployed and checked).
 - GitHub environments (checked 2026-10-26): `production` has the supervisor as required reviewer; the supervisor
   said the branch rules were fixed afterwards (not re-checked).
