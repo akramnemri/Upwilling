@@ -1,10 +1,7 @@
 # STATUS
 
-Updated: 2026-10-20 by Claude (session 4 — Tasks 1.3, 1.4, 1.5a merged; 1.5a publish verified; Task 1.5b
-implemented, PR open, waiting for the supervisor's review)
-
-> This file is updated on the task branch. Until the 1.5b PR is merged, `develop` is behind: start a new session
-> from `feat/m1-deploy-agent` (or after the merge, from `develop`).
+Updated: 2026-10-26 by Claude (session 4 — Tasks 1.3, 1.4, 1.5a, 1.5b merged; ADR-024 accepted; next: the
+supervisor starts the deploy agent on the laptop, then Task 1.5c. A good moment to start a fresh session.)
 
 ## Handoff for the next session (read first)
 - **Hosting for the test phase** (supervisor, 2026-10-20): the domain and the server are not ready, so the
@@ -12,9 +9,9 @@ implemented, PR open, waiting for the supervisor's review)
   accepted with the "go" for Task 1.5: **Tailscale Funnel** for public HTTPS names (`<name>.<tailnet>.ts.net`),
   Caddy mapping them to the ADR-022 recette hosts so the app does not change; **pull-based deploys** (an agent
   on the machine follows tags in GHCR) instead of SSH, because nothing can connect in. Self-hosted GitHub
-  runner rejected (public repo: fork PRs could run code on the machine). Recorded in ADR-024 (proposed, 1.5b).
+  runner rejected (public repo: fork PRs could run code on the machine). Recorded in ADR-024 (accepted 2026-10-26).
 - **Task 1.5 split** (agent, accepted with "go"): 1.5a image published to GHCR + `GET /api/version` (merged);
-  1.5b deploy agent on the local machine + promotion/rollback workflows (PR open); 1.5c Tailscale Funnel ingress.
+  1.5b deploy agent on the local machine + promotion/rollback workflows (merged); 1.5c Tailscale Funnel ingress.
 - **Tailscale:** the supervisor installed Tailscale on the laptop (2026-10-20) and pasted an auth key in the chat.
   The agent did not use or store it; the supervisor **revoked it** (confirmed 2026-10-20). In 1.5c the supervisor creates the
   right kind of key and writes it straight into the local `.env`; never ask for a secret in the chat.
@@ -22,13 +19,16 @@ implemented, PR open, waiting for the supervisor's review)
 
 ## Current position
 - Milestone: M1 — Deployment chain (Essai 1). M0 is complete.
-- Task: 1.5b — Deploy agent + promotion/rollback workflows — state: **implemented, waiting for the supervisor's
-  review**. `promote.yml` moves the GHCR tag `recette`/`production`; `ci.yml` jobs `deploy-recette` (develop) and
+- Task: 1.5b — Deploy agent + promotion/rollback workflows — state: **merged** (supervisor reviewed, accepted
+  ADR-024 and said "merge", 2026-10-26); manual test pending (the supervisor starts the agent). `promote.yml` moves the GHCR tag `recette`/`production`; `ci.yml` jobs `deploy-recette` (develop) and
   `deploy-production` (main, environment approval); `rollback.yml`. The agent (`infra/server/deploy-agent/agent.sh`,
   `compose.deploy-agent.yaml`) follows the tags, deploys by digest, checks, restores on failure. Tested by
   `infra/server/test/smoke-deploy.sh` (local registry; also in CI). The first real deploy needs the supervisor:
-  GitHub environments + the server folder `C:\upwilling-server` (`docs/runbooks/local-server.md`).
-- Branch / PR: `feat/m1-deploy-agent` → `develop`.
+  the server folder `C:\upwilling-server` and the agent (`docs/runbooks/local-server.md` §2–§5).
+- GitHub environments (checked 2026-10-26): `production` has the supervisor as required reviewer and allows the
+  branches `main` and `develop` (runbook: `main` only); `recette` has no branch rule (runbook: `develop`). The
+  reviewer is the real guard; the branch rules are suggested to the supervisor, not blocking.
+- Branch / PR: none open.
 
 ## Last completed tasks
 - 0.1 — Verify versions and record foundational ADRs — merged 2026-10-18 (PR #1, `efd7107`)
@@ -48,6 +48,8 @@ implemented, PR open, waiting for the supervisor's review)
 - 1.5a — Image publishing to GHCR, `GET /api/version` — merged 2026-10-20 (PR #14), reviewed by the supervisor;
   publish verified 2026-10-20: CI on develop green, package made public by the supervisor, `imagetools inspect`
   shows linux/amd64 + linux/arm64 anonymously, and the pulled image reports its commit on `/api/version`.
+- 1.5b — Pull-based deploys (promote/rollback workflows, deploy agent) — merged 2026-10-26 (PR #15), reviewed by
+  the supervisor, ADR-024 accepted; manual test (agent started on the laptop) pending.
 
 ## What exists now (so a new session does not have to rediscover it)
 - pnpm 11 workspace + Turborepo: `apps/web` (Next.js 16.3.8, App Router, `src/`), `packages/config`
@@ -169,7 +171,7 @@ implemented, PR open, waiting for the supervisor's review)
   CA (origin only reachable through Cloudflare, so Access cannot be bypassed); Caddy publishes 443 only (no port 80,
   no HTTP/3); separate edge compose project (supervisor-approved 2026-10-20); basic auth on every recette host
   except hooks, standing in for Cloudflare Access on `recette-admin` (supervisor, 2026-10-20). HSTS waits for launch.
-- ADR-024 (proposed, Task 1.5b; approach accepted with "go" 2026-10-20): pull-based deploys. CI publishes, the
+- ADR-024 (accepted 2026-10-26, Task 1.5b): pull-based deploys. CI publishes, the
   promote workflow moves the stack's image tag (production behind the `production` environment's approval), the
   deploy agent on the server pulls and deploys by digest. Amends the SSH deploy of 03 §12. Kept for the VPS later
   unless a reason appears (no inbound SSH, no deploy key in GitHub).
@@ -223,8 +225,9 @@ implemented, PR open, waiting for the supervisor's review)
 - Human (test phase, ADR-021, **blocked: no card for Oracle's verification yet**): create the Oracle Cloud account
   (EU home region, consider Pay As You Go + budget alert), the VCN and the Arm VM (`docs/runbooks/server-setup.md` §11), then run §3–§6 and send the `verify.sh` output. Apply the Cloudflare zone settings
   (`docs/runbooks/cloudflare-dns.md` §1); records come with Tasks 1.4/1.5/5.9/9.5. Confirm or amend ADR-020.
-- Supervisor (Task 1.5b): GitHub environments `recette` (branch `develop`) and `production` (required reviewer,
-  branch `main`) before the merge; then the local server folder and the agent (`docs/runbooks/local-server.md`).
+- Supervisor (Task 1.5b): set up the local server folder and start the agent (`docs/runbooks/local-server.md`
+  §2–§5), report the result. Optional: tighten the environment branch rules (production: `main` only; recette:
+  `develop`).
 - Human (when the server exists): Task 1.4's manual step, `docs/runbooks/compose-stacks.md` (origin certificate,
   Authenticated Origin Pulls, `.env` files, start edge + recette, recette DNS records, checks).
 - Supervisor (optional): in SonarCloud, mark docker:S6471 on `infra/server/test/Dockerfile` as "Safe"; PR #12 was
@@ -248,11 +251,9 @@ implemented, PR open, waiting for the supervisor's review)
 - Large `docker`/Windows disk checks are slow here (antivirus): scan targeted folders, not the whole drive.
 
 ## Next step (exact)
-1. Supervisor reviews the 1.5b PR. **Before merging:** create the GitHub environments `recette` and `production`
-   (`docs/runbooks/local-server.md` §1); a missing environment is created on first use without protection.
-2. After the merge: CI on develop runs `deploy-recette` (moves the `recette` tag). The supervisor sets up
-   `C:\upwilling-server` and starts the agent (runbook §2–§5); the agent deploys recette; check §5. Confirm or
-   amend ADR-024.
+1. Check that CI on `develop` after the 1.5b merge ran `deploy-recette` (the `recette` tag moved).
+2. The supervisor sets up `C:\upwilling-server` and starts the agent (runbook §2–§5); the agent deploys recette;
+   check §5 and the agent log. That is Task 1.5b's manual test.
 3. Then Task 1.5c (plan first): public access to recette through Tailscale Funnel (the supervisor creates a new
    Tailscale auth key of the kind the plan names and writes it into a local `.env` only).
 4. When a card is available: human creates the Oracle VM (runbook §11) and runs §3–§6, then

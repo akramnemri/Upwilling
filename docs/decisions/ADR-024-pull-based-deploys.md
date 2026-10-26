@@ -1,6 +1,6 @@
 # ADR-024 — Pull-based deploys: image tags + a deploy agent on the server
 
-- Status: Proposed (Task 1.5b; the approach was accepted with the supervisor's "go" on 2026-10-20)
+- Status: **Accepted** (supervisor, 2026-10-26; proposed in Task 1.5b, approach approved with "go" on 2026-10-20)
 - Date: 2026-10-20
 - Amends: `docs/ai/03_GIT_TESTING_PIPELINE.md` §12 (SSH deploy from GitHub Actions). Relates to ADR-003, ADR-020
   (deploy key), ADR-021 (Oracle VM, not available yet)
