@@ -110,8 +110,76 @@ one (a different password), add `DEPLOY_STACKS=recette production` to `C:\upwill
   images from `ghcr.io/akramnemri/upwilling-web`, by exact digest, and only what the `recette`/`production` tags
   point to (ADR-024).
 
+## 9. Public access to recette: Tailscale Funnel (Task 1.5c, ADR-025)
+
+Result: three public addresses, all behind the recette password except `/api/version`:
+
+| Address | Site |
+|---|---|
+| `https://upwilling-recette.<tailnet>.ts.net` | Academy |
+| `https://careerboost-recette.<tailnet>.ts.net` | Career Boost |
+| `https://admin-recette.<tailnet>.ts.net` | Admin |
+
+`<tailnet>` is your tailnet's DNS name, shown on the **DNS** page of the Tailscale admin console (`tailXXXX.ts.net`).
+They work only while this machine and Docker Desktop run.
+
+**a. Tailscale admin console, once** (https://login.tailscale.com/admin):
+
+1. **DNS** page: **MagicDNS** on, then **HTTPS Certificates** → Enable.
+2. **Access controls** page, in the policy file:
+   - add the tag (inside the top-level `{ }`):
+     ```json
+     "tagOwners": { "tag:upwilling-recette": ["autogroup:admin"] },
+     ```
+   - give it Funnel; if a `"nodeAttrs"` list already exists, add only the `{ … }` entry to it:
+     ```json
+     "nodeAttrs": [ { "target": ["tag:upwilling-recette"], "attr": ["funnel"] } ],
+     ```
+   - in the rule that allows everything (`"src": ["*"]`, in `"grants"` or `"acls"`), replace `"*"` in **src** with
+     `"autogroup:member"`. Your own devices keep full access; the tagged recette devices can no longer open
+     connections to them.
+   - **Save**. The console refuses an invalid file.
+3. **Settings → Keys → Generate auth key**: Reusable **on**, Expiration 1 day is enough, Ephemeral **off**,
+   Tags **on** → `tag:upwilling-recette`. Copy the key.
+
+**b. On this machine.** In `C:\upwilling-server\funnel\` (the agent can prepare this part when asked):
+
+- copies of `infra/server/compose.funnel.yaml`, `infra/server/caddy/Caddyfile.funnel` (into `caddy\`) and
+  `infra/server/tailscale/serve-*.json` (into `tailscale\`);
+- `.env` from `infra/server/.env.funnel.example`: `RECETTE_BASIC_AUTH_USER`, `RECETTE_BASIC_AUTH_HASH` (between single
+  quotes) and `TS_AUTHKEY=` followed by the key you copied. Paste the key yourself; never in a chat.
+
+Then:
+
+```powershell
+cd C:\upwilling-server\funnel
+docker compose -f compose.funnel.yaml up -d --wait
+```
+
+Within a minute the three devices appear on the console's **Machines** page with the tag `tag:upwilling-recette`.
+The first visit to each address can take a few seconds (certificate). Then:
+
+- remove the key from `.env` (keep the line `TS_AUTHKEY=`) and **revoke** it in Settings → Keys: the devices keep
+  their identity in Docker volumes and do not need it again;
+- in GitHub, repository Settings → Environments → **recette** → Environment variables → **Add variable**:
+  `RECETTE_PUBLIC_URL` = `https://upwilling-recette.<tailnet>.ts.net`. From then on the deploy workflow also checks
+  that recette answers with the new commit (a warning, not a failure, when this machine is off).
+
+**c. Checks and everyday use**
+
+| Check | Expected |
+|---|---|
+| Open each address | The browser asks for the recette user and password, then shows the site |
+| `https://upwilling-recette.<tailnet>.ts.net/api/version` | `{"version":"<commit>"}` without a password |
+| Status | `docker compose -f compose.funnel.yaml ps`: four containers `healthy` |
+| Stop public access (recette keeps running) | `docker compose -f compose.funnel.yaml stop` |
+
+If a device shows as offline or an address does not answer: `docker compose -f compose.funnel.yaml logs --tail 50`
+and send the output (it contains no secret) without the `.env`.
+
 ## For developers: testing without GitHub
 
-`bash infra/server/test/smoke-deploy.sh` (needs Docker and the image `upwilling-web:local`) runs the agent against a
+`bash infra/server/test/smoke-funnel.sh` checks the public-access ingress (ports, Host rewrite, password, headers) without
+Tailscale. `bash infra/server/test/smoke-deploy.sh` (needs Docker and the image `upwilling-web:local`) runs the agent against a
 throwaway local registry: first deploy, next release, a bad release refused and the previous one restored, then a
 rollback. It uses test names, so it is safe next to the real stacks. CI runs it in the `docker` job.
