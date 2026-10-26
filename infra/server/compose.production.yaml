@@ -1,6 +1,6 @@
 # Production stack (Task 1.4; 01_ARCHITECTURE.md §5.1, §16). Compose project `upwilling-prod`.
-# On the server: /srv/upwilling-prod (this file, compose.base.yaml, .env). Start the edge project first:
-# it creates the network this stack joins. Runbook: docs/runbooks/compose-stacks.md
+# On the server: /srv/upwilling-prod (this file, compose.base.yaml, .env). The edge network must exist first
+# (see compose.edge.yaml). Deployed by the deploy agent (Task 1.5b). Runbook: docs/runbooks/compose-stacks.md
 #   docker compose -f compose.production.yaml up -d --wait
 # Nothing here publishes a port: Caddy (compose.edge.yaml) is the only way in.
 name: upwilling-prod
@@ -66,7 +66,8 @@ networks:
   # The stack's own network: app <-> postgres, and outbound calls (Stripe, Brevo, R2...).
   default: {}
   edge:
-    name: upwilling-edge-prod
+    # Created beforehand (see compose.edge.yaml). Only the smoke tests override the name.
+    name: ${EDGE_NETWORK_PROD:-upwilling-edge-prod}
     external: true
 
 volumes:

@@ -1,7 +1,7 @@
 # STATUS
 
-Updated: 2026-10-20 by Claude (session 4 — Tasks 1.3, 1.4 and 1.5a merged; next: the first publish on develop,
-then Task 1.5b. A good moment to start a fresh session.)
+Updated: 2026-10-26 by Claude (session 4 — Tasks 1.3, 1.4, 1.5a, 1.5b merged; ADR-024 accepted; next: the
+supervisor starts the deploy agent on the laptop, then Task 1.5c. A good moment to start a fresh session.)
 
 ## Handoff for the next session (read first)
 - **Hosting for the test phase** (supervisor, 2026-10-20): the domain and the server are not ready, so the
@@ -9,19 +9,25 @@ then Task 1.5b. A good moment to start a fresh session.)
   accepted with the "go" for Task 1.5: **Tailscale Funnel** for public HTTPS names (`<name>.<tailnet>.ts.net`),
   Caddy mapping them to the ADR-022 recette hosts so the app does not change; **pull-based deploys** (an agent
   on the machine follows tags in GHCR) instead of SSH, because nothing can connect in. Self-hosted GitHub
-  runner rejected (public repo: fork PRs could run code on the machine). To be recorded in ADR-024 with 1.5b.
+  runner rejected (public repo: fork PRs could run code on the machine). Recorded in ADR-024 (accepted 2026-10-26).
 - **Task 1.5 split** (agent, accepted with "go"): 1.5a image published to GHCR + `GET /api/version` (merged);
-  1.5b deploy agent on the local machine + promotion/rollback workflows; 1.5c Tailscale Funnel ingress.
+  1.5b deploy agent on the local machine + promotion/rollback workflows (merged); 1.5c Tailscale Funnel ingress.
 - **Tailscale:** the supervisor installed Tailscale on the laptop (2026-10-20) and pasted an auth key in the chat.
-  The agent did not use or store it and asked the supervisor to **revoke it**. In 1.5c the supervisor creates the
+  The agent did not use or store it; the supervisor **revoked it** (confirmed 2026-10-20). In 1.5c the supervisor creates the
   right kind of key and writes it straight into the local `.env`; never ask for a secret in the chat.
 - Oracle Cloud (ADR-021) and the Cloudflare setup (ADR-023) stay the plan once a card / the domain are available.
 
 ## Current position
 - Milestone: M1 — Deployment chain (Essai 1). M0 is complete.
-- Task: 1.5a — Image publishing — state: **merged** (supervisor reviewed, "merge", 2026-10-20). The first real
-  publish runs on the push to `develop`; then the supervisor makes the package public
-  (`docs/runbooks/image-publishing.md` §2).
+- Task: 1.5b — Deploy agent + promotion/rollback workflows — state: **merged** (supervisor reviewed, accepted
+  ADR-024 and said "merge", 2026-10-26); manual test pending (the supervisor starts the agent). `promote.yml` moves the GHCR tag `recette`/`production`; `ci.yml` jobs `deploy-recette` (develop) and
+  `deploy-production` (main, environment approval); `rollback.yml`. The agent (`infra/server/deploy-agent/agent.sh`,
+  `compose.deploy-agent.yaml`) follows the tags, deploys by digest, checks, restores on failure. Tested by
+  `infra/server/test/smoke-deploy.sh` (local registry; also in CI). The first real deploy needs the supervisor:
+  the server folder `C:\upwilling-server` and the agent (`docs/runbooks/local-server.md` §2–§5).
+- GitHub environments (checked 2026-10-26): `production` has the supervisor as required reviewer and allows the
+  branches `main` and `develop` (runbook: `main` only); `recette` has no branch rule (runbook: `develop`). The
+  reviewer is the real guard; the branch rules are suggested to the supervisor, not blocking.
 - Branch / PR: none open.
 
 ## Last completed tasks
@@ -40,7 +46,10 @@ then Task 1.5b. A good moment to start a fresh session.)
 - 1.4 — Compose projects & Caddy — merged 2026-10-20 (PR #13, `2c4cc44`), manual test waived (no server).
   Supervisor decisions: PostgreSQL confirmed (ADR-005), separate edge project, basic auth on recette-admin, ADR-023 accepted.
 - 1.5a — Image publishing to GHCR, `GET /api/version` — merged 2026-10-20 (PR #14), reviewed by the supervisor;
-  the publish itself is checked on the first push to develop.
+  publish verified 2026-10-20: CI on develop green, package made public by the supervisor, `imagetools inspect`
+  shows linux/amd64 + linux/arm64 anonymously, and the pulled image reports its commit on `/api/version`.
+- 1.5b — Pull-based deploys (promote/rollback workflows, deploy agent) — merged 2026-10-26 (PR #15), reviewed by
+  the supervisor, ADR-024 accepted; manual test (agent started on the laptop) pending.
 
 ## What exists now (so a new session does not have to rediscover it)
 - pnpm 11 workspace + Turborepo: `apps/web` (Next.js 16.3.8, App Router, `src/`), `packages/config`
@@ -102,10 +111,19 @@ then Task 1.5b. A good moment to start a fresh session.)
   Test: `infra/server/test/smoke-stacks.sh` (test project names, throwaway certificates in the git-ignored
   `infra/server/test/.work/`, requests from a `curlimages/curl` container). Measured idle RAM with the 1.4 image:
   web ~55–61 MiB, cms ~56–59 MiB, worker ~23 MiB, postgres ~39 MiB, caddy ~14 MiB.
+- Deploys (Task 1.5b, ADR-024): `.github/workflows/promote.yml` (reusable: checks the commit's image exists, moves
+  `ghcr.io/akramnemri/upwilling-web:<stack>` to it, in the GitHub environment named after the stack), called by
+  `ci.yml` jobs `deploy-recette`/`deploy-production` and by `rollback.yml` (manual). Deploy agent:
+  `infra/server/compose.deploy-agent.yaml` (`docker:29.9.1-cli`, Docker socket, read-only, state volume) +
+  `deploy-agent/agent.sh` (POSIX sh; per stack: pull tag → revision label + digest → compose files from
+  raw.githubusercontent.com at that commit → `up --wait` → `/api/ready` + `/api/version` checks → restore previous
+  release on failure, remember the failed commit; keeps 2 releases). Edge networks are now `external` in every
+  project (names overridable for tests), created by the agent / runbook. Runbook: `docs/runbooks/local-server.md`.
 - CI: `.github/workflows/ci.yml`, jobs `checks` (install, format, typecheck, lint, test, build, e2e),
   `secret-scan` (gitleaks v8.30.1 Docker image, full history), `docker` (image build + `smoke-roles.sh` + `smoke-stacks.sh`, Tasks 1.1b/1.4),
   `shellcheck` (v0.11.0 image, every `*.sh`, Task 1.3), `image` (PRs: amd64 + arm64 native builds, `/api/version`
-  check), `publish` + `publish-manifest` (pushes to develop/main, after every other job: GHCR, Task 1.5a).
+  check), `publish` + `publish-manifest` (pushes to develop/main, after every other job: GHCR, Task 1.5a),
+  `deploy-recette` / `deploy-production` (Task 1.5b). The docker job also runs `smoke-deploy.sh`.
   Actions and images pinned (ADR-018 "CI tooling"). The docker job bakes the commit in (`APP_VERSION`).
   Repository settings to apply by hand: `docs/runbooks/github-repository-settings.md`.
   A third check, **SonarCloud Code Analysis**, also runs on PRs: it comes from a GitHub App on the repository,
@@ -153,6 +171,10 @@ then Task 1.5b. A good moment to start a fresh session.)
   CA (origin only reachable through Cloudflare, so Access cannot be bypassed); Caddy publishes 443 only (no port 80,
   no HTTP/3); separate edge compose project (supervisor-approved 2026-10-20); basic auth on every recette host
   except hooks, standing in for Cloudflare Access on `recette-admin` (supervisor, 2026-10-20). HSTS waits for launch.
+- ADR-024 (accepted 2026-10-26, Task 1.5b): pull-based deploys. CI publishes, the
+  promote workflow moves the stack's image tag (production behind the `production` environment's approval), the
+  deploy agent on the server pulls and deploys by digest. Amends the SSH deploy of 03 §12. Kept for the VPS later
+  unless a reason appears (no inbound SSH, no deploy key in GitHub).
 - Database: Oracle Database 11g (mentioned 2026-10-20) is not usable; PostgreSQL was confirmed instead.
 - Route rules match a canonical path (percent-decoded, lowercased, repeated slashes collapsed); malformed encoding and
   `.`/`..` segments are refused.
@@ -203,6 +225,9 @@ then Task 1.5b. A good moment to start a fresh session.)
 - Human (test phase, ADR-021, **blocked: no card for Oracle's verification yet**): create the Oracle Cloud account
   (EU home region, consider Pay As You Go + budget alert), the VCN and the Arm VM (`docs/runbooks/server-setup.md` §11), then run §3–§6 and send the `verify.sh` output. Apply the Cloudflare zone settings
   (`docs/runbooks/cloudflare-dns.md` §1); records come with Tasks 1.4/1.5/5.9/9.5. Confirm or amend ADR-020.
+- Supervisor (Task 1.5b): set up the local server folder and start the agent (`docs/runbooks/local-server.md`
+  §2–§5), report the result. Optional: tighten the environment branch rules (production: `main` only; recette:
+  `develop`).
 - Human (when the server exists): Task 1.4's manual step, `docs/runbooks/compose-stacks.md` (origin certificate,
   Authenticated Origin Pulls, `.env` files, start edge + recette, recette DNS records, checks).
 - Supervisor (optional): in SonarCloud, mark docker:S6471 on `infra/server/test/Dockerfile` as "Safe"; PR #12 was
@@ -226,10 +251,10 @@ then Task 1.5b. A good moment to start a fresh session.)
 - Large `docker`/Windows disk checks are slow here (antivirus): scan targeted folders, not the whole drive.
 
 ## Next step (exact)
-1. Check the first CI run on `develop` after PR #14: jobs `publish (amd64)`, `publish (arm64)`, `publish-manifest`.
-   Then the supervisor makes the package public (`docs/runbooks/image-publishing.md` §2) and confirms the
-   Tailscale key from the chat was revoked.
-2. Then Task 1.5b (plan first): pull-based deploy agent on the supervisor's machine, `recette`/`production` tags,
-   promotion with GitHub environment approval, rollback workflow, ADR-024. Then 1.5c (Tailscale Funnel).
-3. When a card is available: human creates the Oracle VM (runbook §11) and runs §3–§6, then
+1. Check that CI on `develop` after the 1.5b merge ran `deploy-recette` (the `recette` tag moved).
+2. The supervisor sets up `C:\upwilling-server` and starts the agent (runbook §2–§5); the agent deploys recette;
+   check §5 and the agent log. That is Task 1.5b's manual test.
+3. Then Task 1.5c (plan first): public access to recette through Tailscale Funnel (the supervisor creates a new
+   Tailscale auth key of the kind the plan names and writes it into a local `.env` only).
+4. When a card is available: human creates the Oracle VM (runbook §11) and runs §3–§6, then
    `docs/runbooks/compose-stacks.md`; the server-dependent steps of 1.4–1.6 resume.

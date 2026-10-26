@@ -2,7 +2,7 @@
 # Smoke test of the server stacks (Task 1.4): starts compose.edge.yaml, compose.production.yaml and
 # compose.recette.yaml on this machine, with throwaway test certificates, and checks through Caddy that every
 # host goes where 01_ARCHITECTURE.md §5.2 says, with the right protection and headers. Then removes everything.
-# Runs locally (Git Bash, Linux, macOS) and in CI. NEVER on a server: it refuses to run next to the real stacks.
+# Runs locally (Git Bash, Linux, macOS) and in CI, also next to the real stacks: test project and network names.
 # Needs the image upwilling-web:local, curl and openssl:
 #   docker build -f apps/web/Dockerfile -t upwilling-web:local .
 #   bash infra/server/test/smoke-stacks.sh           # run, then remove the containers, volumes and test files
@@ -29,13 +29,9 @@ edge() { docker compose -p upwilling-smoke-edge -f compose.edge.yaml --env-file 
 prod() { docker compose -p upwilling-smoke-prod -f compose.production.yaml --env-file "$WORK_DIR/stack.env" "$@"; }
 recette() { docker compose -p upwilling-smoke-recette -f compose.recette.yaml --env-file "$WORK_DIR/stack.env" "$@"; }
 
-# The edge networks have fixed names: the test cannot run next to the real stacks, and must not try.
-for project in upwilling-edge upwilling-prod upwilling-recette; do
-  if [[ -n $(docker ps -aq --filter "label=com.docker.compose.project=$project") ]]; then
-    echo "Refusing to run: containers of the real project $project exist on this Docker host." >&2
-    exit 1
-  fi
-done
+# Test edge networks, created beforehand as on a server (compose.edge.yaml), never the real ones.
+NETWORK_PROD="upwilling-smoke-edge-prod"
+NETWORK_RECETTE="upwilling-smoke-edge-recette"
 
 cleanup() {
   if [[ $KEEP == false ]]; then
@@ -46,10 +42,12 @@ cleanup() {
       prod down --volumes --timeout 15 || true
       edge down --volumes --timeout 15 || true
     fi
+    docker network rm "$NETWORK_PROD" "$NETWORK_RECETTE" >/dev/null 2>&1 || true
     rm -rf "$WORK_DIR"
   else
     echo "== Kept. Remove later with 'docker rm -f $CLIENT', then 'docker compose -p <project> down -v' for"
-    echo "   upwilling-smoke-recette, upwilling-smoke-prod, then upwilling-smoke-edge; then delete infra/server/$WORK_DIR"
+    echo "   upwilling-smoke-recette, upwilling-smoke-prod, then upwilling-smoke-edge; then"
+    echo "   'docker network rm $NETWORK_PROD $NETWORK_RECETTE' and delete infra/server/$WORK_DIR"
   fi
 }
 trap cleanup EXIT
@@ -87,12 +85,19 @@ CADDY_CERTS_DIR=./test/.work/certs
 EDGE_HTTPS_PUBLISH=127.0.0.1:$PORT
 RECETTE_BASIC_AUTH_USER=$auth_user
 RECETTE_BASIC_AUTH_HASH='$auth_hash'
+EDGE_NETWORK_PROD=$NETWORK_PROD
+EDGE_NETWORK_RECETTE=$NETWORK_RECETTE
 EOF
 cat > "$WORK_DIR/stack.env" <<EOF
 APP_IMAGE=upwilling-web:local
 LOG_LEVEL=info
 POSTGRES_PASSWORD=$(openssl rand -hex 32)
+EDGE_NETWORK_PROD=$NETWORK_PROD
+EDGE_NETWORK_RECETTE=$NETWORK_RECETTE
 EOF
+for network in "$NETWORK_PROD" "$NETWORK_RECETTE"; do
+  docker network inspect "$network" >/dev/null 2>&1 || docker network create --internal "$network" >/dev/null
+done
 
 echo "== Starting the edge, production and recette projects (waits until Docker reports them healthy)"
 for stack in edge prod recette; do

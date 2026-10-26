@@ -1,0 +1,31 @@
+# Puts a stack back on an earlier published commit (Task 1.5b, ADR-024): Actions → Rollback → Run workflow.
+# It only moves the stack's image tag (promote.yml); the deploy agent then deploys that commit. Production needs
+# the supervisor's approval, as for a normal deploy. Database rollbacks are never automatic (03 §12).
+# Runbook: docs/runbooks/local-server.md
+name: Rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      stack:
+        description: Stack to roll back
+        required: true
+        type: choice
+        options: [recette, production]
+      sha:
+        description: Full commit SHA to go back to (a commit CI published from develop or main)
+        required: true
+        type: string
+
+permissions: {}
+
+jobs:
+  rollback:
+    name: rollback ${{ inputs.stack }}
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/promote.yml
+    with:
+      stack: ${{ inputs.stack }}
+      sha: ${{ inputs.sha }}

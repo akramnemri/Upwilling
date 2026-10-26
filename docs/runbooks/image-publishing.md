@@ -12,6 +12,7 @@
 |---|---|
 | `ghcr.io/akramnemri/upwilling-web:<commit SHA>` | **The one to deploy.** Multi-architecture: linux/amd64 + linux/arm64 |
 | `…:<commit SHA>-amd64`, `…:<commit SHA>-arm64` | The two single-architecture builds the tag above points to. Do not delete them. |
+| `…:recette`, `…:production` | Which commit each stack must run; moved only by `promote.yml` (Task 1.5b). Never move them by hand. |
 
 - `<commit SHA>` is the full 40-character SHA of the commit on `develop`/`main`. The image serves it on
   `GET /api/version` (`{"version":"<SHA>"}`) and carries it in the `org.opencontainers.image.revision` label.
@@ -55,4 +56,5 @@ docker rm -f version-check
   architectures are pushed. Re-run the failed jobs from the Actions tab.
 - GHCR storage is free for public packages. A retention rule (delete old untagged/unused versions) is not set up
   yet; it is not needed before many images accumulate.
-- Deployments (moving `recette`/`production` to a published commit) come with Task 1.5b.
+- Deployments move the `recette`/`production` tags to a published commit (Task 1.5b, ADR-024):
+  `docs/runbooks/local-server.md`.
