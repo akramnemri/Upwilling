@@ -8,6 +8,8 @@
 #   bash infra/server/test/smoke-stacks.sh           # run, then remove the containers, volumes and test files
 #   bash infra/server/test/smoke-stacks.sh --keep    # leave them running afterwards (remove with the commands printed)
 set -euo pipefail
+# So `| grep ... >/dev/null`, never `| grep -q`: -q stops at the first match, the writer fails on the closed pipe,
+# and pipefail reports the match as a miss. This failed a develop run (PR #17).
 
 # Relative host paths from here on, and no Git Bash path rewriting: container paths such as /work and openssl
 # -subj values must reach the programs unchanged (no effect on Linux and macOS).
@@ -145,13 +147,13 @@ expect_status() {
 expect_body() {
   local host=$1 path=$2 text=$3
   shift 3
-  if body "$host" "$path" "$@" | grep -qF "$text"; then pass "$host$path contains \"$text\""; else fail "$host$path does not contain \"$text\""; fi
+  if body "$host" "$path" "$@" | grep -F "$text" >/dev/null; then pass "$host$path contains \"$text\""; else fail "$host$path does not contain \"$text\""; fi
 }
 # expect_header <host> <path> <case-insensitive regex> <present|absent> [curl options...]
 expect_header() {
   local host=$1 path=$2 pattern=$3 mode=$4
   shift 4
-  if headers "$host" "$path" "$@" | grep -qiE "$pattern"; then
+  if headers "$host" "$path" "$@" | grep -iE "$pattern" >/dev/null; then
     if [[ $mode == present ]]; then pass "$host$path has /$pattern/"; else fail "$host$path has /$pattern/ (must not)"; fi
   else
     if [[ $mode == absent ]]; then pass "$host$path has no /$pattern/"; else fail "$host$path lacks /$pattern/"; fi

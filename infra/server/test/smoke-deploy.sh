@@ -7,6 +7,8 @@
 #   docker build -f apps/web/Dockerfile -t upwilling-web:local .
 #   bash infra/server/test/smoke-deploy.sh
 set -euo pipefail
+# So `| grep ... >/dev/null`, never `| grep -q`: -q stops at the first match, the writer fails on the closed pipe,
+# and pipefail reports the match as a miss. This failed a develop run (PR #17).
 
 # Relative host paths, and no Git Bash path rewriting of container paths such as /state (no effect elsewhere).
 export MSYS_NO_PATHCONV=1
@@ -112,8 +114,8 @@ if [[ $(state previous) == "$V1" ]]; then pass "previous release remembered"; el
 echo "== A bad release is refused and the last good one restored"
 promote "$BAD"
 if wait_for failed "$BAD" 240; then pass "bad release marked as failed"; else fail "bad release not marked as failed"; fi
-for _ in $(seq 1 120); do agent logs agent 2>/dev/null | grep -q "restored $V2" && break; sleep 1; done
-if agent logs agent | grep -qF "restored $V2"; then pass "agent logged the restore"; else fail "no restore logged"; fi
+for _ in $(seq 1 120); do agent logs agent 2>/dev/null | grep "restored $V2" >/dev/null && break; sleep 1; done
+if agent logs agent | grep -F "restored $V2" >/dev/null; then pass "agent logged the restore"; else fail "no restore logged"; fi
 expect_running "$V2"
 if [[ $(state current) == "$V2" ]]; then pass "current release unchanged"; else fail "current release is '$(state current)'"; fi
 sleep 10
