@@ -76,6 +76,8 @@ with the version in a trailing comment. Upgrades are `chore(ci)` PRs that update
 | Docker CLI | **`docker:29.9.1-cli`** | `sha256:6fae2214c3121a28d5aa639d09032f61310b7c9c75ffbad1025f261a1b621800` | Deploy agent, `infra/server/compose.deploy-agent.yaml` (ADR-024; added 2026-10-20). Includes Compose v5.6.0 and buildx. |
 | Tailscale | **`tailscale/tailscale:v1.104.2`** | `sha256:b11583ad2e93e4671128538c88cf11f460444a5d7e449311dd1933a400ab849d` | Public access to recette in the test phase, `infra/server/compose.funnel.yaml` (ADR-025; added 2026-10-26). Latest stable (2026-10-21). |
 | Registry (test only) | **`registry:3.1.2`** | `sha256:ddf754342cfc8acc51a56d5d0ab6af06826461864460636d8bd5c546dab2a7b8` | Stand-in for GHCR in `infra/server/test/smoke-deploy.sh` (added 2026-10-20). Never deployed. |
+| rclone | **`rclone/rclone:1.75.2`** | `sha256:2687085f718d3c628f7fdfb77c52a1d344332aed543110bb88088f2c70d43eb5` | Its static binary is copied into the backup image, `infra/server/backup/Dockerfile` (ADR-026; added 2026-11-01). Latest release (2026-10-09). Debian trixie has 1.60.1. |
+| age | **Debian package `age=1.2.1-1*`** | — (version pin; the `*` accepts Debian's per-architecture rebuild suffix) | Installed in the backup image on top of the pinned Postgres image (ADR-026; added 2026-11-01). Candidate on amd64: `1.2.1-1+b5`. Upstream is 1.3.2. |
 
 ## Consequences
 

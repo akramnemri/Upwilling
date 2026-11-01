@@ -58,6 +58,8 @@ services:
   # Database `app` for Payload (Task 3.1); `umami` is added with Task 5.8.
   postgres:
     extends: { file: compose.base.yaml, service: postgres }
+    # Not `recette`: backup/restore.sh refuses this server.
+    command: ["postgres", "-c", "cluster_name=production"]
     mem_limit: 1g
     networks:
       default: {}

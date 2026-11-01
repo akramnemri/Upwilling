@@ -59,6 +59,8 @@ services:
   # Database `app` for Payload (Task 3.1); `umami` is added with Task 5.8. Synthetic data only.
   postgres:
     extends: { file: compose.base.yaml, service: postgres }
+    # The name backup/restore.sh asks this server for: restores only go into a server that says `recette`.
+    command: ["postgres", "-c", "cluster_name=recette"]
     mem_limit: 640m
     networks:
       default: {}
