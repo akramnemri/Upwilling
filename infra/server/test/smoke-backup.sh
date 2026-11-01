@@ -48,6 +48,11 @@ cleanup() {
   stack recette down --volumes --timeout 10 >/dev/null 2>&1 || true
   stack production down --volumes --timeout 10 >/dev/null 2>&1 || true
   docker network rm "$EDGE_NETWORK" >/dev/null 2>&1 || true
+  # On Linux these files belong to the container's user: only a container can remove them.
+  if [[ -n ${KEYS_PATH:-} ]]; then
+    docker run --rm --user 0 -v "$BACKUPS_PATH:/backups" -v "$KEYS_PATH:/keys" --entrypoint find "$IMAGE" \
+      /backups /keys -mindepth 1 -delete >/dev/null 2>&1 || true
+  fi
   docker image rm "$IMAGE" >/dev/null 2>&1 || true
   rm -rf "$WORK_DIR"
 }
@@ -98,12 +103,12 @@ docker build -q -t "$IMAGE" backup >/dev/null
 
 rm -rf "$WORK_DIR"
 mkdir -p "$SERVER_DIR/recette" "$SERVER_DIR/production" "$SERVER_DIR/backup" "$SERVER_DIR/backups" "$WORK_DIR/keys"
-# Written by the container's user (uid 999) on Linux, removed by the runner's.
-chmod 777 "$SERVER_DIR/backups" "$WORK_DIR/keys"
 cp compose.backup.yaml "$SERVER_DIR/backup/"
 cp -r backup "$SERVER_DIR/backup/backup"
 BACKUPS_PATH=$(cd "$SERVER_DIR/backups" && (pwd -W 2>/dev/null || pwd))
 KEYS_PATH=$(cd "$WORK_DIR/keys" && (pwd -W 2>/dev/null || pwd))
+# Owned by the container's user, as the runbook asks on a Linux server (uid 999). Containers handle everything in them.
+docker run --rm --user 0 -v "$BACKUPS_PATH:/backups" -v "$KEYS_PATH:/keys" --entrypoint chown "$IMAGE" 999:999 /backups /keys
 
 RECIPIENT=$(generate_key backup-key.txt)
 generate_key wrong-key.txt >/dev/null
@@ -234,11 +239,16 @@ expect "no scratch database left" \
 echo "== S3 destination (rclone's S3 server standing in for R2)"
 S3_ACCESS=$(openssl rand -hex 8)
 S3_SECRET=$(openssl rand -hex 16)
+# HTTPS, as R2 is, with a throwaway certificate made inside the container: the client is told not to verify it.
 docker run -d --name "$S3_CONTAINER" --network "$RECETTE_NETWORK" --entrypoint bash "$IMAGE" -c \
-  "mkdir -p /tmp/s3/upwilling-backups && exec rclone serve s3 --addr :8080 --auth-key '$S3_ACCESS,$S3_SECRET' /tmp/s3" \
-  >/dev/null
-S3_ENV=(-e BACKUP_DESTINATION=s3stand:upwilling-backups -e RCLONE_CONFIG_S3STAND_TYPE=s3
-  -e RCLONE_CONFIG_S3STAND_PROVIDER=Rclone -e "RCLONE_CONFIG_S3STAND_ENDPOINT=http://$S3_CONTAINER:8080/"
+  "mkdir -p /tmp/s3/upwilling-backups &&
+   openssl req -x509 -newkey ed25519 -nodes -days 1 -subj /CN=$S3_CONTAINER \
+     -keyout /tmp/key.pem -out /tmp/cert.pem 2>/dev/null &&
+   exec rclone serve s3 --addr :8443 --cert /tmp/cert.pem --key /tmp/key.pem \
+     --auth-key '$S3_ACCESS,$S3_SECRET' /tmp/s3" >/dev/null
+S3_ENV=(-e BACKUP_DESTINATION=s3stand:upwilling-backups -e RCLONE_NO_CHECK_CERTIFICATE=true
+  -e RCLONE_CONFIG_S3STAND_TYPE=s3 -e RCLONE_CONFIG_S3STAND_PROVIDER=Rclone
+  -e "RCLONE_CONFIG_S3STAND_ENDPOINT=https://$S3_CONTAINER:8443/"
   -e "RCLONE_CONFIG_S3STAND_ACCESS_KEY_ID=$S3_ACCESS" -e "RCLONE_CONFIG_S3STAND_SECRET_ACCESS_KEY=$S3_SECRET")
 sleep 2
 if backup_compose run --rm -T "${S3_ENV[@]}" backup once 2>&1 | grep -q 'backed up app as'; then
