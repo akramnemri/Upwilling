@@ -1,9 +1,11 @@
 # STATUS
 
-Updated: 2026-10-26 by Claude (session 4 — Task 1.5 complete: 1.5a–1.5c merged; recette deploys automatically to the
-laptop and is public behind its password. Next: Task 1.6 or 1.7. A good moment to start a fresh session.)
+Updated: 2026-11-01 by Claude (session 5 — Task 1.6 split into 1.6a/b/c, supervisor "Go 1.6a"; 1.6a on its branch,
+waiting for review, merge and the real restore on the laptop.)
 
 ## Handoff for the next session (read first)
+- **Task 1.6a needs its merge first:** the restore guard reads `cluster_name`, which only reaches recette's Postgres
+  with the deploy after the merge. The real restore (manual test) comes after that, not before.
 - **Hosting for the test phase** (supervisor, 2026-10-20): the domain and the server are not ready, so the
   **supervisor's laptop is the server**, and public access must be free with no bank card. Pull-based deploys
   (ADR-024, accepted); public access through Tailscale Funnel (ADR-025, accepted, Task 1.5c).
@@ -20,7 +22,17 @@ laptop and is public behind its password. Next: Task 1.6 or 1.7. A good moment t
 
 ## Current position
 - Milestone: M1 — Deployment chain (Essai 1). M0 is complete.
-- Task: 1.5c — Public access to recette through Tailscale Funnel — state: **merged** (PR #16, supervisor "merge"
+- Task: 1.6a — Encrypted backups and restore into recette — state: **PR open, waiting for review**. Branch
+  `chore/m1-backup-restore`. ADR-026 proposed. Runs in CI and locally; not installed on the laptop yet.
+- Task 1.6 split (supervisor, 2026-11-01, "Go 1.6a"): **1.6a** backup and restore, required for M1's exit; **1.6b**
+  Sentry, after the supervisor creates the organization (the storage location is chosen at creation and can never
+  change: pick EU); **1.6c** uptime monitor, deferred until a server exists (`/api/ready` is behind the recette
+  password, and the laptop is often off, so it would only send false alerts). M1's exit criteria do not need 1.6c.
+  A local-folder destination counts as "restore proven" for M1 while the data is synthetic (accepted with the "go").
+- End-to-end check of the PR #16 merge, done 2026-11-01 (step 1 of the previous "Next step"): every CI job passed,
+  `deploy-recette` printed `Live on https://upwilling-recette.tail3810a7.ts.net`, and the public `/api/version`
+  answers `94389c8`. **A merge to `develop` reaches recette with no manual step.**
+- Previous task: 1.5c — Public access to recette through Tailscale Funnel — state: **merged** (PR #16, supervisor "merge"
   2026-10-26), live and verified, ADR-025 accepted
   (supervisor, 2026-10-26). `infra/server/compose.funnel.yaml` (ingress Caddy + 3 Tailscale devices),
   `caddy/Caddyfile.funnel` (port per site, Host rewrite to the ADR-022 recette hosts, basic auth except
@@ -41,7 +53,7 @@ laptop and is public behind its password. Next: Task 1.6 or 1.7. A good moment t
   said the branch rules were fixed afterwards (not re-checked).
 - Docker Desktop starts only when the supervisor works on the project (supervisor, 2026-10-26): recette is offline
   otherwise, the deploy check warns, and the agent catches up on the next start (runbook §2). Passwords saved.
-- Branch / PR: none open.
+- Branch / PR: `chore/m1-backup-restore`, to `develop`.
 
 ## Last completed tasks
 - 0.1 — Verify versions and record foundational ADRs — merged 2026-10-18 (PR #1, `efd7107`)
@@ -135,11 +147,20 @@ laptop and is public behind its password. Next: Task 1.6 or 1.7. A good moment t
   raw.githubusercontent.com at that commit → `up --wait` → `/api/ready` + `/api/version` checks → restore previous
   release on failure, remember the failed commit; keeps 2 releases). Edge networks are now `external` in every
   project (names overridable for tests), created by the agent / runbook. Runbook: `docs/runbooks/local-server.md`.
+- Backups (Task 1.6a, ADR-026): `infra/server/compose.backup.yaml` (project `upwilling-backup`: service `backup`, loop;
+  service `restore`, profile, one-off), image built on the server from `infra/server/backup/` (`Dockerfile`: the
+  database's own Postgres digest + Debian `age` + rclone's static binary; `common.sh`, `backup.sh`, `restore.sh`).
+  `pg_dump -Fc | age | rclone rcat`, 24 h interval with catch-up (poll 5 minutes), 35 days. Files
+  `<stack>-<database>-<UTC time>.dump.age`. Postgres now starts with `cluster_name=recette|production`; `restore.sh`
+  (`list`, `check`, `apply`) refuses any server not named `recette`, and restores through a scratch database.
+  Test: `infra/server/test/smoke-backup.sh` (also in CI). Runbook: `docs/runbooks/backup-restore.md`. R2 facts and
+  variables: `docs/integrations/r2.md` (no real R2 run yet).
 - CI: `.github/workflows/ci.yml`, jobs `checks` (install, format, typecheck, lint, test, build, e2e),
   `secret-scan` (gitleaks v8.30.1 Docker image, full history), `docker` (image build + `smoke-roles.sh` + `smoke-stacks.sh`, Tasks 1.1b/1.4),
   `shellcheck` (v0.11.0 image, every `*.sh`, Task 1.3), `image` (PRs: amd64 + arm64 native builds, `/api/version`
   check), `publish` + `publish-manifest` (pushes to develop/main, after every other job: GHCR, Task 1.5a),
-  `deploy-recette` / `deploy-production` (Task 1.5b). The docker job also runs `smoke-deploy.sh`.
+  `deploy-recette` / `deploy-production` (Task 1.5b). The docker job also runs `smoke-deploy.sh`, `smoke-funnel.sh`
+  and `smoke-backup.sh`.
   Actions and images pinned (ADR-018 "CI tooling"). The docker job bakes the commit in (`APP_VERSION`).
   Repository settings to apply by hand: `docs/runbooks/github-repository-settings.md`.
   A third check, **SonarCloud Code Analysis**, also runs on PRs: it comes from a GitHub App on the repository,
@@ -195,6 +216,11 @@ laptop and is public behind its password. Next: Task 1.6 or 1.7. A good moment t
   local ingress Caddy with Host rewrite to the ADR-022 hosts + basic auth); removed when the domain/server exist.
   Also records the agreed exception: the agent may run setup steps on the supervisor's laptop when asked, never on
   a real server, never entering a secret the human holds.
+- ADR-026 (proposed 2026-11-01, Task 1.6a): own Compose project, no Docker socket; public-key encryption with age, the
+  private key off the server; interval with catch-up because the laptop is off at night; any rclone path as the
+  destination (local folder in the test phase, amending ADR-008 for it, R2 by configuration); retention only after
+  a successful round; restores into recette only, checked against the server's own `cluster_name`, through a scratch
+  database.
 - Database: Oracle Database 11g (mentioned 2026-10-20) is not usable; PostgreSQL was confirmed instead.
 - Route rules match a canonical path (percent-decoded, lowercased, repeated slashes collapsed); malformed encoding and
   `.`/`..` segments are refused.
@@ -222,9 +248,16 @@ laptop and is public behind its password. Next: Task 1.6 or 1.7. A good moment t
 - Task 0.5: no database-backed integration tests yet (placeholder `tests/integration/environment.test.ts`).
 - Task 0.6: CI without a Postgres service container and without a migration check.
 - Task 1.4: the server stacks run Postgres with its `postgres` superuser only; the app's own non-superuser role and
-  `DATABASE_URL` come with Task 3.1. Backups: Task 1.6.
+  `DATABASE_URL` come with Task 3.1.
+- Task 1.6a: backups run as the superuser and restores use `--no-owner`. Task 3.1 adds a backup role, decides how
+  roles are restored (`pg_dump` does not contain them), and wires the pre-migration backup (03 §10) into the agent.
 
 ## Open issues / risks
+- **Backups are not off-site in the test phase** (ADR-026): they would not survive losing the laptop. R2 or another
+  off-site destination, and a second holder of the private key, are mandatory before any real data.
+- Nothing alerts on a failing backup yet: only an `unhealthy` container and its log (ADR-026).
+- Real R2 and the arm64 build of the backup image have never run: no account, no arm64 emulation locally, and CI
+  builds that image on amd64 only. Run both when the Oracle VM or an R2 account exists.
 - Task 3.1: verify Payload against PostgreSQL 18 (ADR-005); fall back to 17 before real data if needed.
 - `X-Frame-Options: DENY` from Caddy will block Payload's live preview (admin frames the sites): revisit in M5.
 - The server stacks have never run on a real server or on arm64; the first real start is the deferred 1.4 manual step.
@@ -239,6 +272,11 @@ laptop and is public behind its password. Next: Task 1.6 or 1.7. A good moment t
   before `docker builder prune` (it removes other projects' build cache too).
 
 ## Waiting on human / PO
+- Supervisor: review and merge Task 1.6a, then the restore proof on the laptop (`docs/runbooks/backup-restore.md`
+  §1, §2, §5). Generate the key yourself and never paste the private key in the chat. Confirm or amend ADR-026.
+- PO: confirm the 35-day retention (TR-08). Before the first restore of real data into recette: decide whether and
+  how that is allowed (ADR-026).
+- Supervisor (when wanted): whether the R2 checkout asks for a card; the Sentry organization, EU, for Task 1.6b.
 - PO: public contact address for each site (organization mailbox, e.g. a `contact@` address); academy logo files
   (SVG, + favicon); vector source of the Career Boost logo; validation of the French copy in
   `apps/web/src/modules/content/under-construction.ts`. **Before go-live** the two `contactEmail: null` must be filled.
@@ -268,9 +306,9 @@ laptop and is public behind its password. Next: Task 1.6 or 1.7. A good moment t
 - Large `docker`/Windows disk checks are slow here (antivirus): scan targeted folders, not the whole drive.
 
 ## Next step (exact)
-1. Check the first end-to-end run of the PR #16 merge: CI on develop → `deploy-recette` → the agent deploys → the
-   promote job sees the new commit on `RECETTE_PUBLIC_URL` (job summary "Live on …").
-2. Then Task 1.6 (backups, restore, monitoring; plan first; Postgres runs on the laptop now) or Task 1.7 (Essai 1
-   report), the supervisor's choice.
-3. When a card is available: human creates the Oracle VM (runbook §11) and runs §3–§6, then
+1. Supervisor reviews and merges Task 1.6a; recette redeploys with `cluster_name=recette`.
+2. Supervisor installs backups on the laptop and runs the restore proof (runbook §1, §2, §5). Do not start another
+   task before that result.
+3. Then Task 1.6b (Sentry) or Task 1.7 (Essai 1 report), the supervisor's choice.
+4. When a card is available: human creates the Oracle VM (runbook §11) and runs §3–§6, then
    `docs/runbooks/compose-stacks.md`; the server-dependent steps of 1.4–1.6 resume.

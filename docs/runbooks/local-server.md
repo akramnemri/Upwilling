@@ -6,6 +6,7 @@
 - Files: `infra/server/compose.deploy-agent.yaml`, `infra/server/deploy-agent/agent.sh`,
   `.github/workflows/promote.yml`, `rollback.yml`, jobs `deploy-*` of `ci.yml`.
 - Public access to recette comes with Task 1.5c (Tailscale Funnel). Until then, recette runs only on this machine.
+- Database backups and restores have their own runbook: `docs/runbooks/backup-restore.md` (Task 1.6a).
 
 ## How it works
 
@@ -36,7 +37,8 @@ when it starts. Starting it only when you work on the project is fine (superviso
 
 - while it is off, recette is offline and the deploy workflow's public check ends with a warning (not a failure);
 - merges in the meantime are not lost: when Docker Desktop starts, the agent deploys the latest commit the
-  `recette` tag points to within about a minute.
+  `recette` tag points to within about a minute;
+- a backup missed while it was off is taken within minutes of Docker Desktop starting.
 
 To keep recette always available instead: Settings → General → **Start Docker Desktop when you sign in to your
 computer**: on (and the machine must stay on).

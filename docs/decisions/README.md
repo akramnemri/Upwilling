@@ -31,3 +31,4 @@ and setting the old one's status to "Superseded by ADR-YYY".
 | [023](ADR-023-edge-tls-cloudflare-caddy.md) | Edge TLS: Cloudflare origin certificate + Authenticated Origin Pulls | Accepted |
 | [024](ADR-024-pull-based-deploys.md) | Pull-based deploys: image tags + deploy agent | Accepted |
 | [025](ADR-025-test-phase-public-access-tailscale.md) | Test-phase public access to recette through Tailscale Funnel | Accepted |
+| [026](ADR-026-database-backups-restore.md) | Encrypted database backups and restores into recette | Proposed (amends 008 for the test phase) |
