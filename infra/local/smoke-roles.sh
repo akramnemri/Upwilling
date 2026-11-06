@@ -8,6 +8,8 @@
 #   bash infra/local/smoke-roles.sh --keep    # leave the containers running afterwards
 # EXPECTED_VERSION=<commit SHA> checks /api/version when the image was built with that APP_VERSION (CI does).
 set -euo pipefail
+# So `| grep ... >/dev/null`, never `| grep -q`: -q stops at the first match, the writer fails on the closed pipe,
+# and pipefail reports the match as a miss. This failed a develop run (PR #17).
 
 COMPOSE_FILE="$(cd "$(dirname "$0")" && pwd)/compose.roles.yaml"
 KEEP=false
@@ -37,7 +39,7 @@ expect_status() {
 # expect_body <port> <Host header> <path> <text the page must contain>
 expect_body() {
   local port=$1 host=$2 path=$3 text=$4
-  if curl -s --max-time 10 -H "Host: $host" "http://127.0.0.1:$port$path" | grep -qF "$text"; then
+  if curl -s --max-time 10 -H "Host: $host" "http://127.0.0.1:$port$path" | grep -F "$text" >/dev/null; then
     pass "$host$path on :$port contains \"$text\""
   else
     fail "$host$path on :$port does not contain \"$text\""
@@ -92,13 +94,13 @@ for service in web-upwilling cms worker; do
 done
 
 echo "== worker"
-if compose logs worker | grep -qF '"msg":"worker started"'; then pass "worker logged its start"; else fail "worker start not logged"; fi
+if compose logs worker | grep -F '"msg":"worker started"' >/dev/null; then pass "worker logged its start"; else fail "worker start not logged"; fi
 echo "   stopping the worker (SIGTERM)"
 compose stop --timeout 15 worker
 worker_id=$(compose ps -aq worker)
 exit_code=$(docker inspect -f '{{.State.ExitCode}}' "$worker_id")
 if [[ $exit_code == "0" ]]; then pass "worker exited with code 0 on SIGTERM"; else fail "worker exited with code $exit_code"; fi
-if compose logs worker | grep -qF '"msg":"worker stopped"'; then pass "worker logged a clean stop"; else fail "worker stop not logged"; fi
+if compose logs worker | grep -F '"msg":"worker stopped"' >/dev/null; then pass "worker logged a clean stop"; else fail "worker stop not logged"; fi
 
 echo "== web shutdown"
 echo "   stopping web-upwilling (SIGTERM)"

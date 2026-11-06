@@ -7,6 +7,8 @@
 # Runs locally (Git Bash, Linux, macOS) and in CI:
 #   bash infra/server/test/smoke-backup.sh
 set -euo pipefail
+# So `| grep ... >/dev/null`, never `| grep -q`: -q stops at the first match, the writer fails on the closed pipe,
+# and pipefail reports the match as a miss. This failed a develop run (PR #17).
 
 # Relative host paths, and no Git Bash path rewriting of container paths such as /backups (no effect elsewhere).
 export MSYS_NO_PATHCONV=1
@@ -251,7 +253,7 @@ S3_ENV=(-e BACKUP_DESTINATION=s3stand:upwilling-backups -e RCLONE_NO_CHECK_CERTI
   -e "RCLONE_CONFIG_S3STAND_ENDPOINT=https://$S3_CONTAINER:8443/"
   -e "RCLONE_CONFIG_S3STAND_ACCESS_KEY_ID=$S3_ACCESS" -e "RCLONE_CONFIG_S3STAND_SECRET_ACCESS_KEY=$S3_SECRET")
 sleep 2
-if backup_compose run --rm -T "${S3_ENV[@]}" backup once 2>&1 | grep -q 'backed up app as'; then
+if backup_compose run --rm -T "${S3_ENV[@]}" backup once 2>&1 | grep 'backed up app as' >/dev/null; then
   pass "backup uploaded to S3"
 else
   fail "backup not uploaded to S3"

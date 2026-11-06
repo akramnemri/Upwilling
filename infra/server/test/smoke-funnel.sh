@@ -8,6 +8,8 @@
 #   docker build -f apps/web/Dockerfile -t upwilling-web:local .
 #   bash infra/server/test/smoke-funnel.sh
 set -euo pipefail
+# So `| grep ... >/dev/null`, never `| grep -q`: -q stops at the first match, the writer fails on the closed pipe,
+# and pipefail reports the match as a miss. This failed a develop run (PR #17).
 
 # Relative host paths, and no Git Bash path rewriting of container paths (no effect on Linux and macOS).
 export MSYS_NO_PATHCONV=1
@@ -92,13 +94,13 @@ expect_status() {
 expect_body() {
   local port=$1 path=$2 text=$3
   shift 3
-  if request "$port" "$path" "$@" | grep -qF "$text"; then pass ":$port$path contains \"$text\""; else fail ":$port$path does not contain \"$text\""; fi
+  if request "$port" "$path" "$@" | grep -F "$text" >/dev/null; then pass ":$port$path contains \"$text\""; else fail ":$port$path does not contain \"$text\""; fi
 }
 # expect_header <port> <path> <case-insensitive regex> <present|absent> [curl options...]
 expect_header() {
   local port=$1 path=$2 pattern=$3 mode=$4
   shift 4
-  if headers "$port" "$path" "$@" | grep -qiE "$pattern"; then
+  if headers "$port" "$path" "$@" | grep -iE "$pattern" >/dev/null; then
     if [[ $mode == present ]]; then pass ":$port$path has /$pattern/"; else fail ":$port$path has /$pattern/ (must not)"; fi
   else
     if [[ $mode == absent ]]; then pass ":$port$path has no /$pattern/"; else fail ":$port$path lacks /$pattern/"; fi
