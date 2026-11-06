@@ -1,0 +1,7 @@
+.body {
+  margin: 0;
+  font-family: var(--uw-font-family-body);
+  line-height: var(--uw-line-height-body);
+  color: var(--uw-color-text);
+  background: var(--uw-color-surface-muted);
+}

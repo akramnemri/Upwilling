@@ -1,0 +1,19 @@
+{
+  "name": "@upwilling/design-system",
+  "version": "0.0.0",
+  "private": true,
+  "description": "UpWilling design system: tokens, brand themes and React components (built in Milestone 2)",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint ."
+  },
+  "devDependencies": {
+    "@upwilling/config": "workspace:*",
+    "eslint": "9.39.5",
+    "typescript": "5.9.3"
+  }
+}

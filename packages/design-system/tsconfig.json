@@ -1,0 +1,4 @@
+{
+  "extends": "@upwilling/config/tsconfig/library.json",
+  "include": ["src/**/*.ts", "src/**/*.tsx"]
+}

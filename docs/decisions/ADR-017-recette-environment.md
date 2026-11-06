@@ -1,6 +1,7 @@
 # ADR-017 — Recette on the same VPS, isolated, on a separate registrable domain
 
-- Status: Accepted (recette domain to be chosen and bought by the human)
+- Status: Accepted (recette domain to be chosen and bought by the human). Amended by ADR-022: during the test phase,
+  recette uses first-level hosts of upwilling.fr; the separate domain comes before accepting traffic.
 - Date: 2026-10-18
 - Source: `docs/ai/01_ARCHITECTURE.md` §3, §5.2, §16
 

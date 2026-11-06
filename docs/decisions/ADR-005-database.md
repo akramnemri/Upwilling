@@ -1,8 +1,26 @@
-# ADR-005 — Database: PostgreSQL (placeholder)
+# ADR-005 — Database: PostgreSQL
 
-- Status: **Proposed — placeholder.** The concrete database is pending the supervisor's decision.
-- Date: 2026-10-18
-- Source: `docs/ai/01_ARCHITECTURE.md` §3, §9; supervisor instruction of 2026-10-18
+- Status: **Accepted** (supervisor, 2026-10-20: "we will go with postgres"). Was a placeholder since 2026-10-18.
+- Date: 2026-10-18, updated 2026-10-20 (Task 1.4)
+- Source: `docs/ai/01_ARCHITECTURE.md` §3, §9; supervisor instructions of 2026-10-18 and 2026-10-20;
+  PostgreSQL versioning policy and the `postgres` Docker image page, checked 2026-10-20
+
+## Update 2026-10-20 — PostgreSQL confirmed
+
+- Engine: PostgreSQL, through `@payloadcms/db-postgres` (Task 3.1).
+- Version: **major 18**, image `postgres:18.6-trixie` pinned by digest in `infra/server/compose.base.yaml`
+  (multi-arch, so it also runs on the ADR-021 Arm VM). 18 is the current major, supported until 2030-11-14.
+  Since 18 the image's volume is `/var/lib/postgresql` (data in `/var/lib/postgresql/18/docker`).
+- One Postgres container per stack (production, recette), never published, database `app` (Task 1.4).
+  The `umami` database comes with Task 5.8.
+- **To verify in Task 3.1:** Payload's own CI ran `postgres:15` at v3.91.0 and its docs list no supported
+  majors. Task 3.1 runs the integration tests against 18. If anything fails, drop to 17 (supported until
+  2029-11-08) before real data exists: changing a major then costs only a new volume.
+- Still to do in Task 3.1: a non-superuser role owning `app` for the application (the container's
+  `postgres` superuser is for administration only), the local Postgres container (Task 0.3's deferral) and the
+  CI service container with the migration check (Task 0.6's deferral).
+
+The sections below are the original placeholder record.
 
 ## Context
 
@@ -34,4 +52,4 @@ last, or when a concrete database is provided.
 
 ## Revisit when
 
-The supervisor provides the concrete database, or M3 is about to start — whichever comes first.
+Task 3.1 (Payload compatibility with major 18), or when a new PostgreSQL major is released.

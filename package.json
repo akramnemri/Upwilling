@@ -1,0 +1,26 @@
+{
+  "name": "upwilling",
+  "private": true,
+  "description": "UpWilling web platform: academy (upwilling.fr) and association (careerboost.upwilling.fr)",
+  "packageManager": "pnpm@11.28.6",
+  "engines": {
+    "node": ">=24.0.0 <25.0.0",
+    "pnpm": "11.28.6"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "typecheck": "turbo run typecheck",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "e2e": "turbo run e2e",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "prettier": "@upwilling/config/prettier",
+  "devDependencies": {
+    "@upwilling/config": "workspace:*",
+    "prettier": "3.9.10",
+    "turbo": "2.11.9"
+  }
+}
