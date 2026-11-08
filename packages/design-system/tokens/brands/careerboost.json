@@ -1,0 +1,8 @@
+{
+  "$description": "UpWilling Career Boost (association): blue primary, orange accent, green support (04_DESIGN_SYSTEM.md §2, provisional until the PO's M2 design review).",
+  "palettes": {
+    "primary": "blue",
+    "accent": "orange",
+    "support": "green"
+  }
+}

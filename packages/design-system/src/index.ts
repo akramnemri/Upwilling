@@ -1,19 +1,16 @@
-// Placeholder until Milestone 2 (tokens, themes, components). It already defines the brand
-// identifiers, because the `data-brand` attribute and the tenant map will both depend on them.
+// Public interface of the design system. The stylesheet is imported separately:
+// `import "@upwilling/design-system/tokens.css"` (once, in the root layout).
 
-export const BRANDS = ["upwilling", "careerboost"] as const;
-
-export type Brand = (typeof BRANDS)[number];
-
-export function isBrand(value: string): value is Brand {
-  return (BRANDS as readonly string[]).includes(value);
-}
-
-export { contrastRatio } from "./contrast";
+export { BRANDS, type Brand, isBrand } from "./brands.ts";
+export { contrastRatio } from "./contrast.ts";
+export { baseTokenVariable, colorRoleVariable, paletteStepVariable } from "./css-variables.ts";
 export {
-  TEMPORARY_BRAND_COLORS,
-  TEXT_COLOR_PAIRS,
-  temporaryBrandCss,
-  temporaryBrandCssVariables,
-  type BrandColorRoles,
-} from "./temporary-brand-theme";
+  BASE_TOKENS,
+  BRAND_TOKENS,
+  type BrandTokens,
+  COLOR_ROLES,
+  type ColorRole,
+  CONTRAST_PAIRS,
+  type PaletteName,
+  PALETTES,
+} from "./generated/tokens.ts";

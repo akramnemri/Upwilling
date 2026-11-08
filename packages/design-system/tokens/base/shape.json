@@ -1,0 +1,24 @@
+{
+  "$description": "Radii (friendly rounded style), border widths, three subtle elevations, focus ring geometry (its color is the focus-ring role).",
+  "radius": {
+    "sm": "0.375rem",
+    "md": "0.75rem",
+    "lg": "1rem",
+    "xl": "1.5rem",
+    "full": "9999px"
+  },
+  "border-width": {
+    "thin": "1px",
+    "medium": "2px",
+    "thick": "0.25rem"
+  },
+  "shadow": {
+    "sm": "0 1px 2px rgb(28 33 40 / 0.06), 0 1px 3px rgb(28 33 40 / 0.08)",
+    "md": "0 4px 8px -2px rgb(28 33 40 / 0.08), 0 2px 4px -2px rgb(28 33 40 / 0.06)",
+    "lg": "0 12px 24px -6px rgb(28 33 40 / 0.12), 0 4px 8px -4px rgb(28 33 40 / 0.06)"
+  },
+  "focus-ring": {
+    "width": "3px",
+    "offset": "2px"
+  }
+}

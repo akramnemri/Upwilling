@@ -1,0 +1,8 @@
+{
+  "$description": "UpWilling (academy): green primary, orange accent (04_DESIGN_SYSTEM.md §2, provisional until the PO's M2 design review). The academy has no support color of its own; green keeps the variable defined for shared components.",
+  "palettes": {
+    "primary": "green",
+    "accent": "orange",
+    "support": "green"
+  }
+}
