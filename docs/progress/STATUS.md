@@ -124,7 +124,7 @@ supervisor's manual test.)
 - Tests (Task 0.5): Vitest 4.1.12 projects in `apps/web/vitest.config.ts`: `unit` (`src/**/*.test.ts`,
   `tests/factories/**/*.test.ts`) and `integration` (`tests/integration/`, one placeholder until ADR-005); 214 tests.
   Env for tests: `DEPLOY_ENV=local`, `LOG_LEVEL=fatal`. Scripts in `apps/web`: `test:unit`, `test:integration`.
-- E2E: Playwright 1.64.1, Chromium headless shell only, `apps/web/playwright.config.ts`, `tests/e2e/*.spec.ts` (22 tests).
+- E2E: Playwright 1.64.1, Chromium headless shell only, `apps/web/playwright.config.ts`, `tests/e2e/*.spec.ts` (23 tests).
   Runs `next start --port 3100` (`DEPLOY_ENV=local`); Turbo `e2e` depends on `build`. Report + traces on failure.
 - Test data: `apps/web/tests/factories/person.ts` (`buildPerson`), emails restricted to `example.test` / `example.com`.
 - `infra/local/compose.yaml`: Mailpit v1.31.6 only (no database, ADR-005).
