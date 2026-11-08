@@ -1,14 +1,21 @@
 # STATUS
 
-Updated: 2026-11-06 by Claude (session 5, continued — Task 1.7 merged; M1 closed by the supervisor's decision; `main`
-reconciled and promoted. The production approval click is the supervisor's. Next: M2. A good moment for a fresh session.)
+Updated: 2026-11-09 by Claude (session 6 — M2 started; Task 2.1a, design tokens, implemented and waiting for the
+supervisor's manual test.)
 
 ## Handoff for the next session (read first)
-- **M1 is closed** (supervisor, 2026-11-06: "go with your recommendations"): promote `develop → main` now, run
-  production nowhere yet (the agent deploys recette only), reconcile `main` with an `ours` merge. The first live
-  production deploy happens on the real server. Essai 1 report: `docs/phase0/essai-1.md`.
-- **No branch protection exists** on `develop` or `main` (checked 2026-11-06 with an admin token: no rulesets, no
-  classic protection). Only discipline enforces PRs and green CI. Production is still gated by its environment (the
+- **M2 has started.** Task 2.1 was split (supervisor "Go 2.1a", 2026-11-09): **2.1a** token pipeline (this branch),
+  **2.1b** Tailwind v4 mapping + lint rule against raw colors / arbitrary values. Token how-to:
+  `packages/design-system/README.md`. Preview: `/dev/tokens` on either site host (local, recette).
+- **Production approval, one-off exception:** on 2026-11-06 the supervisor's own approval of the first production
+  deployment did not register (CI run 42240836809 on `main`, `a7e47a8`, PR #21); they told the agent "you do the
+  approve", and the agent approved it through the GitHub API with a comment saying so. Checked 2026-11-09: the
+  `production` image tag has the same digest as `a7e47a8`; no production stack runs anywhere. **Not a standing
+  permission**: never approve a production deployment again without a new explicit instruction for that run.
+- **M1 is closed** (supervisor, 2026-11-06) and promoted (`main` = `a7e47a8`). The first live production deploy
+  happens on the real server. Essai 1 report: `docs/phase0/essai-1.md` (M1 details: there and PRs #9–#21).
+- **No branch protection exists** on `develop` or `main` (re-checked 2026-11-09: no rulesets, no classic
+  protection). Only discipline enforces PRs and green CI. Production is still gated by its environment (the
   supervisor as required reviewer, `main` only). See "Waiting on human".
 - **Backups run on the laptop** since 2026-11-01: `C:\upwilling-server\backup` (project `upwilling-backup`), files in
   `C:\upwilling-server\backups`. Set up by the agent at the supervisor's request: ADR-025's agreed exception.
@@ -33,60 +40,27 @@ reconciled and promoted. The production approval click is the supervisor's. Next
 - Oracle Cloud (ADR-021) and the Cloudflare setup (ADR-023) stay the plan once a card / the domain are available.
 
 ## Current position
-- Milestone: **M1 — closed** 2026-11-06 by the supervisor's decision: exit criteria met; "production by approval" is
-  proven up to the image tag (approval gate, image check, tag move), not to a running production stack. Next: M2.
-- Promotion, 2026-11-06: `chore/reconcile-main` (the `ours` merge of `main`'s `653deb2` into `develop`, tree
-  unchanged, merged as a merge commit) and then `develop → main` as a merge commit. After that, the CI run on `main`
-  waits in job `deploy-production` for the supervisor's approval; once approved it only moves the `production` tag.
-- Task: 1.7 — Essai 1 report — state: **complete** (PR #19, `956bd35`, supervisor "Go", 2026-11-06). Docs only.
-  `docs/phase0/essai-1.md`: the five questions answered, the one-page procedure, live vs tested vs not done, idle
-  memory, issues met, and the promotion proposal.
-- 1.7 measurements, 2026-11-06: PR #18 went from merge to live in 5 min 47 s, first try. Rollback drill with
-  `rollback.yml` on recette: back to `0d57102` and forward to `b3d43f4`, each served 71–72 s after the dispatch (the
-  agent's own deploy ~10 s). Idle memory: recette stack 210 MiB, everything on the server 436 MiB.
-- `develop → main` today: 7 add/add conflicts, all from PR #2. `main`'s `653deb2` has the same tree and parent as
-  `develop`'s `efd7107`; a simulated `ours` merge of `main` into `develop` makes the promotion clean (checked
-  2026-11-06 without touching a branch). That PR must be merged as a merge commit, not squashed.
-- Previous task: 1.6a — Encrypted backups and restore into recette — state: **complete** (PR #17, supervisor "Merge it",
-  `0d57102`, 2026-11-01), manual test passed, ADR-026 still proposed. Live check: recette's Postgres reports
-  `cluster_name=recette`, the public `/api/version` answers `0d57102`.
-- 1.6a manual test: passed 2026-11-01, run by the agent at the supervisor's request ("can you do the restore proof for
-  me?"), runbook §1, §2, §5 on the real recette: a synthetic row backed up, deleted, restored and seen again;
-  `apply` without the key and a bad name refused; proof table removed afterwards, so `app` has no tables again. First
-  real backup of recette: 1 KB. The restore read the key through its Windows path. Image 769 MB, idle memory 2 MiB.
-- **M1 exit: "restore proven" is met** on the terms accepted with "Go 1.6a": a local folder, synthetic data.
-- Merge run of PR #17: the first attempt failed in `smoke-stacks.sh` on a race in the test (see "Decisions"), not on the
-  merged code, so nothing deployed; the rerun of the failed jobs passed and deployed at 20:32 UTC.
-- Task 1.6 split (supervisor, 2026-11-01, "Go 1.6a"): **1.6a** backup and restore, required for M1's exit; **1.6b**
-  Sentry, after the supervisor creates the organization (the storage location is chosen at creation and can never
-  change: pick EU); **1.6c** uptime monitor, deferred until a server exists (`/api/ready` is behind the recette
-  password, and the laptop is often off, so it would only send false alerts). M1's exit criteria do not need 1.6c.
-  A local-folder destination counts as "restore proven" for M1 while the data is synthetic (accepted with the "go").
-- End-to-end check of the PR #16 merge, done 2026-11-01 (step 1 of the previous "Next step"): every CI job passed,
-  `deploy-recette` printed `Live on https://upwilling-recette.tail3810a7.ts.net`, and the public `/api/version`
-  answers `94389c8`. **A merge to `develop` reaches recette with no manual step.**
-- Previous task: 1.5c — Public access to recette through Tailscale Funnel — state: **merged** (PR #16, supervisor "merge"
-  2026-10-26), live and verified, ADR-025 accepted
-  (supervisor, 2026-10-26). `infra/server/compose.funnel.yaml` (ingress Caddy + 3 Tailscale devices),
-  `caddy/Caddyfile.funnel` (port per site, Host rewrite to the ADR-022 recette hosts, basic auth except
-  `/api/version`, headers), `tailscale/serve-*.json`, `.env.funnel.example`; `promote.yml` polls
-  `vars.RECETTE_PUBLIC_URL` after a recette promotion (warning only). Test: `infra/server/test/smoke-funnel.sh`
-  (also in CI). Also fixed for both Caddyfiles: security headers were missing on Caddy's own 401 page.
-- 1.5c live start 2026-10-26 (agent, agreed exception): the three devices joined tailnet `tail3810a7.ts.net`, got
-  certificates; after adding the grant `src: *` → `dst: tag:upwilling-recette` (the Funnel relay `tag:ingress` was
-  dropped by the packet filter otherwise), checked from outside through a Funnel relay: each of
-  `https://{upwilling,careerboost,admin}-recette.tail3810a7.ts.net` answers 401 without / with a wrong password, 200
-  and the right page with it; `/api/version` open (`93903a4`); security headers and noindex on 200 and 401 pages.
-  `X-Robots-Tag` appears twice (Caddy + the app): harmless. Then: the supervisor removed the auth key from `.env`
-  and revoked it; the agent recreated the devices without it (they kept their identity; first requests after the
-  restart timed out briefly, then all answered) and set `RECETTE_PUBLIC_URL` in the GitHub environment `recette`
-  (`https://upwilling-recette.tail3810a7.ts.net`) at the supervisor's request.
-- 1.5b manual test: passed 2026-10-26 (agent started on the laptop, recette deployed and checked).
+- Milestone: **M2 — Design system foundation (Essai 2)**, in progress. M1 closed 2026-11-06.
+- Task: **2.1a — Design tokens & theming pipeline** (TR-01, TR-01b) — state: implemented, PR open, **waiting for the
+  supervisor's manual test**. Branch `feat/TR-01-design-tokens`.
+  - Token sources `packages/design-system/tokens/` (base, brands, semantic), generator `scripts/build-tokens.ts`
+    (`pnpm --filter @upwilling/design-system tokens`), outputs `css/tokens.css` and `src/generated/tokens.ts`
+    (committed; a unit test fails when stale). OKLCH palettes (own conversion code, no dependency), role shades
+    picked by measured contrast, every declared pair checked by the generator and by a unit test in both brands.
+  - `apps/web`: root layout imports `@upwilling/design-system/tokens.css` (temporary theme of Task 1.2 removed);
+    `brandForHost()` in `modules/content`; `/dev/tokens` preview page; `/dev/*` refused in production by the route
+    rules (all hosts).
+  - Visible change on the brand pages: generated shades replace the hand-picked ones (academy green text/buttons
+    `#2E7D34` → `#1E832B`, association blue `#0070D8` → `#006BCF`, body text `#16233A` → `#1C2128`, muted text
+    `#4B5563` → `#636E7F`, headline 1.75–3rem → 2–3rem). All provisional until the PO's M2 design review.
 - GitHub environments (re-checked 2026-11-06): `production` has the supervisor as required reviewer and accepts `main`
-  only; `recette` accepts `develop` only. Branch rules: none exist (see the handoff), despite the 2026-10-26 note.
+  only; `recette` accepts `develop` only. Branch rules: none exist (see the handoff).
 - Docker Desktop starts only when the supervisor works on the project (supervisor, 2026-10-26): recette is offline
   otherwise, the deploy check warns, and the agent catches up on the next start (runbook §2). Passwords saved.
-- Branch / PR: `chore/reconcile-main` to `develop`, then the promotion PR `develop → main`.
+- A merge to `develop` reaches recette with no manual step (checked end to end 2026-11-01 and 2026-11-06).
+- Still open from M1 (split of Task 1.6, supervisor 2026-11-01): **1.6b** Sentry, after the supervisor creates the
+  organization (the storage location is chosen at creation and can never change: pick EU); **1.6c** uptime monitor,
+  deferred until a server exists (`/api/ready` is behind the recette password, and the laptop is often off).
 
 ## Last completed tasks
 - 0.1 — Verify versions and record foundational ADRs — merged 2026-10-18 (PR #1, `efd7107`)
@@ -115,12 +89,21 @@ reconciled and promoted. The production approval click is the supervisor's. Next
   proposed; manual test passed 2026-11-01 (restore proof run by the agent at the supervisor's request).
 - (no task) — Smoke test race (`grep -q` under `pipefail`) — merged 2026-11-06 (PR #18, `b3d43f4`), deployed first try.
 - 1.7 — Essai 1 report — merged 2026-11-06 (PR #19, `956bd35`); rollback drill passed live the same day (M1 closed).
+- (no task) — M1 promotion: `chore/reconcile-main` (PR #20, `ours` merge) then `develop → main` (PR #21, `a7e47a8`,
+  merge commits); `production` image tag moved to `a7e47a8` on 2026-11-06 (approved by the agent on the
+  supervisor's explicit instruction, see the handoff). No production stack runs.
 
 ## What exists now (so a new session does not have to rediscover it)
 - pnpm 11 workspace + Turborepo: `apps/web` (Next.js 16.3.8, App Router, `src/`), `packages/config`
-  (tsconfig/ESLint/Prettier presets), `packages/design-system` (`BRANDS`, `isBrand`, `contrastRatio`, and the
-  TEMPORARY theme `temporary-brand-theme.ts`: color roles per brand + small scale as `--uw-*` variables, injected by
-  the root layout as a `<style>`; replaced by the token pipeline in Task 2.1). Asset rights: `assets/LICENSES.md`.
+  (tsconfig/ESLint/Prettier presets; the base tsconfig allows `.ts` import extensions, Task 2.1a),
+  `packages/design-system`. Asset rights: `assets/LICENSES.md`.
+- Design tokens (Task 2.1a, `packages/design-system/README.md`): JSON sources in `tokens/` → `scripts/build-tokens.ts`
+  (run by Node directly, type stripping) → `css/tokens.css` (`:root` non-color tokens + reduced-motion block + one
+  `[data-brand]` block per brand: `--uw-palette-<palette>-<step>` and `--uw-color-<role>`) and
+  `src/generated/tokens.ts` (`COLOR_ROLES`, `PALETTES`, `BRAND_TOKENS`, `CONTRAST_PAIRS`, `BASE_TOKENS`). Code:
+  `src/color/` (OKLCH, palettes), `src/tokens/` (parse/validate, resolve roles, render). Exports:
+  `@upwilling/design-system` (index) and `@upwilling/design-system/tokens.css`. Own Vitest setup (127 tests,
+  including the stale-output check, contrast of every pair in both brands and the Essai 2 propagation cases).
 - `apps/web/src/modules/content/` (Task 1.2): `UNDER_CONSTRUCTION` per tenant (French copy, logo, icons, OG image,
   `contactEmail: null` until the PO gives it), `UnderConstructionPage`, `buildSiteMetadata()` (title, description,
   icons, Open Graph, robots), `isIndexable()` = production **and** site host only. The proxy adds
@@ -135,12 +118,13 @@ reconciled and promoted. The production approval click is the supervisor's. Next
 - `apps/web/src/instrumentation{,.node}.ts`: env check at startup (exit 1 if invalid), console scrubbing, `onRequestError` logging.
 - Routes: `/` (brand page per site, simple page on the admin host), `/api/health`, `/api/ready`, `/api/version`
   (commit baked into the image as `APP_VERSION`, "local" otherwise; public on site hosts, Task 1.5a),
-  local-only `/api/dev/test-error` and `/dev/test-error`;
+  local-only `/api/dev/test-error` and `/dev/test-error`; `/dev/tokens` (local + recette, Task 2.1a). Every `/dev/*`
+  path is refused in production by the route rules;
   `error.tsx`, `global-error.tsx`, `not-found.tsx` (French).
 - Tests (Task 0.5): Vitest 4.1.12 projects in `apps/web/vitest.config.ts`: `unit` (`src/**/*.test.ts`,
-  `tests/factories/**/*.test.ts`) and `integration` (`tests/integration/`, one placeholder until ADR-005); 200 tests.
+  `tests/factories/**/*.test.ts`) and `integration` (`tests/integration/`, one placeholder until ADR-005); 214 tests.
   Env for tests: `DEPLOY_ENV=local`, `LOG_LEVEL=fatal`. Scripts in `apps/web`: `test:unit`, `test:integration`.
-- E2E: Playwright 1.64.1, Chromium headless shell only, `apps/web/playwright.config.ts`, `tests/e2e/*.spec.ts` (19 tests).
+- E2E: Playwright 1.64.1, Chromium headless shell only, `apps/web/playwright.config.ts`, `tests/e2e/*.spec.ts` (22 tests).
   Runs `next start --port 3100` (`DEPLOY_ENV=local`); Turbo `e2e` depends on `build`. Report + traces on failure.
 - Test data: `apps/web/tests/factories/person.ts` (`buildPerson`), emails restricted to `example.test` / `example.com`.
 - `infra/local/compose.yaml`: Mailpit v1.31.6 only (no database, ADR-005).
@@ -258,6 +242,13 @@ reconciled and promoted. The production approval click is the supervisor's. Next
   destination (local folder in the test phase, amending ADR-008 for it, R2 by configuration); retention only after
   a successful round; restores into recette only, checked against the server's own `cluster_name`, through a scratch
   database.
+- Task 2.1a (supervisor "Go 2.1a", 2026-11-09): Task 2.1 split into 2.1a (tokens) and 2.1b (Tailwind v4 + lint rule).
+  No new dependency: OKLCH math written in the package (checked against the CSS Color 4 reference values);
+  Vitest 4.1.12 and `@types/node` 24.19.2 (already pinned in the workspace) added as design-system dev dependencies.
+  Generated files are committed (reviewable diffs, Essai 2 screenshots), Prettier ignores them, a test fails when
+  stale. Hex output (what the contrast test measures is what the browser paints). Ladder step 600 = first step for
+  text on light surfaces (both brand primaries land there). UpWilling's `support` maps to green to keep the variable
+  defined (04 §2 lists none). Fluid sizes: linear from 360 px to 1280 px wide. `/dev/*` refused in production.
 - Smoke tests: no `| grep -q` under `pipefail` (2026-11-01). `-q` exits at the first match, the writer then fails on the
   closed pipe, and `pipefail` turns the match into a miss: reproduced 5 out of 5 times, and it failed a `develop` run.
   Use `| grep ... >/dev/null`, which reads to the end. Each of the five smoke tests says so below its `set` line.
@@ -293,6 +284,11 @@ reconciled and promoted. The production approval click is the supervisor's. Next
   roles are restored (`pg_dump` does not contain them), and wires the pre-migration backup (03 §10) into the agent.
 
 ## Open issues / risks
+- Brand colors, role mapping, status colors and the neutral (slate) are provisional (TR-01b, PO's M2 design review).
+  The academy primary passes 4.5:1 on `surface-muted` by a small margin (4.51): a darker muted surface moves it to
+  step 700 automatically. Fonts are system stacks until Task 2.4.
+- No lint rule yet against raw colors / arbitrary values (Task 2.1b). Under reduced motion only the duration tokens
+  drop to 0 ms; a global animation reset belongs with the components (Task 2.2).
 - **Backups are not off-site in the test phase** (ADR-026): they would not survive losing the laptop. R2 or another
   off-site destination, and a second holder of the private key, are mandatory before any real data.
 - Nothing alerts on a failing backup yet: only an `unhealthy` container and its log (ADR-026).
@@ -320,8 +316,9 @@ reconciled and promoted. The production approval click is the supervisor's. Next
   before `docker builder prune` (it removes other projects' build cache too).
 
 ## Waiting on human / PO
-- Supervisor: approve the production deployment of the promotion (GitHub → Actions → the CI run on `main` → job
-  `deploy-production` → Review deployments). Human-only (CLAUDE.md). It only moves the `production` image tag.
+- Supervisor: manual test of Task 2.1a (instructions in the task report / PR #22).
+- PO (M2 design review, Task 2.5): the generated role colors, which change the brand pages slightly (see "Current
+  position"); confirm the brand colors with the vector logo files (TR-01b).
 - Supervisor: **apply branch protection** to `develop` and `main` (`docs/runbooks/github-repository-settings.md`):
   none exists today, so a direct push or a merge with failing CI would not be stopped.
 - PO: read `docs/phase0/essai-1.md` (Essai 1's answers for the Phase 0 decision session, Task 4.3).
@@ -359,8 +356,8 @@ reconciled and promoted. The production approval click is the supervisor's. Next
 - Large `docker`/Windows disk checks are slow here (antivirus): scan targeted folders, not the whole drive.
 
 ## Next step (exact)
-1. Supervisor approves the production deployment of the promotion, and applies branch protection (see "Waiting on
-   human"). Check afterwards: the `production` tag points to the promoted commit; nothing runs on the laptop for it.
-2. Then M2 (Task 2.1, design tokens) or Task 1.6b (Sentry), the supervisor's choice. Read only M2's roadmap section.
-3. When a card is available: human creates the Oracle VM (runbook §11) and runs §3–§6, then
-   `docs/runbooks/compose-stacks.md`; the server-dependent steps of 1.4–1.6 resume.
+1. Supervisor runs the manual test of Task 2.1a (task report / PR). Fixes on the same branch if needed; then the
+   supervisor merges (squash) and the agent syncs `develop`, checks CI on `develop` and recette, deletes the branch.
+2. Then Task 2.1b — Tailwind v4 mapping + lint rule (verify the current Tailwind version first). Do not start it
+   before the supervisor's go.
+3. Still waiting on the human: branch protection, the backup key copy, the Oracle VM (see "Waiting on human").
