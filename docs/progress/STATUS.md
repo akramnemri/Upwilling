@@ -1,7 +1,7 @@
 # STATUS
 
 Updated: 2026-11-09 by Claude (session 6 — Task 2.1 merged; Task 2.2a, design-system foundations and static
-primitives, implemented and waiting for the supervisor's manual test.)
+primitives, manual test passed, waiting for the merge of PR #24.)
 
 ## Handoff for the next session (read first)
 - **M2 is under way.** Task 2.1 is merged (2.1a tokens, 2.1b Tailwind theme + lint). Task 2.2 was split (supervisor
@@ -45,8 +45,8 @@ primitives, implemented and waiting for the supervisor's manual test.)
 
 ## Current position
 - Milestone: **M2 — Design system foundation (Essai 2)**, in progress. M1 closed 2026-11-06.
-- Task: **2.2a — Design-system foundations + static primitives** (TR-01, TR-07) — state: implemented, PR #24
-  open, **waiting for the supervisor's manual test**. Branch `feat/TR-01-primitives`.
+- Task: **2.2a — Design-system foundations + static primitives** (TR-01, TR-07) — state: **manual test passed**
+  (supervisor, 2026-11-09), PR #24 open, **waiting for the merge**. Branch `feat/TR-01-primitives`.
   - `packages/design-system/react/` (export `./react`), Server Components only: `Container`, `Section`, `Stack`,
     `Grid`, `Heading`, `Text`, `Eyebrow`, `Button`, `ButtonLink`, `Link`, `Icon` (Lucide), `Badge`, `Chip`,
     `AnnouncementPill`, `Card` (+ slots), `Spinner`, `Skeleton`. Variants are lookup tables of token classes;
@@ -328,6 +328,11 @@ primitives, implemented and waiting for the supervisor's manual test.)
   the design system define raw values by design. Stylelint runs in `apps/web` only (the design system's CSS is
   generated, plus the hand-written `base.css`).
 - Icon-only buttons are not supported yet (a `Button` needs text); add a labelled variant when a design needs one.
+- SonarCloud on PR #24 (quality gate passed) left 8 minor findings, kept on purpose after the manual test:
+  3× "use `String.raw`" in `packages/config/eslint/design-tokens.mjs` (style; tidy when the file next changes),
+  4× `!important` in the reduced-motion reset of `css/base.css` (needed: a reset must beat every utility), 1× "use
+  `<output>` instead of `role="status"`" on `Spinner` (both are announced; `<output>` is meant for form results).
+  Supervisor (optional): mark the last two groups "Accepted" in SonarCloud.
 - **Backups are not off-site in the test phase** (ADR-026): they would not survive losing the laptop. R2 or another
   off-site destination, and a second holder of the private key, are mandatory before any real data.
 - Nothing alerts on a failing backup yet: only an `unhealthy` container and its log (ADR-026).
@@ -355,7 +360,7 @@ primitives, implemented and waiting for the supervisor's manual test.)
   before `docker builder prune` (it removes other projects' build cache too).
 
 ## Waiting on human / PO
-- Supervisor: manual test of Task 2.2a (instructions in the task report / PR #24).
+- Supervisor: squash-merge PR #24 (Task 2.2a, manual test passed 2026-11-09), or ask the agent to merge it.
 - PO (M2 design review, Task 2.5): the generated role colors, which changed the brand pages slightly in Task 2.1a
   (academy green `#2E7D34` → `#1E832B`, association blue `#0070D8` → `#006BCF`, body text `#16233A` → `#1C2128`,
   muted text `#4B5563` → `#636E7F`); confirm the brand colors with the vector logo files (TR-01b).
@@ -396,8 +401,8 @@ primitives, implemented and waiting for the supervisor's manual test.)
 - Large `docker`/Windows disk checks are slow here (antivirus): scan targeted folders, not the whole drive.
 
 ## Next step (exact)
-1. Supervisor runs the manual test of Task 2.2a (task report / PR #24). Fixes on the same branch if needed; then the
-   merge (squash) and the agent syncs `develop`, checks CI on `develop` and recette, deletes the branch.
+1. Merge of PR #24 (squash; Task 2.2a, manual test passed 2026-11-09). The agent then syncs `develop`, checks CI on
+   `develop` and recette, deletes the branch.
 2. Then Task 2.2b — Form components (post its plan first). Do not start it before the supervisor's go. This session
    is long: start 2.2b in a fresh session that reads this file.
 3. Still waiting on the human: branch protection, the backup key copy, the Oracle VM (see "Waiting on human").
