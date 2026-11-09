@@ -1,0 +1,125 @@
+{
+  "$description": "Color roles (light theme). Components use roles only, never palettes or brand color names. A role is a constant, a palette step, the lightest step reaching a contrast against roles listed above it, or a step darker than another role. contrastPairs are checked by the generator and by the unit test in both brands: 4.5 for text, 3 for UI components (WCAG AA).",
+  "palettes": {
+    "neutral": "slate",
+    "success": "success",
+    "warning": "warning",
+    "danger": "danger",
+    "info": "info"
+  },
+  "roles": {
+    "surface": { "constant": "white" },
+    "surface-raised": { "constant": "white" },
+    "surface-muted": { "palette": "neutral", "step": "50" },
+    "text": { "palette": "neutral", "step": "950" },
+    "text-muted": {
+      "palette": "neutral",
+      "lightestStepWithContrast": {
+        "min": 4.5,
+        "against": ["surface", "surface-raised", "surface-muted"]
+      }
+    },
+    "text-inverse": { "constant": "white" },
+    "border": { "palette": "neutral", "step": "200" },
+    "border-strong": {
+      "palette": "neutral",
+      "lightestStepWithContrast": { "min": 3, "against": ["surface", "surface-muted"] }
+    },
+    "primary-contrast": { "constant": "white" },
+    "primary": {
+      "palette": "primary",
+      "lightestStepWithContrast": {
+        "min": 4.5,
+        "against": ["surface", "surface-raised", "surface-muted", "primary-contrast"]
+      }
+    },
+    "primary-hover": { "darkerThan": "primary", "steps": 1 },
+    "accent": { "palette": "accent", "step": "source" },
+    "accent-contrast": { "palette": "neutral", "step": "950" },
+    "support": { "palette": "support", "step": "source" },
+    "focus-ring": {
+      "palette": "primary",
+      "lightestStepWithContrast": { "min": 3, "against": ["surface", "surface-muted"] }
+    },
+    "success": {
+      "palette": "success",
+      "lightestStepWithContrast": { "min": 3, "against": ["surface", "surface-muted"] }
+    },
+    "success-surface": { "palette": "success", "step": "50" },
+    "success-text": {
+      "palette": "success",
+      "lightestStepWithContrast": { "min": 4.5, "against": ["surface", "success-surface"] }
+    },
+    "warning": {
+      "palette": "warning",
+      "lightestStepWithContrast": { "min": 3, "against": ["surface", "surface-muted"] }
+    },
+    "warning-surface": { "palette": "warning", "step": "50" },
+    "warning-text": {
+      "palette": "warning",
+      "lightestStepWithContrast": { "min": 4.5, "against": ["surface", "warning-surface"] }
+    },
+    "danger": {
+      "palette": "danger",
+      "lightestStepWithContrast": { "min": 3, "against": ["surface", "surface-muted"] }
+    },
+    "danger-surface": { "palette": "danger", "step": "50" },
+    "danger-text": {
+      "palette": "danger",
+      "lightestStepWithContrast": { "min": 4.5, "against": ["surface", "danger-surface"] }
+    },
+    "info": {
+      "palette": "info",
+      "lightestStepWithContrast": { "min": 3, "against": ["surface", "surface-muted"] }
+    },
+    "info-surface": { "palette": "info", "step": "50" },
+    "info-text": {
+      "palette": "info",
+      "lightestStepWithContrast": { "min": 4.5, "against": ["surface", "info-surface"] }
+    }
+  },
+  "contrastPairs": [
+    {
+      "foreground": "text",
+      "min": 4.5,
+      "backgrounds": ["surface", "surface-raised", "surface-muted"]
+    },
+    {
+      "foreground": "text-muted",
+      "min": 4.5,
+      "backgrounds": ["surface", "surface-raised", "surface-muted"]
+    },
+    {
+      "foreground": "primary",
+      "min": 4.5,
+      "backgrounds": ["surface", "surface-raised", "surface-muted"]
+    },
+    {
+      "foreground": "primary-hover",
+      "min": 4.5,
+      "backgrounds": ["surface", "surface-raised", "surface-muted"]
+    },
+    { "foreground": "primary-contrast", "min": 4.5, "backgrounds": ["primary", "primary-hover"] },
+    { "foreground": "text-inverse", "min": 4.5, "backgrounds": ["primary", "primary-hover"] },
+    { "foreground": "accent-contrast", "min": 4.5, "backgrounds": ["accent"] },
+    {
+      "foreground": "text",
+      "min": 4.5,
+      "backgrounds": ["success-surface", "warning-surface", "danger-surface", "info-surface"]
+    },
+    { "foreground": "success-text", "min": 4.5, "backgrounds": ["surface", "success-surface"] },
+    { "foreground": "warning-text", "min": 4.5, "backgrounds": ["surface", "warning-surface"] },
+    { "foreground": "danger-text", "min": 4.5, "backgrounds": ["surface", "danger-surface"] },
+    { "foreground": "info-text", "min": 4.5, "backgrounds": ["surface", "info-surface"] },
+    { "foreground": "border-strong", "min": 3, "backgrounds": ["surface", "surface-muted"] },
+    {
+      "foreground": "focus-ring",
+      "min": 3,
+      "backgrounds": ["surface", "surface-raised", "surface-muted"]
+    },
+    { "foreground": "success", "min": 3, "backgrounds": ["surface", "surface-muted"] },
+    { "foreground": "warning", "min": 3, "backgrounds": ["surface", "surface-muted"] },
+    { "foreground": "danger", "min": 3, "backgrounds": ["surface", "surface-muted"] },
+    { "foreground": "info", "min": 3, "backgrounds": ["surface", "surface-muted"] }
+  ]
+}

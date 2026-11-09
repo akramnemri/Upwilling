@@ -23,6 +23,10 @@ const LIVENESS_PATH = "/api/health";
 // from Milestone 3, webhooks, internal routes) is refused on public hosts: deny by default.
 const SITE_PUBLIC_API_PATHS = new Set(["/api/ready", "/api/version"]);
 
+// Developer pages (test error page, token preview): never in production, on any host. The pages check
+// the environment themselves as well; this rule makes sure a new /dev page cannot forget it.
+const DEV_PAGES_PREFIX = "/dev";
+
 /** Derives the role from a validated environment. */
 export function roleFromEnv(env: Pick<Env, "APP_ROLE" | "SITE">): AppRole {
   switch (env.APP_ROLE) {
@@ -84,6 +88,9 @@ function roleServesHost(role: AppRole, target: HostTarget, deployEnv: DeployEnv)
 }
 
 function hostServesPath(target: HostTarget, path: string, deployEnv: DeployEnv): boolean {
+  if (deployEnv === "production" && isUnder(path, DEV_PAGES_PREFIX)) {
+    return false;
+  }
   switch (target.kind) {
     case "site":
       if (isUnder(path, "/admin")) {

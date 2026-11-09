@@ -1,0 +1,32 @@
+{
+  "$description": "Layout. CSS cannot read variables inside @media, so breakpoints are also exported to TypeScript (and to the Tailwind theme in Task 2.1b).",
+  "breakpoint": {
+    "sm": "40rem",
+    "md": "48rem",
+    "lg": "64rem",
+    "xl": "80rem"
+  },
+  "container": {
+    "prose": "40rem",
+    "md": "48rem",
+    "lg": "64rem",
+    "xl": "80rem"
+  },
+  "gutter": {
+    "page": [1, 2]
+  },
+  "gap": {
+    "sm": [0.75, 1],
+    "md": [1, 1.5],
+    "lg": [1.5, 2.5]
+  },
+  "z-index": {
+    "base": 0,
+    "raised": 10,
+    "dropdown": 100,
+    "sticky": 200,
+    "overlay": 300,
+    "modal": 400,
+    "toast": 500
+  }
+}

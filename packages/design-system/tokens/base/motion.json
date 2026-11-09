@@ -1,0 +1,13 @@
+{
+  "$description": "Motion. Every duration becomes 0ms under prefers-reduced-motion (the generator adds that rule).",
+  "duration": {
+    "fast": "120ms",
+    "base": "200ms",
+    "slow": "320ms"
+  },
+  "easing": {
+    "standard": "cubic-bezier(0.2, 0, 0, 1)",
+    "enter": "cubic-bezier(0, 0, 0.2, 1)",
+    "exit": "cubic-bezier(0.4, 0, 1, 1)"
+  }
+}

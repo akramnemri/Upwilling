@@ -1,4 +1,4 @@
-/* Only `--uw-*` variables (temporary brand theme, @upwilling/design-system): no raw colors or sizes. */
+/* Only `--uw-*` tokens (@upwilling/design-system/tokens.css): no raw colors, font sizes or spacing. */
 
 .page {
   min-height: 100vh;
@@ -12,12 +12,12 @@
 
 .card {
   width: 100%;
-  max-width: var(--uw-width-content);
+  max-width: var(--uw-container-prose);
   padding: var(--uw-space-8) var(--uw-space-6);
   box-sizing: border-box;
   background: var(--uw-color-surface);
   border-radius: var(--uw-radius-lg);
-  border-top: var(--uw-border-width-accent) solid var(--uw-color-accent);
+  border-top: var(--uw-border-width-thick) solid var(--uw-color-accent);
   text-align: center;
 }
 
@@ -31,8 +31,8 @@
 
 .wordmark {
   margin: 0 0 var(--uw-space-6);
-  font-size: var(--uw-font-size-display);
-  font-weight: 800;
+  font-size: var(--uw-font-size-4xl);
+  font-weight: var(--uw-font-weight-extrabold);
   line-height: var(--uw-line-height-tight);
   color: var(--uw-color-primary);
 }
@@ -45,12 +45,12 @@
   background: var(--uw-color-primary);
   color: var(--uw-color-primary-contrast);
   font-size: var(--uw-font-size-sm);
-  font-weight: 600;
+  font-weight: var(--uw-font-weight-semibold);
 }
 
 .headline {
   margin: 0 0 var(--uw-space-4);
-  font-size: var(--uw-font-size-display);
+  font-size: var(--uw-font-size-4xl);
   line-height: var(--uw-line-height-tight);
   color: var(--uw-color-text);
   overflow-wrap: break-word;
@@ -59,8 +59,8 @@
 .tagline {
   margin: 0 0 var(--uw-space-6);
   font-size: var(--uw-font-size-lg);
-  font-weight: 700;
-  letter-spacing: 0.05em;
+  font-weight: var(--uw-font-weight-bold);
+  letter-spacing: var(--uw-letter-spacing-wide);
   text-transform: uppercase;
   color: var(--uw-color-primary);
 }
@@ -80,5 +80,5 @@
 
 .contact a {
   color: var(--uw-color-primary);
-  font-weight: 600;
+  font-weight: var(--uw-font-weight-semibold);
 }

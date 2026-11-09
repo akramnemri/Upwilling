@@ -66,12 +66,13 @@ Everything else gets a plain-text 404 from the proxy (rules: `apps/web/src/modul
 
 ## Operations endpoints and logs
 
-| Endpoint                  | Purpose                                                                                           |
-| ------------------------- | ------------------------------------------------------------------------------------------------- |
-| `GET /api/health`         | Liveness: always `{"status":"ok"}`, on any host (Docker healthcheck). Checks nothing else.        |
-| `GET /api/ready`          | Readiness: configuration (and the database once it exists). `503` when not ready.                 |
-| `GET /api/dev/test-error` | Local only (`DEPLOY_ENV=local`): returns an error on purpose. `?kind=expected` for a handled one. |
-| `/dev/test-error`         | Local only: a page that fails while rendering, to see the error page.                             |
+| Endpoint                  | Purpose                                                                                                                     |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `GET /api/health`         | Liveness: always `{"status":"ok"}`, on any host (Docker healthcheck). Checks nothing else.                                  |
+| `GET /api/ready`          | Readiness: configuration (and the database once it exists). `503` when not ready.                                           |
+| `GET /api/dev/test-error` | Local only (`DEPLOY_ENV=local`): returns an error on purpose. `?kind=expected` for a handled one.                           |
+| `/dev/test-error`         | Local only: a page that fails while rendering, to see the error page.                                                       |
+| `/dev/tokens`             | Local and recette: preview of the design tokens of the current host's brand. Every `/dev/*` path answers 404 in production. |
 
 Server logs are JSON lines on stdout. Every line of a request carries the same `requestId`, also returned to the
 client in the `x-request-id` response header and shown on error responses. Passwords, tokens, cookies, emails and
@@ -79,15 +80,16 @@ similar values are replaced with `[REDACTED]`. Log through `getLogger()` / `getR
 
 ## Commands (run from the repository root)
 
-| Command                             | What it does                                             |
-| ----------------------------------- | -------------------------------------------------------- |
-| `pnpm dev`                          | Starts the Next.js dev server for `apps/web`.            |
-| `pnpm build`                        | Production build of every package.                       |
-| `pnpm typecheck`                    | TypeScript checks (generates Next.js route types first). |
-| `pnpm lint`                         | ESLint with type-aware rules.                            |
-| `pnpm test`                         | Unit and integration tests (Vitest).                     |
-| `pnpm e2e`                          | Builds, then runs the end-to-end tests (Playwright).     |
-| `pnpm format` / `pnpm format:check` | Prettier write / check. `docs/` is never reformatted.    |
+| Command                                         | What it does                                                                                      |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `pnpm dev`                                      | Starts the Next.js dev server for `apps/web`.                                                     |
+| `pnpm build`                                    | Production build of every package.                                                                |
+| `pnpm typecheck`                                | TypeScript checks (generates Next.js route types first).                                          |
+| `pnpm lint`                                     | ESLint with type-aware rules.                                                                     |
+| `pnpm test`                                     | Unit and integration tests (Vitest).                                                              |
+| `pnpm e2e`                                      | Builds, then runs the end-to-end tests (Playwright).                                              |
+| `pnpm format` / `pnpm format:check`             | Prettier write / check. `docs/` is never reformatted.                                             |
+| `pnpm --filter @upwilling/design-system tokens` | Regenerates the design tokens after editing `packages/design-system/tokens/` (commit the result). |
 
 ## Tests
 

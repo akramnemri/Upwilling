@@ -153,6 +153,21 @@ describe("resolveRoute — local development", () => {
     );
   });
 
+  it("refuses the /dev pages in production only, on every host and in any spelling", () => {
+    expect(decide(WEB_UPWILLING, "upwilling.fr", "/dev/tokens", "production")).toBe("not_found");
+    expect(decide(WEB_CAREERBOOST, "careerboost.upwilling.fr", "/DEV/tokens")).toBe("not_found");
+    expect(decide(WEB_UPWILLING, "upwilling.fr", "//dev//test-error")).toBe("not_found");
+    expect(decide(WEB_UPWILLING, "upwilling.fr", "/%64ev/tokens")).toBe("not_found");
+    expect(decide(CMS, "admin.upwilling.fr", "/dev/tokens")).toBe("not_found");
+    expect(decide(WEB_UPWILLING, "upwilling.fr", "/developpement")).toBe("allow");
+
+    expect(decide(WEB_UPWILLING, "recette.upwilling.fr", "/dev/tokens", "recette")).toBe("allow");
+    expect(
+      decide(WEB_CAREERBOOST, "recette-careerboost.upwilling.fr", "/dev/tokens", "recette"),
+    ).toBe("allow");
+    expect(decide(ALL, "careerboost.localhost:3000", "/dev/tokens", "local")).toBe("allow");
+  });
+
   it("applies role rules locally too (as in the local role-test containers)", () => {
     expect(decide(WEB_UPWILLING, "upwilling.localhost:3001", "/", "local")).toBe("allow");
     expect(decide(WEB_UPWILLING, "careerboost.localhost:3001", "/", "local")).toBe("not_found");

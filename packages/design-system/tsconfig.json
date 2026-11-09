@@ -1,4 +1,10 @@
 {
   "extends": "@upwilling/config/tsconfig/library.json",
-  "include": ["src/**/*.ts", "src/**/*.tsx"]
+  "compilerOptions": {
+    // The token generator runs in Node without a build step (type stripping): only erasable syntax,
+    // explicit `import type`, and `.ts` extensions on relative imports.
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx", "scripts/**/*.ts", "vitest.config.ts"]
 }
