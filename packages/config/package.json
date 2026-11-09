@@ -9,6 +9,7 @@
     "./tsconfig/library.json": "./tsconfig/library.json",
     "./tsconfig/nextjs.json": "./tsconfig/nextjs.json",
     "./eslint/base": "./eslint/base.mjs",
+    "./eslint/design-tokens": "./eslint/design-tokens.mjs",
     "./eslint/next": "./eslint/next.mjs",
     "./prettier": "./prettier.mjs"
   },
@@ -18,6 +19,7 @@
   "dependencies": {
     "@eslint/js": "9.39.5",
     "eslint-config-next": "16.3.8",
+    "eslint-plugin-better-tailwindcss": "4.10.0",
     "typescript-eslint": "8.71.2"
   },
   "devDependencies": {

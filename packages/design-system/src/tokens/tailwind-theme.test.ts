@@ -7,10 +7,10 @@ import { colorRoleVariable } from "../css-variables.ts";
 import { BASE_TOKENS, COLOR_ROLES } from "../generated/tokens.ts";
 import { parseTokenSources } from "./sources.ts";
 import {
-  CSS_ONLY_GROUPS,
   GENERATED_THEME_PATH,
   renderTailwindTheme,
   TailwindThemeError,
+  UTILITY_GROUP_NAMES,
 } from "./tailwind-theme.ts";
 import { PACKAGE_ROOT, realTokenFiles } from "./token-files.fixture.ts";
 
@@ -18,7 +18,8 @@ const theme = readFileSync(join(PACKAGE_ROOT, GENERATED_THEME_PATH), "utf8").rep
   "\r\n",
   "\n",
 );
-const themeBody = theme.slice(theme.indexOf("@theme inline {"));
+const themeBody = theme.slice(theme.indexOf("@theme inline {"), theme.indexOf("\n}\n") + 3);
+const utilities = theme.slice(theme.indexOf("\n}\n") + 3);
 
 describe("css/theme.css (Tailwind v4 theme)", () => {
   it("removes Tailwind's default theme before mapping the tokens", () => {
@@ -35,16 +36,36 @@ describe("css/theme.css (Tailwind v4 theme)", () => {
     expect(themeBody).not.toContain("--uw-palette-");
   });
 
-  it("maps every base token outside the CSS-only groups, and nothing from those groups", () => {
+  it("maps every base token: to a theme namespace, or to an @utility for groups without one", () => {
     for (const [group, variables] of Object.entries(BASE_TOKENS)) {
       for (const variable of Object.keys(variables)) {
-        if (CSS_ONLY_GROUPS.includes(group)) {
-          expect(themeBody).not.toContain(variable);
+        if (UTILITY_GROUP_NAMES.includes(group)) {
+          expect(utilities).toContain(`var(${variable})`);
         } else if (group !== "breakpoint" && group !== "container") {
           expect(themeBody).toContain(`: var(${variable});`);
         }
       }
     }
+  });
+
+  it("gives components named utilities for durations, layers, border widths and the focus ring", () => {
+    expect(utilities).toContain(
+      "@utility duration-base {\n  --tw-duration: var(--uw-duration-base);\n  transition-duration: var(--uw-duration-base);\n}",
+    );
+    expect(utilities).toContain("@utility z-modal {\n  z-index: var(--uw-z-index-modal);\n}");
+    expect(utilities).toContain(
+      "@utility border-thick {\n  border-style: var(--tw-border-style, solid);\n  border-width: var(--uw-border-width-thick);\n}",
+    );
+    expect(utilities).toContain(
+      "@utility focus-ring {\n  outline: var(--uw-focus-ring-width) solid var(--uw-color-focus-ring);\n  outline-offset: var(--uw-focus-ring-offset);\n}",
+    );
+  });
+
+  it("takes transition defaults from the motion tokens", () => {
+    expect(themeBody).toContain("  --default-transition-duration: var(--uw-duration-base);\n");
+    expect(themeBody).toContain(
+      "  --default-transition-timing-function: var(--uw-easing-standard);\n",
+    );
   });
 
   it("copies breakpoint and container values, since media and container queries cannot read var()", () => {
@@ -69,12 +90,23 @@ describe("renderTailwindTheme", () => {
     tokens: group.values.map(([name]) => ({ name, value: "1rem" })),
   }));
 
-  it("refuses a base group with no Tailwind namespace and no CSS-only decision", () => {
+  it("refuses a base group with no Tailwind namespace and no utility mapping", () => {
     expect(() =>
       renderTailwindTheme([...groups, { group: "opacity", tokens: [] }], [], "/* header */"),
     ).toThrow(TailwindThemeError);
     expect(() =>
       renderTailwindTheme([...groups, { group: "opacity", tokens: [] }], [], "/* header */"),
     ).toThrow('base group "opacity" has no Tailwind namespace');
+  });
+
+  it("refuses a focus-ring group without its width and offset", () => {
+    const withoutOffset = groups.map((entry) =>
+      entry.group === "focus-ring"
+        ? { group: "focus-ring", tokens: [{ name: "width", value: "3px" }] }
+        : entry,
+    );
+    expect(() => renderTailwindTheme(withoutOffset, [], "/* header */")).toThrow(
+      'base group "focus-ring" needs the tokens "width" and "offset"',
+    );
   });
 });

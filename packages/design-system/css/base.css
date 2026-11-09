@@ -1,0 +1,39 @@
+/*
+ * Base styles shared by every site (hand-written, not generated). Import after theme.css.
+ *
+ * Reduced motion (04_DESIGN_SYSTEM.md §3, 02_CODING_STANDARDS.md §16): the duration tokens already drop
+ * to 0ms (tokens.css); this also stops animations and transitions that do not use them, such as a
+ * spinner's rotation or a skeleton's pulse. A spinner still shows its label to assistive technology.
+ */
+/*
+ * Animations used by the components. Tailwind's defaults are removed with its default theme (theme.css),
+ * so the two the components need are declared here: `animate-spin` (Spinner) and `animate-pulse`
+ * (Skeleton). Components apply them with `motion-safe:` as well.
+ */
+@theme {
+  --animate-spin: spin 1s linear infinite;
+  --animate-pulse: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes pulse {
+    50% {
+      opacity: 0.5;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
