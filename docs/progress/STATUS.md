@@ -1,7 +1,7 @@
 # STATUS
 
-Updated: 2026-11-09 by Claude (session 6 — M2 started; Task 2.1a, design tokens, implemented and waiting for the
-supervisor's manual test.)
+Updated: 2026-11-09 by Claude (session 6 — M2 started; Task 2.1a, design tokens, manual test passed, waiting for
+the supervisor's merge of PR #22.)
 
 ## Handoff for the next session (read first)
 - **M2 has started.** Task 2.1 was split (supervisor "Go 2.1a", 2026-11-09): **2.1a** token pipeline (this branch),
@@ -41,8 +41,8 @@ supervisor's manual test.)
 
 ## Current position
 - Milestone: **M2 — Design system foundation (Essai 2)**, in progress. M1 closed 2026-11-06.
-- Task: **2.1a — Design tokens & theming pipeline** (TR-01, TR-01b) — state: implemented, PR open, **waiting for the
-  supervisor's manual test**. Branch `feat/TR-01-design-tokens`.
+- Task: **2.1a — Design tokens & theming pipeline** (TR-01, TR-01b) — state: **manual test passed** (supervisor,
+  2026-11-09), PR #22 open, **waiting for the supervisor's merge**. Branch `feat/TR-01-design-tokens`.
   - Token sources `packages/design-system/tokens/` (base, brands, semantic), generator `scripts/build-tokens.ts`
     (`pnpm --filter @upwilling/design-system tokens`), outputs `css/tokens.css` and `src/generated/tokens.ts`
     (committed; a unit test fails when stale). OKLCH palettes (own conversion code, no dependency), role shades
@@ -53,6 +53,11 @@ supervisor's manual test.)
   - Visible change on the brand pages: generated shades replace the hand-picked ones (academy green text/buttons
     `#2E7D34` → `#1E832B`, association blue `#0070D8` → `#006BCF`, body text `#16233A` → `#1C2128`, muted text
     `#4B5563` → `#636E7F`, headline 1.75–3rem → 2–3rem). All provisional until the PO's M2 design review.
+  - After the manual test, SonarCloud's quality gate failed on PR #22: a `sort()` without comparator ("bug") and a
+    mutating sort in `sources.ts`, three props not marked read-only in the preview page, and 22% duplication, all of
+    it in the generated `tokens.ts`. Fixed on the branch: `toSorted` with a comparator, `Readonly` props, and a new
+    `.sonarcloud.properties` that leaves the two generated token files out of copy-paste detection (exact paths: that
+    file allows no wildcards). No behavior change; the regenerated files are identical.
 - GitHub environments (re-checked 2026-11-06): `production` has the supervisor as required reviewer and accepts `main`
   only; `recette` accepts `develop` only. Branch rules: none exist (see the handoff).
 - Docker Desktop starts only when the supervisor works on the project (supervisor, 2026-10-26): recette is offline
@@ -185,7 +190,8 @@ supervisor's manual test.)
   Actions and images pinned (ADR-018 "CI tooling"). The docker job bakes the commit in (`APP_VERSION`).
   Repository settings to apply by hand: `docs/runbooks/github-repository-settings.md`.
   A third check, **SonarCloud Code Analysis**, also runs on PRs: it comes from a GitHub App on the repository,
-  not from this repo's files (not set up by the agent; confirm with the supervisor before relying on it).
+  not from this repo's files (not set up by the agent; confirm with the supervisor before relying on it). Its
+  automatic analysis reads `.sonarcloud.properties` (Task 2.1a: generated token files out of duplication checks).
 
 ## Decisions since last milestone
 - ADR-001…ADR-017 recorded from `docs/ai/01_ARCHITECTURE.md` §3 (see `docs/decisions/README.md`).
@@ -316,7 +322,7 @@ supervisor's manual test.)
   before `docker builder prune` (it removes other projects' build cache too).
 
 ## Waiting on human / PO
-- Supervisor: manual test of Task 2.1a (instructions in the task report / PR #22).
+- Supervisor: squash-merge PR #22 (Task 2.1a, manual test passed 2026-11-09), or ask the agent to merge it.
 - PO (M2 design review, Task 2.5): the generated role colors, which change the brand pages slightly (see "Current
   position"); confirm the brand colors with the vector logo files (TR-01b).
 - Supervisor: **apply branch protection** to `develop` and `main` (`docs/runbooks/github-repository-settings.md`):
@@ -356,8 +362,8 @@ supervisor's manual test.)
 - Large `docker`/Windows disk checks are slow here (antivirus): scan targeted folders, not the whole drive.
 
 ## Next step (exact)
-1. Supervisor runs the manual test of Task 2.1a (task report / PR). Fixes on the same branch if needed; then the
-   supervisor merges (squash) and the agent syncs `develop`, checks CI on `develop` and recette, deletes the branch.
+1. Supervisor merges PR #22 (squash; manual test passed 2026-11-09). The agent then syncs `develop`, checks CI on
+   `develop` and recette, deletes the branch.
 2. Then Task 2.1b — Tailwind v4 mapping + lint rule (verify the current Tailwind version first). Do not start it
    before the supervisor's go.
 3. Still waiting on the human: branch protection, the backup key copy, the Oracle VM (see "Waiting on human").
