@@ -1,4 +1,4 @@
-// Regenerates css/tokens.css and src/generated/tokens.ts from tokens/**.json.
+// Regenerates css/tokens.css, css/theme.css (Tailwind) and src/generated/tokens.ts from tokens/**.json.
 // Run with `pnpm --filter @upwilling/design-system tokens` after editing a token file, and commit the
 // result: a unit test fails while the generated files are out of date.
 // Node runs this TypeScript file directly (type stripping), so imports carry the `.ts` extension.

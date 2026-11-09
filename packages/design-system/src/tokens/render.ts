@@ -2,12 +2,14 @@ import { type Brand, BRANDS, mapBrands } from "../brands.ts";
 import { baseTokenVariable, colorRoleVariable, paletteStepVariable } from "../css-variables.ts";
 import { type BrandColors, resolveBrandColors } from "./resolve-colors.ts";
 import type { BaseValue, TokenSources } from "./sources.ts";
+import { GENERATED_THEME_PATH, renderTailwindTheme } from "./tailwind-theme.ts";
 
 /** Generated files, by path relative to the package root. Never edited by hand. */
 export const GENERATED_CSS_PATH = "css/tokens.css";
 export const GENERATED_TS_PATH = "src/generated/tokens.ts";
 
 const REGENERATE_COMMAND = "pnpm --filter @upwilling/design-system tokens";
+const CSS_HEADER = `/* GENERATED from packages/design-system/tokens/ by \`${REGENERATE_COMMAND}\`. Do not edit. */`;
 
 // Fluid sizes grow linearly between a 360 px and a 1280 px wide viewport (in rem at 16 px).
 const FLUID_VIEWPORT_MIN_REM = 22.5;
@@ -18,7 +20,10 @@ export interface GeneratedFile {
   content: string;
 }
 
-/** Resolves both brands and renders the stylesheet and the TypeScript module. Throws on any error. */
+/**
+ * Resolves both brands and renders the stylesheet, the Tailwind theme and the TypeScript module.
+ * Throws on any error.
+ */
 export function buildTokenFiles(sources: TokenSources): GeneratedFile[] {
   const brandColors = mapBrands((brand) => resolveBrandColors(brand, sources));
   const baseVariables = sources.baseGroups.map((group) => ({
@@ -27,9 +32,18 @@ export function buildTokenFiles(sources: TokenSources): GeneratedFile[] {
       ([name, value]) => [baseTokenVariable(group.name, name), formatBaseValue(value)] as const,
     ),
   }));
+  const themeGroups = sources.baseGroups.map((group) => ({
+    group: group.name,
+    tokens: group.values.map(([name, value]) => ({ name, value: formatBaseValue(value) })),
+  }));
+  const colorRoles = sources.semantic.roles.map(([role]) => role);
 
   return [
     { path: GENERATED_CSS_PATH, content: renderCss(baseVariables, brandColors) },
+    {
+      path: GENERATED_THEME_PATH,
+      content: renderTailwindTheme(themeGroups, colorRoles, CSS_HEADER),
+    },
     { path: GENERATED_TS_PATH, content: renderTypeScript(baseVariables, brandColors, sources) },
   ];
 }
@@ -44,7 +58,7 @@ function renderCss(
   brandColors: Readonly<Record<Brand, BrandColors>>,
 ): string {
   const lines = [
-    `/* GENERATED from packages/design-system/tokens/ by \`${REGENERATE_COMMAND}\`. Do not edit. */`,
+    CSS_HEADER,
     "",
     ":root {",
     ...baseVariables.flatMap(({ declarations }) => declarations.map(declaration)),

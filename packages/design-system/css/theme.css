@@ -1,0 +1,129 @@
+/* GENERATED from packages/design-system/tokens/ by `pnpm --filter @upwilling/design-system tokens`. Do not edit. */
+/* Tailwind v4 theme: import it after `tailwindcss` and tokens.css. The default theme is removed, so
+   utilities exist only for these tokens (no `bg-red-500`), and each reads its --uw-* variable. */
+
+@theme inline {
+  --*: initial;
+
+  /* Fonts used by Tailwind's Preflight on html and code */
+  --default-font-family: var(--uw-font-family-body);
+  --default-mono-font-family: var(--uw-font-family-mono);
+
+  /* Color roles. Palettes are not mapped: only roles are contrast-checked. */
+  --color-surface: var(--uw-color-surface);
+  --color-surface-raised: var(--uw-color-surface-raised);
+  --color-surface-muted: var(--uw-color-surface-muted);
+  --color-text: var(--uw-color-text);
+  --color-text-muted: var(--uw-color-text-muted);
+  --color-text-inverse: var(--uw-color-text-inverse);
+  --color-border: var(--uw-color-border);
+  --color-border-strong: var(--uw-color-border-strong);
+  --color-primary-contrast: var(--uw-color-primary-contrast);
+  --color-primary: var(--uw-color-primary);
+  --color-primary-hover: var(--uw-color-primary-hover);
+  --color-accent: var(--uw-color-accent);
+  --color-accent-contrast: var(--uw-color-accent-contrast);
+  --color-support: var(--uw-color-support);
+  --color-focus-ring: var(--uw-color-focus-ring);
+  --color-success: var(--uw-color-success);
+  --color-success-surface: var(--uw-color-success-surface);
+  --color-success-text: var(--uw-color-success-text);
+  --color-warning: var(--uw-color-warning);
+  --color-warning-surface: var(--uw-color-warning-surface);
+  --color-warning-text: var(--uw-color-warning-text);
+  --color-danger: var(--uw-color-danger);
+  --color-danger-surface: var(--uw-color-danger-surface);
+  --color-danger-text: var(--uw-color-danger-text);
+  --color-info: var(--uw-color-info);
+  --color-info-surface: var(--uw-color-info-surface);
+  --color-info-text: var(--uw-color-info-text);
+
+  /* breakpoint: values, because media and container queries cannot read var() */
+  --breakpoint-sm: 40rem;
+  --breakpoint-md: 48rem;
+  --breakpoint-lg: 64rem;
+  --breakpoint-xl: 80rem;
+
+  /* container: values, because media and container queries cannot read var() */
+  --container-prose: 40rem;
+  --container-md: 48rem;
+  --container-lg: 64rem;
+  --container-xl: 80rem;
+
+  /* gutter */
+  --spacing-gutter-page: var(--uw-gutter-page);
+
+  /* gap */
+  --spacing-gap-sm: var(--uw-gap-sm);
+  --spacing-gap-md: var(--uw-gap-md);
+  --spacing-gap-lg: var(--uw-gap-lg);
+
+  /* easing */
+  --ease-standard: var(--uw-easing-standard);
+  --ease-enter: var(--uw-easing-enter);
+  --ease-exit: var(--uw-easing-exit);
+
+  /* radius */
+  --radius-sm: var(--uw-radius-sm);
+  --radius-md: var(--uw-radius-md);
+  --radius-lg: var(--uw-radius-lg);
+  --radius-xl: var(--uw-radius-xl);
+  --radius-full: var(--uw-radius-full);
+
+  /* shadow */
+  --shadow-sm: var(--uw-shadow-sm);
+  --shadow-md: var(--uw-shadow-md);
+  --shadow-lg: var(--uw-shadow-lg);
+
+  /* space */
+  --spacing-0: var(--uw-space-0);
+  --spacing-1: var(--uw-space-1);
+  --spacing-2: var(--uw-space-2);
+  --spacing-3: var(--uw-space-3);
+  --spacing-4: var(--uw-space-4);
+  --spacing-5: var(--uw-space-5);
+  --spacing-6: var(--uw-space-6);
+  --spacing-8: var(--uw-space-8);
+  --spacing-10: var(--uw-space-10);
+  --spacing-12: var(--uw-space-12);
+  --spacing-16: var(--uw-space-16);
+  --spacing-20: var(--uw-space-20);
+  --spacing-24: var(--uw-space-24);
+
+  /* section-space */
+  --spacing-section-sm: var(--uw-section-space-sm);
+  --spacing-section-md: var(--uw-section-space-md);
+  --spacing-section-lg: var(--uw-section-space-lg);
+
+  /* font-family */
+  --font-display: var(--uw-font-family-display);
+  --font-body: var(--uw-font-family-body);
+  --font-mono: var(--uw-font-family-mono);
+
+  /* font-size */
+  --text-xs: var(--uw-font-size-xs);
+  --text-sm: var(--uw-font-size-sm);
+  --text-md: var(--uw-font-size-md);
+  --text-lg: var(--uw-font-size-lg);
+  --text-xl: var(--uw-font-size-xl);
+  --text-2xl: var(--uw-font-size-2xl);
+  --text-3xl: var(--uw-font-size-3xl);
+  --text-4xl: var(--uw-font-size-4xl);
+  --text-5xl: var(--uw-font-size-5xl);
+
+  /* font-weight */
+  --font-weight-regular: var(--uw-font-weight-regular);
+  --font-weight-semibold: var(--uw-font-weight-semibold);
+  --font-weight-bold: var(--uw-font-weight-bold);
+  --font-weight-extrabold: var(--uw-font-weight-extrabold);
+
+  /* line-height */
+  --leading-tight: var(--uw-line-height-tight);
+  --leading-snug: var(--uw-line-height-snug);
+  --leading-body: var(--uw-line-height-body);
+
+  /* letter-spacing */
+  --tracking-tight: var(--uw-letter-spacing-tight);
+  --tracking-normal: var(--uw-letter-spacing-normal);
+  --tracking-wide: var(--uw-letter-spacing-wide);
+}
