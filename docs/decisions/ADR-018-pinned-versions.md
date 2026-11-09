@@ -1,6 +1,7 @@
 # ADR-018 — Pinned toolchain and framework versions
 
-- Status: Accepted (supervisor merged PR #1, 2026-10-18; lint tooling rows added in Task 0.2; CI tooling added in Task 0.6)
+- Status: Accepted (supervisor merged PR #1, 2026-10-18; lint tooling rows added in Task 0.2; CI tooling added in Task 0.6;
+  styling rows added in Task 2.1b)
 - Date: 2026-10-18
 - Verified on: 2026-10-18, from official sources only (no remembered versions)
 
@@ -32,7 +33,8 @@ Upgrades are deliberate PRs (`chore(deps)`), never drive-by changes.
 | Next.js | **16.3.8** | 16.4.2 (16.4.0 released 2026-10-06) | `@payloadcms/next@3.91.0` peer range: `>=15.2.9 <15.3.0 \|\| >=15.3.9 <15.4.0 \|\| >=15.4.11 <15.5.0 \|\| >=16.3.3 <17.0.0`. Payload's blank template ships 16.3.3; 16.3.8 is the latest patch of that tested line. 16.4.x is allowed by the range and can be adopted in a later `chore(deps)` PR. |
 | React / React DOM | **19.2.9** | 19.3.1 | Payload peer range `^19.0.1 \|\| ^19.1.2 \|\| ^19.2.1`; Payload builds and tests with 19.2.6. 19.2.9 is the latest patch of that line. |
 | TypeScript | **5.9.3** | 7.0.2 | Payload builds with 5.7.3 and its template ships 5.7.3. TypeScript 7 (new major) is not used by Payload yet; ESLint/typed-lint compatibility unverified. |
-| Tailwind CSS (`tailwindcss`, `@tailwindcss/postcss`) | **4.3.3** | 4.3.3 | Latest v4 (released 2026-07-16). Used from Task 2.1. |
+| Tailwind CSS (`tailwindcss`, `@tailwindcss/postcss`) | **4.3.3** (devDependencies of `apps/web`) | 4.3.5 (2026-11-06; re-checked 2026-11-09) | Latest v4 when this ADR was written (released 2026-07-16). Installed in Task 2.1b. 4.3.4 and 4.3.5 only fix bugs we do not hit; adopt them in a `chore(deps)` PR. |
+| PostCSS (`postcss`) | **8.5.32** (devDependency of `apps/web`) | 8.5.32 (2026-10-26) | Tailwind's Next.js guide installs it next to `@tailwindcss/postcss` (`apps/web/postcss.config.mjs`). Task 2.1b. |
 | Vitest | **4.1.12** | 5.0.5 (5.0.0 released 2026-09-03) | Payload's template uses Vitest 4 (4.0.18). Vitest 4.1.x is still patched (4.1.12 on 2026-10-15). Vitest 5 can be adopted later. |
 | Playwright (`@playwright/test`) | **1.64.1** | 1.64.1 | Latest. Next.js peer accepts `^1.51.1`. |
 | Storybook (`storybook`, `@storybook/nextjs-vite`) | **10.6.2** | 10.6.2 | Latest; `@storybook/nextjs-vite` peer accepts Next `^16`. Used from Task 2.3; framework choice confirmed then. |
@@ -41,6 +43,8 @@ Upgrades are deliberate PRs (`chore(deps)`), never drive-by changes.
 | `eslint-config-next` | **16.3.8** | — | Same version as Next.js. |
 | `typescript-eslint` | **8.71.2** | 8.71.2 | Latest; supports TypeScript `<6.1`. |
 | Prettier | **3.9.10** | 3.9.10 | Latest. |
+| `eslint-plugin-better-tailwindcss` | **4.10.0** (devDependency of `apps/web`) | 4.10.0 (2026-10-19) | Lints Tailwind v4 classes against the generated theme (`no-unknown-classes`) and forbids arbitrary values (`no-restricted-classes`). Peer ranges: ESLint `^9`, Tailwind `^4.1.17`. Task 2.1b. |
+| Stylelint (`stylelint`) | **17.16.0** (devDependency of `apps/web`) | 18.0.0 (2026-11-03) | Forbids raw colors, font sizes and spacing in the application's CSS (ESLint has no such CSS rules). 18.0.0 is a new major released six days before Task 2.1b; adopt it later in a `chore(deps)` PR. Task 2.1b. |
 | `@types/node` / `@types/react` / `@types/react-dom` | **24.19.2 / 19.2.18 / 19.2.7** | — | Latest patches of the Node 24 and React 19.2 lines. |
 | Database | **not pinned** | — | Placeholder; see ADR-005. |
 | esbuild | **0.28.2** (devDependency of `apps/web`) | 0.28.2 (2026-08-08) | Bundles the worker and the Docker healthcheck into single CommonJS files (Task 1.1b, decision D4). Its install script is not run (`allowBuilds: esbuild: false`): the platform binary comes from an optional dependency. |

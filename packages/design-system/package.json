@@ -6,7 +6,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./tokens.css": "./css/tokens.css"
+    "./tokens.css": "./css/tokens.css",
+    "./theme.css": "./css/theme.css"
   },
   "scripts": {
     "tokens": "node scripts/build-tokens.ts",

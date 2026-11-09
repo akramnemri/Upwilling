@@ -14,12 +14,21 @@
 .title {
   margin: 0 0 var(--uw-space-4);
   font-size: var(--uw-font-size-3xl);
+  font-weight: var(--uw-font-weight-bold);
   line-height: var(--uw-line-height-tight);
   color: var(--uw-color-primary);
 }
 
 .section {
   margin-bottom: var(--uw-section-space-sm);
+}
+
+/* Tailwind's Preflight resets heading sizes and weights: section titles set theirs from tokens. */
+.section h2 {
+  margin: 0 0 var(--uw-space-4);
+  font-size: var(--uw-font-size-2xl);
+  font-weight: var(--uw-font-weight-bold);
+  line-height: var(--uw-line-height-tight);
 }
 
 .grid {
@@ -61,6 +70,7 @@
 .paletteName {
   margin: 0 0 var(--uw-space-2);
   font-size: var(--uw-font-size-lg);
+  font-weight: var(--uw-font-weight-bold);
 }
 
 .steps {

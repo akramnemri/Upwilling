@@ -48,6 +48,7 @@ export default async function TokenPreviewPage() {
         </p>
       </header>
       <ColorRoles tokens={tokens} />
+      <TailwindSample />
       <Palettes tokens={tokens} />
       <ContrastPairs tokens={tokens} />
       <BaseTokens />
@@ -71,6 +72,39 @@ function ColorRoles({ tokens }: Readonly<{ tokens: BrandTokens }>) {
           </li>
         ))}
       </ul>
+    </section>
+  );
+}
+
+/** Styled with Tailwind classes only (Task 2.1b): each class reads a --uw-* token of the current brand. */
+function TailwindSample() {
+  return (
+    <section className={styles.section} aria-labelledby="tailwind">
+      <h2 id="tailwind">Classes Tailwind</h2>
+      <p className="mb-4 text-text-muted">
+        Ce bloc n’utilise que des classes Tailwind générées depuis les jetons : leurs couleurs
+        suivent la marque du site.
+      </p>
+      <div className="flex flex-wrap items-center gap-gap-sm rounded-lg bg-surface p-6 shadow-md">
+        <span
+          data-testid="tailwind-primary"
+          className="rounded-md bg-primary px-4 py-2 font-semibold text-primary-contrast"
+        >
+          bg-primary
+        </span>
+        <span className="rounded-md bg-accent px-4 py-2 font-semibold text-accent-contrast">
+          bg-accent
+        </span>
+        <span className="rounded-md border border-border-strong px-4 py-2 text-text">
+          border-border-strong
+        </span>
+        <span className="rounded-md bg-danger-surface px-4 py-2 text-danger-text">
+          bg-danger-surface
+        </span>
+        <span className="font-display text-2xl font-bold tracking-tight text-primary">
+          text-2xl
+        </span>
+      </div>
     </section>
   );
 }

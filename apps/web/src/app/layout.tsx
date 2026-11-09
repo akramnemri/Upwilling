@@ -1,4 +1,4 @@
-import "@upwilling/design-system/tokens.css";
+import "./globals.css";
 
 import type { Metadata } from "next";
 import { headers } from "next/headers";

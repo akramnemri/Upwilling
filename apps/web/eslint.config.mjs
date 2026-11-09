@@ -1,3 +1,7 @@
 import { nextConfig } from "@upwilling/config/eslint/next";
 
-export default nextConfig;
+import designTokenRules from "./eslint.design-tokens.mjs";
+
+const config = [...nextConfig, ...designTokenRules];
+
+export default config;

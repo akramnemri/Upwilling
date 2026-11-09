@@ -1,0 +1,10 @@
+/*
+ * Global styles, in this order:
+ * 1. Tailwind CSS v4: theme, Preflight (base reset) and the utilities used in the source files.
+ * 2. The design tokens: --uw-* variables, one block per brand selected by <html data-brand>.
+ * 3. The generated Tailwind theme: Tailwind's default theme removed, each utility mapped to a token.
+ * Pages style themselves with Tailwind classes or CSS modules that read --uw-* tokens; never raw values.
+ */
+@import "tailwindcss";
+@import "@upwilling/design-system/tokens.css";
+@import "@upwilling/design-system/theme.css";

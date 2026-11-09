@@ -12,7 +12,7 @@ export default defineConfig({
         extends: true,
         test: {
           name: "unit",
-          include: ["src/**/*.test.ts", "tests/factories/**/*.test.ts"],
+          include: ["src/**/*.test.ts", "tests/factories/**/*.test.ts", "tests/lint/**/*.test.ts"],
         },
       },
       {
