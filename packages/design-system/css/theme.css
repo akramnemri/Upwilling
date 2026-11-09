@@ -5,9 +5,11 @@
 @theme inline {
   --*: initial;
 
-  /* Fonts used by Tailwind's Preflight on html and code */
+  /* Defaults used by Tailwind's Preflight (html, code) and by `transition-*` utilities */
   --default-font-family: var(--uw-font-family-body);
   --default-mono-font-family: var(--uw-font-family-mono);
+  --default-transition-duration: var(--uw-duration-base);
+  --default-transition-timing-function: var(--uw-easing-standard);
 
   /* Color roles. Palettes are not mapped: only roles are contrast-checked. */
   --color-surface: var(--uw-color-surface);
@@ -126,4 +128,61 @@
   --tracking-tight: var(--uw-letter-spacing-tight);
   --tracking-normal: var(--uw-letter-spacing-normal);
   --tracking-wide: var(--uw-letter-spacing-wide);
+}
+
+/* z-index */
+@utility z-base {
+  z-index: var(--uw-z-index-base);
+}
+@utility z-raised {
+  z-index: var(--uw-z-index-raised);
+}
+@utility z-dropdown {
+  z-index: var(--uw-z-index-dropdown);
+}
+@utility z-sticky {
+  z-index: var(--uw-z-index-sticky);
+}
+@utility z-overlay {
+  z-index: var(--uw-z-index-overlay);
+}
+@utility z-modal {
+  z-index: var(--uw-z-index-modal);
+}
+@utility z-toast {
+  z-index: var(--uw-z-index-toast);
+}
+
+/* duration */
+@utility duration-fast {
+  --tw-duration: var(--uw-duration-fast);
+  transition-duration: var(--uw-duration-fast);
+}
+@utility duration-base {
+  --tw-duration: var(--uw-duration-base);
+  transition-duration: var(--uw-duration-base);
+}
+@utility duration-slow {
+  --tw-duration: var(--uw-duration-slow);
+  transition-duration: var(--uw-duration-slow);
+}
+
+/* border-width */
+@utility border-thin {
+  border-style: var(--tw-border-style, solid);
+  border-width: var(--uw-border-width-thin);
+}
+@utility border-medium {
+  border-style: var(--tw-border-style, solid);
+  border-width: var(--uw-border-width-medium);
+}
+@utility border-thick {
+  border-style: var(--tw-border-style, solid);
+  border-width: var(--uw-border-width-thick);
+}
+
+/* focus-ring */
+@utility focus-ring {
+  outline: var(--uw-focus-ring-width) solid var(--uw-color-focus-ring);
+  outline-offset: var(--uw-focus-ring-offset);
 }

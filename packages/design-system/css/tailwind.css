@@ -1,0 +1,11 @@
+/*
+ * The design system's own Tailwind entry: Tailwind, the tokens, the generated theme and the base
+ * styles, scanning the React components. The class lint of this package reads it, and so will
+ * Storybook (Task 2.3). The application has its own entry (apps/web/src/app/globals.css).
+ */
+@import "tailwindcss" source(none);
+@import "./tokens.css";
+@import "./theme.css";
+@import "./base.css";
+
+@source "../react";
