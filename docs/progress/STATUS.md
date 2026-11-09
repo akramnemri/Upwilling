@@ -1,7 +1,7 @@
 # STATUS
 
 Updated: 2026-11-09 by Claude (session 6 — Task 2.1a merged; Task 2.1b, Tailwind theme and design-token lint,
-implemented and waiting for the supervisor's manual test.)
+manual test passed, waiting for the merge of PR #23.)
 
 ## Handoff for the next session (read first)
 - **M2 has started.** Task 2.1 was split (supervisor "Go 2.1a", 2026-11-09): **2.1a** token pipeline (merged),
@@ -41,8 +41,8 @@ implemented and waiting for the supervisor's manual test.)
 
 ## Current position
 - Milestone: **M2 — Design system foundation (Essai 2)**, in progress. M1 closed 2026-11-06.
-- Task: **2.1b — Tailwind v4 mapping + design-token lint rules** (TR-01) — state: implemented, PR open, **waiting
-  for the supervisor's manual test**. Branch `feat/TR-01-tailwind-theme` (supervisor "Go", 2026-11-09).
+- Task: **2.1b — Tailwind v4 mapping + design-token lint rules** (TR-01) — state: **manual test passed**
+  (supervisor, 2026-11-09), PR #23 open, **waiting for the merge**. Branch `feat/TR-01-tailwind-theme`.
   - The generator also writes `packages/design-system/css/theme.css` (export `./theme.css`): `@theme inline` with
     `--*: initial` (the default Tailwind theme removed), color **roles** only (palettes are not contrast-checked),
     typography, spacing scale (no free `--spacing` multiplier: `p-13` does not exist), section/gutter/gap, radius,
@@ -339,7 +339,7 @@ implemented and waiting for the supervisor's manual test.)
   before `docker builder prune` (it removes other projects' build cache too).
 
 ## Waiting on human / PO
-- Supervisor: manual test of Task 2.1b (instructions in the task report / PR #23).
+- Supervisor: squash-merge PR #23 (Task 2.1b, manual test passed 2026-11-09), or ask the agent to merge it.
 - PO (M2 design review, Task 2.5): the generated role colors, which changed the brand pages slightly in Task 2.1a
   (academy green `#2E7D34` → `#1E832B`, association blue `#0070D8` → `#006BCF`, body text `#16233A` → `#1C2128`,
   muted text `#4B5563` → `#636E7F`); confirm the brand colors with the vector logo files (TR-01b).
@@ -380,8 +380,8 @@ implemented and waiting for the supervisor's manual test.)
 - Large `docker`/Windows disk checks are slow here (antivirus): scan targeted folders, not the whole drive.
 
 ## Next step (exact)
-1. Supervisor runs the manual test of Task 2.1b (task report / PR #23). Fixes on the same branch if needed; then the
-   merge (squash) and the agent syncs `develop`, checks CI on `develop` and recette, deletes the branch.
+1. Merge of PR #23 (squash; Task 2.1b, manual test passed 2026-11-09). The agent then syncs `develop`, checks CI on
+   `develop` and recette, deletes the branch. Task 2.1 (and its Essai 2 part on tokens) is then complete.
 2. Then Task 2.2 — Primitive components (verify and justify any headless library, e.g. Radix, in the plan). Do not
    start it before the supervisor's go.
 3. Still waiting on the human: branch protection, the backup key copy, the Oracle VM (see "Waiting on human").
