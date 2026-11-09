@@ -1,12 +1,12 @@
 # STATUS
 
-Updated: 2026-11-09 by Claude (session 6 — M2 started; Task 2.1a, design tokens, manual test passed, waiting for
-the supervisor's merge of PR #22.)
+Updated: 2026-11-09 by Claude (session 6 — Task 2.1a merged; Task 2.1b, Tailwind theme and design-token lint,
+implemented and waiting for the supervisor's manual test.)
 
 ## Handoff for the next session (read first)
-- **M2 has started.** Task 2.1 was split (supervisor "Go 2.1a", 2026-11-09): **2.1a** token pipeline (this branch),
-  **2.1b** Tailwind v4 mapping + lint rule against raw colors / arbitrary values. Token how-to:
-  `packages/design-system/README.md`. Preview: `/dev/tokens` on either site host (local, recette).
+- **M2 has started.** Task 2.1 was split (supervisor "Go 2.1a", 2026-11-09): **2.1a** token pipeline (merged),
+  **2.1b** Tailwind v4 mapping + lint rules against raw colors / arbitrary values (this branch). Token and Tailwind
+  how-to: `packages/design-system/README.md`. Preview: `/dev/tokens` on either site host (local, recette).
 - **Production approval, one-off exception:** on 2026-11-06 the supervisor's own approval of the first production
   deployment did not register (CI run 42240836809 on `main`, `a7e47a8`, PR #21); they told the agent "you do the
   approve", and the agent approved it through the GitHub API with a comment saying so. Checked 2026-11-09: the
@@ -41,23 +41,25 @@ the supervisor's merge of PR #22.)
 
 ## Current position
 - Milestone: **M2 — Design system foundation (Essai 2)**, in progress. M1 closed 2026-11-06.
-- Task: **2.1a — Design tokens & theming pipeline** (TR-01, TR-01b) — state: **manual test passed** (supervisor,
-  2026-11-09), PR #22 open, **waiting for the supervisor's merge**. Branch `feat/TR-01-design-tokens`.
-  - Token sources `packages/design-system/tokens/` (base, brands, semantic), generator `scripts/build-tokens.ts`
-    (`pnpm --filter @upwilling/design-system tokens`), outputs `css/tokens.css` and `src/generated/tokens.ts`
-    (committed; a unit test fails when stale). OKLCH palettes (own conversion code, no dependency), role shades
-    picked by measured contrast, every declared pair checked by the generator and by a unit test in both brands.
-  - `apps/web`: root layout imports `@upwilling/design-system/tokens.css` (temporary theme of Task 1.2 removed);
-    `brandForHost()` in `modules/content`; `/dev/tokens` preview page; `/dev/*` refused in production by the route
-    rules (all hosts).
-  - Visible change on the brand pages: generated shades replace the hand-picked ones (academy green text/buttons
-    `#2E7D34` → `#1E832B`, association blue `#0070D8` → `#006BCF`, body text `#16233A` → `#1C2128`, muted text
-    `#4B5563` → `#636E7F`, headline 1.75–3rem → 2–3rem). All provisional until the PO's M2 design review.
-  - After the manual test, SonarCloud's quality gate failed on PR #22: a `sort()` without comparator ("bug") and a
-    mutating sort in `sources.ts`, three props not marked read-only in the preview page, and 22% duplication, all of
-    it in the generated `tokens.ts`. Fixed on the branch: `toSorted` with a comparator, `Readonly` props, and a new
-    `.sonarcloud.properties` that leaves the two generated token files out of copy-paste detection (exact paths: that
-    file allows no wildcards). No behavior change; the regenerated files are identical.
+- Task: **2.1b — Tailwind v4 mapping + design-token lint rules** (TR-01) — state: implemented, PR open, **waiting
+  for the supervisor's manual test**. Branch `feat/TR-01-tailwind-theme` (supervisor "Go", 2026-11-09).
+  - The generator also writes `packages/design-system/css/theme.css` (export `./theme.css`): `@theme inline` with
+    `--*: initial` (the default Tailwind theme removed), color **roles** only (palettes are not contrast-checked),
+    typography, spacing scale (no free `--spacing` multiplier: `p-13` does not exist), section/gutter/gap, radius,
+    shadow, easing; breakpoints and containers as values (queries cannot read `var()`). Groups without a Tailwind
+    namespace (`duration`, `z-index`, `border-width`, `focus-ring`) are listed as CSS-only; an unmapped new group
+    stops the generator.
+  - `apps/web`: Tailwind 4.3.3 through `@tailwindcss/postcss` (`postcss.config.mjs`); `src/app/globals.css` imports
+    Tailwind (with Preflight), tokens.css, theme.css; the root layout imports it. Preflight reset heading weights and
+    sizes: the headline and the preview headings now set theirs from tokens (home pages pixel-identical to before).
+    `/dev/tokens` has a "Classes Tailwind" block; e2e checks `bg-primary` per brand.
+  - Lint, `apps/web` only: `eslint.design-tokens.mjs` (raw colors in strings/templates/JSX text via
+    `no-restricted-syntax`; `better-tailwindcss/no-unknown-classes` and `no-restricted-classes` for arbitrary values
+    and arbitrary breakpoints), `stylelint.config.mjs` (hex, named colors, color functions, raw units in font-size /
+    margin / padding / gap; disable comments need a `-- reason`). `pnpm lint` in `apps/web` runs both.
+    `tests/lint/design-tokens.test.ts` (26 tests) runs both tools on synthetic snippets.
+  - New dev dependencies of `apps/web` (ADR-018 rows): `tailwindcss` and `@tailwindcss/postcss` 4.3.3, `postcss`
+    8.5.32, `eslint-plugin-better-tailwindcss` 4.10.0, `stylelint` 17.16.0.
 - GitHub environments (re-checked 2026-11-06): `production` has the supervisor as required reviewer and accepts `main`
   only; `recette` accepts `develop` only. Branch rules: none exist (see the handoff).
 - Docker Desktop starts only when the supervisor works on the project (supervisor, 2026-10-26): recette is offline
@@ -97,6 +99,10 @@ the supervisor's merge of PR #22.)
 - (no task) — M1 promotion: `chore/reconcile-main` (PR #20, `ours` merge) then `develop → main` (PR #21, `a7e47a8`,
   merge commits); `production` image tag moved to `a7e47a8` on 2026-11-06 (approved by the agent on the
   supervisor's explicit instruction, see the handoff). No production stack runs.
+- 2.1a — Design tokens & theming pipeline — merged 2026-11-09 (PR #22, `364241e`, squash-merged by the agent at
+  the supervisor's request), manual test passed; SonarCloud findings fixed before the merge (`toSorted` with a
+  comparator, `Readonly` props, `.sonarcloud.properties` keeping the generated token files out of duplication
+  checks). CI on `develop` green; recette picks it up at the next Docker Desktop start.
 
 ## What exists now (so a new session does not have to rediscover it)
 - pnpm 11 workspace + Turborepo: `apps/web` (Next.js 16.3.8, App Router, `src/`), `packages/config`
@@ -105,10 +111,14 @@ the supervisor's merge of PR #22.)
 - Design tokens (Task 2.1a, `packages/design-system/README.md`): JSON sources in `tokens/` → `scripts/build-tokens.ts`
   (run by Node directly, type stripping) → `css/tokens.css` (`:root` non-color tokens + reduced-motion block + one
   `[data-brand]` block per brand: `--uw-palette-<palette>-<step>` and `--uw-color-<role>`) and
-  `src/generated/tokens.ts` (`COLOR_ROLES`, `PALETTES`, `BRAND_TOKENS`, `CONTRAST_PAIRS`, `BASE_TOKENS`). Code:
-  `src/color/` (OKLCH, palettes), `src/tokens/` (parse/validate, resolve roles, render). Exports:
-  `@upwilling/design-system` (index) and `@upwilling/design-system/tokens.css`. Own Vitest setup (127 tests,
-  including the stale-output check, contrast of every pair in both brands and the Essai 2 propagation cases).
+  `src/generated/tokens.ts` (`COLOR_ROLES`, `PALETTES`, `BRAND_TOKENS`, `CONTRAST_PAIRS`, `BASE_TOKENS`), plus
+  `css/theme.css`, the Tailwind v4 theme (Task 2.1b, `src/tokens/tailwind-theme.ts`). Code: `src/color/` (OKLCH,
+  palettes), `src/tokens/` (parse/validate, resolve roles, render). Exports: `@upwilling/design-system` (index),
+  `/tokens.css`, `/theme.css`. Own Vitest setup (134 tests, including the stale-output check, contrast of every
+  pair in both brands and the Essai 2 propagation cases).
+- Styling in `apps/web` (Task 2.1b): Tailwind 4.3.3 via PostCSS, `src/app/globals.css` (Tailwind + tokens + theme);
+  CSS modules that read `--uw-*` tokens remain allowed. Design-token lint: `eslint.design-tokens.mjs` and
+  `stylelint.config.mjs` (see the README of the design system).
 - `apps/web/src/modules/content/` (Task 1.2): `UNDER_CONSTRUCTION` per tenant (French copy, logo, icons, OG image,
   `contactEmail: null` until the PO gives it), `UnderConstructionPage`, `buildSiteMetadata()` (title, description,
   icons, Open Graph, robots), `isIndexable()` = production **and** site host only. The proxy adds
@@ -127,7 +137,8 @@ the supervisor's merge of PR #22.)
   path is refused in production by the route rules;
   `error.tsx`, `global-error.tsx`, `not-found.tsx` (French).
 - Tests (Task 0.5): Vitest 4.1.12 projects in `apps/web/vitest.config.ts`: `unit` (`src/**/*.test.ts`,
-  `tests/factories/**/*.test.ts`) and `integration` (`tests/integration/`, one placeholder until ADR-005); 214 tests.
+  `tests/factories/**/*.test.ts`, `tests/lint/**/*.test.ts`) and `integration` (`tests/integration/`, one
+  placeholder until ADR-005); 240 tests.
   Env for tests: `DEPLOY_ENV=local`, `LOG_LEVEL=fatal`. Scripts in `apps/web`: `test:unit`, `test:integration`.
 - E2E: Playwright 1.64.1, Chromium headless shell only, `apps/web/playwright.config.ts`, `tests/e2e/*.spec.ts` (23 tests).
   Runs `next start --port 3100` (`DEPLOY_ENV=local`); Turbo `e2e` depends on `build`. Report + traces on failure.
@@ -255,6 +266,11 @@ the supervisor's merge of PR #22.)
   stale. Hex output (what the contrast test measures is what the browser paints). Ladder step 600 = first step for
   text on light surfaces (both brand primaries land there). UpWilling's `support` maps to green to keep the variable
   defined (04 §2 lists none). Fluid sizes: linear from 360 px to 1280 px wide. `/dev/*` refused in production.
+- Task 2.1b (supervisor "Go" on the plan, 2026-11-09): Tailwind gets the color **roles** only (palettes would allow
+  uncontrolled contrast, e.g. `text-primary-400`; they stay CSS variables). Preflight is on (components in 2.2
+  expect it). Lint also refuses raw font sizes and spacing in CSS (the golden rule, beyond the roadmap's "colors /
+  arbitrary values"). Bracketed variants (`data-[state=open]:`) stay allowed; arbitrary breakpoints do not.
+  Tailwind stays on 4.3.3 (ADR-018) although 4.3.5 exists; Stylelint 17.16.0, not the six-day-old 18.0.0.
 - Smoke tests: no `| grep -q` under `pipefail` (2026-11-01). `-q` exits at the first match, the writer then fails on the
   closed pipe, and `pipefail` turns the match into a miss: reproduced 5 out of 5 times, and it failed a `develop` run.
   Use `| grep ... >/dev/null`, which reads to the end. Each of the five smoke tests says so below its `set` line.
@@ -293,8 +309,9 @@ the supervisor's merge of PR #22.)
 - Brand colors, role mapping, status colors and the neutral (slate) are provisional (TR-01b, PO's M2 design review).
   The academy primary passes 4.5:1 on `surface-muted` by a small margin (4.51): a darker muted surface moves it to
   step 700 automatically. Fonts are system stacks until Task 2.4.
-- No lint rule yet against raw colors / arbitrary values (Task 2.1b). Under reduced motion only the duration tokens
-  drop to 0 ms; a global animation reset belongs with the components (Task 2.2).
+- Under reduced motion only the duration tokens drop to 0 ms; a global animation reset belongs with the components
+  (Task 2.2). The design-token lint covers `apps/web` only: `packages/design-system` (where raw values are defined)
+  is exempt by design, and its React components (2.2) need `@source` in `globals.css` for Tailwind to scan them.
 - **Backups are not off-site in the test phase** (ADR-026): they would not survive losing the laptop. R2 or another
   off-site destination, and a second holder of the private key, are mandatory before any real data.
 - Nothing alerts on a failing backup yet: only an `unhealthy` container and its log (ADR-026).
@@ -322,9 +339,10 @@ the supervisor's merge of PR #22.)
   before `docker builder prune` (it removes other projects' build cache too).
 
 ## Waiting on human / PO
-- Supervisor: squash-merge PR #22 (Task 2.1a, manual test passed 2026-11-09), or ask the agent to merge it.
-- PO (M2 design review, Task 2.5): the generated role colors, which change the brand pages slightly (see "Current
-  position"); confirm the brand colors with the vector logo files (TR-01b).
+- Supervisor: manual test of Task 2.1b (instructions in the task report / PR #23).
+- PO (M2 design review, Task 2.5): the generated role colors, which changed the brand pages slightly in Task 2.1a
+  (academy green `#2E7D34` → `#1E832B`, association blue `#0070D8` → `#006BCF`, body text `#16233A` → `#1C2128`,
+  muted text `#4B5563` → `#636E7F`); confirm the brand colors with the vector logo files (TR-01b).
 - Supervisor: **apply branch protection** to `develop` and `main` (`docs/runbooks/github-repository-settings.md`):
   none exists today, so a direct push or a merge with failing CI would not be stopped.
 - PO: read `docs/phase0/essai-1.md` (Essai 1's answers for the Phase 0 decision session, Task 4.3).
@@ -362,8 +380,8 @@ the supervisor's merge of PR #22.)
 - Large `docker`/Windows disk checks are slow here (antivirus): scan targeted folders, not the whole drive.
 
 ## Next step (exact)
-1. Supervisor merges PR #22 (squash; manual test passed 2026-11-09). The agent then syncs `develop`, checks CI on
-   `develop` and recette, deletes the branch.
-2. Then Task 2.1b — Tailwind v4 mapping + lint rule (verify the current Tailwind version first). Do not start it
-   before the supervisor's go.
+1. Supervisor runs the manual test of Task 2.1b (task report / PR #23). Fixes on the same branch if needed; then the
+   merge (squash) and the agent syncs `develop`, checks CI on `develop` and recette, deletes the branch.
+2. Then Task 2.2 — Primitive components (verify and justify any headless library, e.g. Radix, in the plan). Do not
+   start it before the supervisor's go.
 3. Still waiting on the human: branch protection, the backup key copy, the Oracle VM (see "Waiting on human").
