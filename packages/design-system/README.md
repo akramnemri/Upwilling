@@ -53,14 +53,49 @@ namespace. Every utility reads a `--uw-*` variable, so the same class gives each
 | Shape, motion                             | `rounded-md`, `shadow-md`, `ease-standard`                                                                                                               |
 | Layout                                    | `md:`, `lg:` (breakpoints), `@md:` and `max-w-prose` (containers)                                                                                        |
 
-`duration`, `z-index`, `border-width` and `focus-ring` have no Tailwind namespace: CSS reads their
-variables. A new token group must be mapped in `src/tokens/tailwind-theme.ts` (or listed there as
-CSS-only), or the generator stops.
+`duration`, `z-index`, `border-width` and `focus-ring` have no Tailwind namespace: the generator writes
+`@utility` classes for them instead (`duration-fast`, `z-modal`, `border-thick`, `focus-visible:focus-ring`).
+`transition-*` utilities default to `--uw-duration-base` and `--uw-easing-standard`. A new token group
+must be mapped in `src/tokens/tailwind-theme.ts`, or the generator stops.
 
-In `apps/web`, lint refuses what bypasses the tokens: raw colors in code (ESLint), arbitrary Tailwind
-values such as `p-[13px]` or `bg-(--x)` and classes the theme does not define (ESLint,
-`eslint.design-tokens.mjs`), and raw colors, font sizes and spacing in CSS (Stylelint,
-`stylelint.config.mjs`). An exception needs a disable comment that says why (`-- <reason>`).
+`css/base.css` (hand-written) declares the two animations the components use (`animate-spin`,
+`animate-pulse`) and stops every animation and transition under `prefers-reduced-motion`.
+
+Lint refuses what bypasses the tokens, in `apps/web` and in `react/` (shared rules:
+`@upwilling/config/eslint/design-tokens`): raw colors in code, arbitrary Tailwind values such as
+`p-[13px]` or `bg-(--x)`, and classes the theme does not define. In `apps/web`, Stylelint also refuses raw
+colors, font sizes and spacing in CSS (`stylelint.config.mjs`). An exception needs a disable comment that
+says why (`-- <reason>`).
+
+## React components (Task 2.2a)
+
+`react/`, imported as `@upwilling/design-system/react`. Server Components (no `"use client"`), styled
+with token classes only; every visible or announced text comes from props (French copy lives in the
+application). Preview: `/dev/components` on any site host, locally and on recette.
+
+| Group      | Components                                                                                                     |
+| ---------- | -------------------------------------------------------------------------------------------------------------- |
+| Layout     | `Container` (token width + page gutter), `Section` (rhythm, background + matching text color), `Stack`, `Grid` |
+| Typography | `Heading` (level ≠ size), `Text`, `Eyebrow`                                                                    |
+| Actions    | `Button` (primary, secondary, ghost, link; sm/md/lg; icon; loading), `ButtonLink`, `Link`                      |
+| Content    | `Icon` (Lucide), `Badge`, `Chip`, `AnnouncementPill`, `Card` + `CardMedia/Header/Body/Footer`                  |
+| Feedback   | `Spinner` (labelled status or decorative), `Skeleton`                                                          |
+
+Conventions:
+
+- Variants are plain lookup tables of full class names (Tailwind must see them literally); `cx()` joins
+  them. A caller's `className` is for placement (margins, grid position), not restyling: classes are not
+  merged.
+- `Link` and `ButtonLink` use `next/link` for paths (`/…`, `#…`, `?…`) and a plain anchor otherwise. A new
+  tab needs `newTabLabel` (read after the link text). `Button` defaults to `type="button"`; while
+  `loading` it is disabled and reads `loadingLabel` after its text.
+- Icons: import each Lucide icon by name and pass the component (`icon={ArrowRight}`); decorative unless
+  given a `label`.
+- Tests (`react/*.test.tsx`, jsdom): roles, accessible names, keyboard, variants, and an axe-core check
+  (color contrast is measured in the e2e test, in Chromium).
+
+Tailwind in an application must scan this folder: `@source` in `apps/web/src/app/globals.css`.
+`css/tailwind.css` is this package's own entry (lint now, Storybook in Task 2.3).
 
 **Provisional values:** the brand colors were read from the logos (`docs/ai/04_DESIGN_SYSTEM.md` §2) and
 must be confirmed with the vector source files (TR-01b); the role mapping and fonts wait for the PO's M2

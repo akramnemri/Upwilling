@@ -6,5 +6,12 @@
     "erasableSyntaxOnly": true,
     "verbatimModuleSyntax": true
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "scripts/**/*.ts", "vitest.config.ts"]
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "react/**/*.ts",
+    "react/**/*.tsx",
+    "scripts/**/*.ts",
+    "vitest.config.ts"
+  ]
 }
