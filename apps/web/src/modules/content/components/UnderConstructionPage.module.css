@@ -51,6 +51,7 @@
 .headline {
   margin: 0 0 var(--uw-space-4);
   font-size: var(--uw-font-size-4xl);
+  font-weight: var(--uw-font-weight-bold);
   line-height: var(--uw-line-height-tight);
   color: var(--uw-color-text);
   overflow-wrap: break-word;

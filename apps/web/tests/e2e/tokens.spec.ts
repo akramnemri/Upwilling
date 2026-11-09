@@ -31,7 +31,17 @@ for (const { host, brand } of HOSTS) {
     expect(primary).toMatch(/^#[0-9A-F]{6}$/);
     await expect(page.getByTestId("role-primary")).toHaveText(primary);
     await expect(page.getByText("✘ insuffisant")).toHaveCount(0);
+    // Tailwind's bg-primary (Task 2.1b) reads the same brand variable.
+    await expect(page.getByTestId("tailwind-primary")).toHaveCSS(
+      "background-color",
+      hexToRgb(primary),
+    );
   });
+}
+
+function hexToRgb(hex: string): string {
+  const [r, g, b] = [1, 3, 5].map((start) => parseInt(hex.slice(start, start + 2), 16));
+  return `rgb(${r}, ${g}, ${b})`;
 }
 
 test("the two sites share the accent and differ in primary color", async ({ page }) => {

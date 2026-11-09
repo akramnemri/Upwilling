@@ -80,16 +80,16 @@ similar values are replaced with `[REDACTED]`. Log through `getLogger()` / `getR
 
 ## Commands (run from the repository root)
 
-| Command                                         | What it does                                                                                      |
-| ----------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| `pnpm dev`                                      | Starts the Next.js dev server for `apps/web`.                                                     |
-| `pnpm build`                                    | Production build of every package.                                                                |
-| `pnpm typecheck`                                | TypeScript checks (generates Next.js route types first).                                          |
-| `pnpm lint`                                     | ESLint with type-aware rules.                                                                     |
-| `pnpm test`                                     | Unit and integration tests (Vitest).                                                              |
-| `pnpm e2e`                                      | Builds, then runs the end-to-end tests (Playwright).                                              |
-| `pnpm format` / `pnpm format:check`             | Prettier write / check. `docs/` is never reformatted.                                             |
-| `pnpm --filter @upwilling/design-system tokens` | Regenerates the design tokens after editing `packages/design-system/tokens/` (commit the result). |
+| Command                                         | What it does                                                                                                             |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `pnpm dev`                                      | Starts the Next.js dev server for `apps/web`.                                                                            |
+| `pnpm build`                                    | Production build of every package.                                                                                       |
+| `pnpm typecheck`                                | TypeScript checks (generates Next.js route types first).                                                                 |
+| `pnpm lint`                                     | ESLint with type-aware rules; in `apps/web` also the design-token rules and Stylelint.                                   |
+| `pnpm test`                                     | Unit and integration tests (Vitest).                                                                                     |
+| `pnpm e2e`                                      | Builds, then runs the end-to-end tests (Playwright).                                                                     |
+| `pnpm format` / `pnpm format:check`             | Prettier write / check. `docs/` is never reformatted.                                                                    |
+| `pnpm --filter @upwilling/design-system tokens` | Regenerates the design tokens and the Tailwind theme after editing `packages/design-system/tokens/` (commit the result). |
 
 ## Tests
 
