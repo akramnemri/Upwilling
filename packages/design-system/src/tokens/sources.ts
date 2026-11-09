@@ -119,7 +119,7 @@ export function parseTokenSources(files: ReadonlyMap<string, unknown>): TokenSou
 
   const colors = parseColorSources(requireFile(files, COLOR_FILE), COLOR_FILE);
   const baseGroups = baseGroupFiles
-    .sort()
+    .toSorted((a, b) => a.localeCompare(b, "en"))
     .flatMap((path) => parseBaseGroups(files.get(path), path));
   assertUniqueBaseGroups(baseGroups);
 

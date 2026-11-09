@@ -55,7 +55,7 @@ export default async function TokenPreviewPage() {
   );
 }
 
-function ColorRoles({ tokens }: { tokens: BrandTokens }) {
+function ColorRoles({ tokens }: Readonly<{ tokens: BrandTokens }>) {
   return (
     <section className={styles.section} aria-labelledby="roles">
       <h2 id="roles">Rôles de couleur</h2>
@@ -75,7 +75,7 @@ function ColorRoles({ tokens }: { tokens: BrandTokens }) {
   );
 }
 
-function Palettes({ tokens }: { tokens: BrandTokens }) {
+function Palettes({ tokens }: Readonly<{ tokens: BrandTokens }>) {
   return (
     <section className={styles.section} aria-labelledby="palettes">
       <h2 id="palettes">Palettes (aperçus et teintes, jamais du texte)</h2>
@@ -102,7 +102,7 @@ function Palettes({ tokens }: { tokens: BrandTokens }) {
   );
 }
 
-function ContrastPairs({ tokens }: { tokens: BrandTokens }) {
+function ContrastPairs({ tokens }: Readonly<{ tokens: BrandTokens }>) {
   return (
     <section className={styles.section} aria-labelledby="contrast">
       <h2 id="contrast">Contrastes (WCAG AA : 4,5 pour le texte, 3 pour les composants)</h2>
