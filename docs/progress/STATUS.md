@@ -1,7 +1,7 @@
 # STATUS
 
-Updated: 2026-11-10 by Claude (session 8 — Task 2.2b merged; Task 2.2c, interactive components, PR open,
-waiting for the supervisor's manual test.)
+Updated: 2026-11-10 by Claude (session 8 — Task 2.2b merged; Task 2.2c, interactive components, manual test
+passed, waiting for the merge of PR #26.)
 
 ## Handoff for the next session (read first)
 - **M2 is under way.** Task 2.1 is merged (2.1a tokens, 2.1b Tailwind theme + lint). Task 2.2 was split (supervisor
@@ -44,8 +44,8 @@ waiting for the supervisor's manual test.)
 
 ## Current position
 - Milestone: **M2 — Design system foundation (Essai 2)**, in progress. M1 closed 2026-11-06.
-- Task: **2.2c — Interactive components** (TR-01, TR-07) — state: **implemented, PR #26 open, waiting for the
-  supervisor's manual test**. Branch `feat/TR-01-interactive`.
+- Task: **2.2c — Interactive components** (TR-01, TR-07) — state: **manual test passed** (supervisor, 2026-11-10),
+  PR #26 open, **waiting for the merge**. Branch `feat/TR-01-interactive`.
   - `packages/design-system/react/disclosure.tsx` (Server Components): `Accordion` = native `<details>`/`<summary>`
     (`exclusive` → shared `name` from `useId()`, `defaultOpen`; plain-text titles), `Tabs` = `@radix-ui/react-tabs`
     parts (Radix ships `"use client"` itself, so the wrapper needs none; label, items, `defaultValue`; selected tab
@@ -413,11 +413,7 @@ waiting for the supervisor's manual test.)
 - Large `docker`/Windows disk checks are slow here (antivirus): scan targeted folders, not the whole drive.
 
 ## Next step (exact)
-1. Supervisor: manual test of Task 2.2c on `/dev/components` (both hosts): keyboard walkthrough of the accordion,
-   tabs and dialog (Tab, Enter, Space, arrows, Escape; focus back on "Voir le programme"), and a screen reader if
-   available (NVDA + Chrome or Firefox: expanded/collapsed on the accordion, "onglet 2 sur 3", the dialog's name and
-   description read on opening).
-2. After the go: merge of PR #26 (squash), by the supervisor or the agent on request; then sync `develop`,
-   check CI on `develop` and recette, delete the branch.
+1. Merge of PR #26 (squash; Task 2.2c, manual test passed 2026-11-10), by the supervisor or the agent on request.
+2. After the merge: sync `develop`, check CI on `develop` and recette, delete the branch.
 3. Then Task 2.3 — Storybook & visual regression (post its plan first). Do not start it before the supervisor's go.
 4. Still waiting on the human: branch protection, the backup key copy, the Oracle VM (see "Waiting on human").
