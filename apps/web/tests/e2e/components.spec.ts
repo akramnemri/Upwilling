@@ -32,7 +32,7 @@ test("keyboard focus shows the focus ring; a mouse click does not", async ({ pag
   });
 
   // Start sequential navigation from the "Boutons" heading, then Tab to the first button.
-  await page.getByRole("heading", { level: 2, name: "Boutons" }).click();
+  await page.getByRole("heading", { level: 2, name: "Boutons", exact: true }).click();
   await page.keyboard.press("Tab");
   const first = page.getByRole("button", { name: "Principal" });
   await expect(first).toBeFocused();
