@@ -44,7 +44,7 @@ waiting for the supervisor's manual test.)
 
 ## Current position
 - Milestone: **M2 — Design system foundation (Essai 2)**, in progress. M1 closed 2026-11-06.
-- Task: **2.2c — Interactive components** (TR-01, TR-07) — state: **implemented, PR open, waiting for the
+- Task: **2.2c — Interactive components** (TR-01, TR-07) — state: **implemented, PR #26 open, waiting for the
   supervisor's manual test**. Branch `feat/TR-01-interactive`.
   - `packages/design-system/react/disclosure.tsx` (Server Components): `Accordion` = native `<details>`/`<summary>`
     (`exclusive` → shared `name` from `useId()`, `defaultOpen`; plain-text titles), `Tabs` = `@radix-ui/react-tabs`
@@ -417,7 +417,7 @@ waiting for the supervisor's manual test.)
    tabs and dialog (Tab, Enter, Space, arrows, Escape; focus back on "Voir le programme"), and a screen reader if
    available (NVDA + Chrome or Firefox: expanded/collapsed on the accordion, "onglet 2 sur 3", the dialog's name and
    description read on opening).
-2. After the go: merge of the 2.2c PR (squash), by the supervisor or the agent on request; then sync `develop`,
+2. After the go: merge of PR #26 (squash), by the supervisor or the agent on request; then sync `develop`,
    check CI on `develop` and recette, delete the branch.
 3. Then Task 2.3 — Storybook & visual regression (post its plan first). Do not start it before the supervisor's go.
 4. Still waiting on the human: branch protection, the backup key copy, the Oracle VM (see "Waiting on human").
