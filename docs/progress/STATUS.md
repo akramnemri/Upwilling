@@ -1,16 +1,16 @@
 # STATUS
 
-Updated: 2026-11-09 by Claude (session 6 — Task 2.1 merged; Task 2.2a, design-system foundations and static
-primitives, manual test passed, waiting for the merge of PR #24.)
+Updated: 2026-11-10 by Claude (session 7 — Task 2.2a merged; Task 2.2b, form components, manual test passed,
+waiting for the merge of PR #25.)
 
 ## Handoff for the next session (read first)
 - **M2 is under way.** Task 2.1 is merged (2.1a tokens, 2.1b Tailwind theme + lint). Task 2.2 was split (supervisor
-  "Go 2.2a", 2026-11-09): **2.2a** foundations + static primitives (this branch), **2.2b** forms (`Field`, `Input`,
-  `Textarea`, `Select`, `Checkbox`, `RadioGroup`, `ChoiceCards`, `FileInput`, `Alert`, `EmptyState`), **2.2c**
-  interactive (`Accordion`, `Tabs`, `Dialog`, `Breadcrumbs`, `Toast` if needed; its plan decides the headless
+  "Go 2.2a", 2026-11-09): **2.2a** foundations + static primitives (merged), **2.2b** forms (`Field`, `Input`,
+  `Textarea`, `Select`, `Checkbox`, `RadioGroup`, `ChoiceCards`, `FileInput`, `Alert`, `EmptyState`; this branch),
+  **2.2c** interactive (`Accordion`, `Tabs`, `Dialog`, `Breadcrumbs`, `Toast` if needed; its plan decides the headless
   library: native `<dialog>`/`<details>` first, Radix only where they fall short, checked with keyboard and screen
-  reader). `SiteHeader`/`SiteFooter` stay in 2.4. How-to: `packages/design-system/README.md`. Previews:
-  `/dev/tokens` and `/dev/components` on either site host (local, recette).
+  reader). `SiteHeader`/`SiteFooter` stay in 2.4. How-to: `packages/design-system/README.md`. Previews: `/dev/tokens`
+  and `/dev/components` on either site host (local, recette).
 - **Production approval, one-off exception:** on 2026-11-06 the supervisor's own approval of the first production
   deployment did not register (CI run 42240836809 on `main`, `a7e47a8`, PR #21); they told the agent "you do the
   approve", and the agent approved it through the GitHub API with a comment saying so. Checked 2026-11-09: the
@@ -45,25 +45,20 @@ primitives, manual test passed, waiting for the merge of PR #24.)
 
 ## Current position
 - Milestone: **M2 — Design system foundation (Essai 2)**, in progress. M1 closed 2026-11-06.
-- Task: **2.2a — Design-system foundations + static primitives** (TR-01, TR-07) — state: **manual test passed**
-  (supervisor, 2026-11-09), PR #24 open, **waiting for the merge**. Branch `feat/TR-01-primitives`.
-  - `packages/design-system/react/` (export `./react`), Server Components only: `Container`, `Section`, `Stack`,
-    `Grid`, `Heading`, `Text`, `Eyebrow`, `Button`, `ButtonLink`, `Link`, `Icon` (Lucide), `Badge`, `Chip`,
-    `AnnouncementPill`, `Card` (+ slots), `Spinner`, `Skeleton`. Variants are lookup tables of token classes;
-    `cx()` joins without merging (`className` is for placement). Texts and announced labels come from props.
-  - `theme.css` now also has `@utility` classes for the groups without a namespace (`duration-*`, `z-*`,
-    `border-thin/medium/thick`, `focus-ring`) and transition defaults from the motion tokens. New hand-written
-    `css/base.css` (export `./base.css`): `animate-spin`/`animate-pulse` and the global reduced-motion reset.
-    `css/tailwind.css` is the package's own Tailwind entry (lint now, Storybook in 2.3).
-  - The design-token ESLint rules moved to `@upwilling/config/eslint/design-tokens` and now also check
-    `packages/design-system/react/`. `apps/web/src/app/globals.css` imports `base.css` and has `@source` for the
-    components.
-  - Tests: 42 component tests (jsdom, Testing Library, axe-core with contrast off) in a `react` Vitest project;
-    e2e `components.spec.ts` (5): axe WCAG 2.2 AA tags on `/dev/components` in both brands (contrast on), focus ring
-    on keyboard focus only, loading button, reduced motion.
-  - Found and fixed while testing: accessible names lost a space between a pill's tag and its text and before a
-    hidden "(nouvel onglet)"; a loading button's name differs between jsdom and Chromium unless the hidden label
-    follows a real space (labels are now passed in parentheses, e.g. "(envoi en cours)").
+- Task: **2.2b — Form components** (TR-01, TR-07) — state: **manual test passed** (supervisor, 2026-11-10),
+  PR #25 open, CI green (SonarCloud included), **waiting for the merge**. Branch `feat/TR-01-forms`.
+  - `packages/design-system/react/forms.tsx` (Server Components): `Field` passes `id`, `aria-describedby` (help,
+    then error), `aria-invalid` and `required` to its control through a render prop; `Input`, `Textarea`,
+    `Select`, `FileInput`, `Checkbox`, `Fieldset`. `choices.tsx`: `RadioGroup`, `ChoiceCards` (a `<label>` card
+    around a native radio/checkbox, `has-checked:`/`has-focus-visible:`). `feedback.tsx`: `Alert`, `EmptyState`.
+  - `submit-button.tsx` is the only `"use client"` file (`useFormStatus`): spinner, `aria-disabled` (a disabled
+    button drops the focus), no second submission, `pendingLabel` announced in a status region present from the
+    start. `react-dom` 19.2.9 became a peer dependency (no new package). `Button` got `aria-disabled:` styles.
+  - Preview `/dev/components`: sections for fields, choices, messages and a pending-submission demo (client action
+    that only waits 1.5 s). `PreviewSection` moved to `preview-section.tsx`.
+  - Tests: 66 component tests (24 new); e2e `forms.spec.ts` (3): accessible names/descriptions in Chromium,
+    choice-card focus ring and arrow keys, pending submission. The 2.2a focus-ring test needed an exact heading
+    locator (Playwright name matching is a case-insensitive substring).
 - GitHub environments (re-checked 2026-11-06): `production` has the supervisor as required reviewer and accepts `main`
   only; `recette` accepts `develop` only. Branch rules: none exist (see the handoff).
 - Docker Desktop starts only when the supervisor works on the project (supervisor, 2026-10-26): recette is offline
@@ -109,6 +104,8 @@ primitives, manual test passed, waiting for the merge of PR #24.)
   checks). CI on `develop` green; recette picks it up at the next Docker Desktop start.
 - 2.1b — Tailwind v4 mapping + design-token lint rules — merged 2026-11-09 (PR #23, `3703398`, squash-merged by
   the agent at the supervisor's request), manual test passed. CI on `develop` green; recette at the next start.
+- 2.2a — Design-system foundations + static primitives — merged 2026-11-09 (PR #24, `859e749`, squash-merged by
+  the agent at the supervisor's request), manual test passed (keyboard walkthrough of `/dev/components`).
 
 ## What exists now (so a new session does not have to rediscover it)
 - pnpm 11 workspace + Turborepo: `apps/web` (Next.js 16.3.8, App Router, `src/`), `packages/config`
@@ -121,8 +118,10 @@ primitives, manual test passed, waiting for the merge of PR #24.)
   `css/theme.css`, the Tailwind v4 theme (Task 2.1b, `src/tokens/tailwind-theme.ts`). Code: `src/color/` (OKLCH,
   palettes), `src/tokens/` (parse/validate, resolve roles, render). Exports: `@upwilling/design-system` (index),
   `/react`, `/tokens.css`, `/theme.css`, `/base.css`. Vitest projects `tokens` (node, 137 tests: stale-output
-  check, contrast of every pair in both brands, Essai 2 propagation) and `react` (jsdom, 42 component tests).
-- React components (Task 2.2a): `packages/design-system/react/`, see the package README (table + conventions).
+  check, contrast of every pair in both brands, Essai 2 propagation) and `react` (jsdom, 66 component tests).
+- React components (Tasks 2.2a, 2.2b): `packages/design-system/react/`, see the package README (table +
+  conventions). A visually hidden label that follows text needs a real space text node before it (accessible
+  names differ between jsdom and Chromium otherwise, found in 2.2a).
 - Styling in `apps/web` (Tasks 2.1b, 2.2a): Tailwind 4.3.3 via PostCSS, `src/app/globals.css` (Tailwind + tokens +
   theme + base, `@source` on the components); CSS modules that read `--uw-*` tokens remain allowed. Design-token
   lint: `eslint.design-tokens.mjs` (shared rules from `packages/config`) and `stylelint.config.mjs`.
@@ -148,8 +147,8 @@ primitives, manual test passed, waiting for the merge of PR #24.)
   `tests/factories/**/*.test.ts`, `tests/lint/**/*.test.ts`) and `integration` (`tests/integration/`, one
   placeholder until ADR-005); 240 tests.
   Env for tests: `DEPLOY_ENV=local`, `LOG_LEVEL=fatal`. Scripts in `apps/web`: `test:unit`, `test:integration`.
-- E2E: Playwright 1.64.1, Chromium headless shell only, `apps/web/playwright.config.ts`, `tests/e2e/*.spec.ts` (28 tests;
-  `components.spec.ts` uses `@axe-core/playwright`).
+- E2E: Playwright 1.64.1, Chromium headless shell only, `apps/web/playwright.config.ts`, `tests/e2e/*.spec.ts` (31 tests;
+  `components.spec.ts` uses `@axe-core/playwright`, `forms.spec.ts` covers the form components).
   Runs `next start --port 3100` (`DEPLOY_ENV=local`); Turbo `e2e` depends on `build`. Report + traces on failure.
 - Test data: `apps/web/tests/factories/person.ts` (`buildPerson`), emails restricted to `example.test` / `example.com`.
 - `infra/local/compose.yaml`: Mailpit v1.31.6 only (no database, ADR-005).
@@ -401,8 +400,8 @@ primitives, manual test passed, waiting for the merge of PR #24.)
 - Large `docker`/Windows disk checks are slow here (antivirus): scan targeted folders, not the whole drive.
 
 ## Next step (exact)
-1. Merge of PR #24 (squash; Task 2.2a, manual test passed 2026-11-09). The agent then syncs `develop`, checks CI on
-   `develop` and recette, deletes the branch.
-2. Then Task 2.2b — Form components (post its plan first). Do not start it before the supervisor's go. This session
-   is long: start 2.2b in a fresh session that reads this file.
-3. Still waiting on the human: branch protection, the backup key copy, the Oracle VM (see "Waiting on human").
+1. Merge of PR #25 (squash; Task 2.2b, manual test passed 2026-11-10), by the supervisor or the agent on request.
+2. After the merge: sync `develop`, check CI on `develop` and recette, delete the branch.
+3. Then Task 2.2c — Interactive components (`Accordion`, `Tabs`, `Dialog`, `Breadcrumbs`, `Toast` if needed; post
+   its plan first, including the headless-library decision). Do not start it before the supervisor's go.
+4. Still waiting on the human: branch protection, the backup key copy, the Oracle VM (see "Waiting on human").

@@ -23,9 +23,10 @@ import {
 import { ArrowRight, Code, Download, ShieldCheck } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import type { ReactNode } from "react";
 
 import { getEnv } from "../../../lib/env";
+import { FormsPreview } from "./forms-preview";
+import { PreviewSection } from "./preview-section";
 
 // Rendered per request: the brand comes from the Host header (root layout), and at build time there is
 // no DEPLOY_ENV to check.
@@ -34,8 +35,8 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Aperçu des composants" };
 
 /**
- * Component preview (Task 2.2a): every primitive of @upwilling/design-system/react in the brand of the
- * current host, for the keyboard walkthrough. Synthetic copy. Local and recette only; the route
+ * Component preview (Tasks 2.2a, 2.2b): every component of @upwilling/design-system/react in the brand
+ * of the current host, for the keyboard walkthrough. Synthetic copy. Local and recette only; the route
  * rules also refuse /dev in production.
  */
 export default function ComponentPreviewPage() {
@@ -48,7 +49,7 @@ export default function ComponentPreviewPage() {
       <Section spacing="sm" aria-labelledby="apercu">
         <Container>
           <Stack gap="3">
-            <Eyebrow>Design system · tâche 2.2a</Eyebrow>
+            <Eyebrow>Design system · tâches 2.2a et 2.2b</Eyebrow>
             <Heading level={1} id="apercu" tone="primary">
               Aperçu des composants
             </Heading>
@@ -221,32 +222,9 @@ export default function ComponentPreviewPage() {
           ))}
         </Grid>
       </PreviewSection>
-    </main>
-  );
-}
 
-function PreviewSection({
-  id,
-  title,
-  background = "surface",
-  children,
-}: Readonly<{
-  id: string;
-  title: string;
-  background?: "surface" | "muted";
-  children: ReactNode;
-}>) {
-  return (
-    <Section background={background} spacing="sm" aria-labelledby={id}>
-      <Container>
-        <Stack gap="6">
-          <Heading level={2} id={id}>
-            {title}
-          </Heading>
-          {children}
-        </Stack>
-      </Container>
-    </Section>
+      <FormsPreview />
+    </main>
   );
 }
 

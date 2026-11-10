@@ -32,7 +32,7 @@ test("keyboard focus shows the focus ring; a mouse click does not", async ({ pag
   });
 
   // Start sequential navigation from the "Boutons" heading, then Tab to the first button.
-  await page.getByRole("heading", { level: 2, name: "Boutons" }).click();
+  await page.getByRole("heading", { level: 2, name: "Boutons", exact: true }).click();
   await page.keyboard.press("Tab");
   const first = page.getByRole("button", { name: "Principal" });
   await expect(first).toBeFocused();
@@ -56,7 +56,7 @@ test("a loading button is disabled and named with its loading label", async ({ p
 test("animations stop when the visitor asks for reduced motion", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto(localUrl("upwilling.localhost", "/dev/components"));
-  const ring = page.getByRole("status").locator("svg");
-  await expect(ring).toHaveCSS("animation-iteration-count", "1");
-  await expect(page.getByRole("status")).toHaveText("Chargement des formations");
+  // The page has other status regions (form submission, Task 2.2b): pick the spinner's.
+  const spinner = page.getByRole("status").filter({ hasText: "Chargement des formations" });
+  await expect(spinner.locator("svg")).toHaveCSS("animation-iteration-count", "1");
 });
