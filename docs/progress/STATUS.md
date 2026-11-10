@@ -1,16 +1,15 @@
 # STATUS
 
-Updated: 2026-11-10 by Claude (session 7 — Task 2.2a merged; Task 2.2b, form components, manual test passed,
-waiting for the merge of PR #25.)
+Updated: 2026-11-10 by Claude (session 8 — Task 2.2b merged; Task 2.2c, interactive components, manual test
+passed, waiting for the merge of PR #26.)
 
 ## Handoff for the next session (read first)
 - **M2 is under way.** Task 2.1 is merged (2.1a tokens, 2.1b Tailwind theme + lint). Task 2.2 was split (supervisor
-  "Go 2.2a", 2026-11-09): **2.2a** foundations + static primitives (merged), **2.2b** forms (`Field`, `Input`,
-  `Textarea`, `Select`, `Checkbox`, `RadioGroup`, `ChoiceCards`, `FileInput`, `Alert`, `EmptyState`; this branch),
-  **2.2c** interactive (`Accordion`, `Tabs`, `Dialog`, `Breadcrumbs`, `Toast` if needed; its plan decides the headless
-  library: native `<dialog>`/`<details>` first, Radix only where they fall short, checked with keyboard and screen
-  reader). `SiteHeader`/`SiteFooter` stay in 2.4. How-to: `packages/design-system/README.md`. Previews: `/dev/tokens`
-  and `/dev/components` on either site host (local, recette).
+  "Go 2.2a", 2026-11-09): **2.2a** foundations + static primitives (merged), **2.2b** forms (merged),
+  **2.2c** interactive (`Accordion`, `Tabs`, `Dialog`, `Breadcrumbs`; no `Toast`; this branch). Native `<details>` and
+  `<dialog>`, Radix only for Tabs (supervisor "Go" on the plan, 2026-11-10). After 2.2c: Task 2.3 (Storybook + visual
+  regression). `SiteHeader`/`SiteFooter` stay in 2.4. How-to: `packages/design-system/README.md`. Previews:
+  `/dev/tokens` and `/dev/components` on either site host (local, recette).
 - **Production approval, one-off exception:** on 2026-11-06 the supervisor's own approval of the first production
   deployment did not register (CI run 42240836809 on `main`, `a7e47a8`, PR #21); they told the agent "you do the
   approve", and the agent approved it through the GitHub API with a comment saying so. Checked 2026-11-09: the
@@ -45,20 +44,24 @@ waiting for the merge of PR #25.)
 
 ## Current position
 - Milestone: **M2 — Design system foundation (Essai 2)**, in progress. M1 closed 2026-11-06.
-- Task: **2.2b — Form components** (TR-01, TR-07) — state: **manual test passed** (supervisor, 2026-11-10),
-  PR #25 open, CI green (SonarCloud included), **waiting for the merge**. Branch `feat/TR-01-forms`.
-  - `packages/design-system/react/forms.tsx` (Server Components): `Field` passes `id`, `aria-describedby` (help,
-    then error), `aria-invalid` and `required` to its control through a render prop; `Input`, `Textarea`,
-    `Select`, `FileInput`, `Checkbox`, `Fieldset`. `choices.tsx`: `RadioGroup`, `ChoiceCards` (a `<label>` card
-    around a native radio/checkbox, `has-checked:`/`has-focus-visible:`). `feedback.tsx`: `Alert`, `EmptyState`.
-  - `submit-button.tsx` is the only `"use client"` file (`useFormStatus`): spinner, `aria-disabled` (a disabled
-    button drops the focus), no second submission, `pendingLabel` announced in a status region present from the
-    start. `react-dom` 19.2.9 became a peer dependency (no new package). `Button` got `aria-disabled:` styles.
-  - Preview `/dev/components`: sections for fields, choices, messages and a pending-submission demo (client action
-    that only waits 1.5 s). `PreviewSection` moved to `preview-section.tsx`.
-  - Tests: 66 component tests (24 new); e2e `forms.spec.ts` (3): accessible names/descriptions in Chromium,
-    choice-card focus ring and arrow keys, pending submission. The 2.2a focus-ring test needed an exact heading
-    locator (Playwright name matching is a case-insensitive substring).
+- Task: **2.2c — Interactive components** (TR-01, TR-07) — state: **manual test passed** (supervisor, 2026-11-10),
+  PR #26 open, **waiting for the merge**. Branch `feat/TR-01-interactive`.
+  - `packages/design-system/react/disclosure.tsx` (Server Components): `Accordion` = native `<details>`/`<summary>`
+    (`exclusive` → shared `name` from `useId()`, `defaultOpen`; plain-text titles), `Tabs` = `@radix-ui/react-tabs`
+    parts (Radix ships `"use client"` itself, so the wrapper needs none; label, items, `defaultValue`; selected tab
+    filled with the primary color). `navigation.tsx`: `Breadcrumbs` (`nav` landmark, `ol`, current page as text with
+    `aria-current="page"`). `dialog.tsx` (`"use client"`, `showModal()`): `Dialog` (title = name, optional
+    description, required `closeLabel`, `footer`; `<form method="dialog">` closes without code; no backdrop close).
+    `css/base.css`: the page does not scroll while a modal is open (`html:has(dialog:modal)`).
+  - No `Toast` (no flow needs a vanishing message; README says when to add one).
+  - New dependency `@radix-ui/react-tabs` 1.2.1 (ADR-018 row): 16 `@radix-ui/*` packages, MIT.
+  - Preview `/dev/components`: sections "Accordéon", "Onglets", "Boîte de dialogue", "Fil d’Ariane"
+    (`interactive-preview.tsx`).
+  - Tests: 79 component tests (13 new; jsdom has no `showModal()` and no `<details name>` grouping, so the dialog is
+    tested with a stub there); e2e `interactive.spec.ts` (4): accordion keyboard and exclusivity, tabs keys and
+    focusable panel, dialog (focus on close button, page inert in both Tab directions, backdrop click ignored,
+    Escape and `method="dialog"` close, focus back on the trigger, page scroll locked, axe on the open dialog),
+    breadcrumbs landmark.
 - GitHub environments (re-checked 2026-11-06): `production` has the supervisor as required reviewer and accepts `main`
   only; `recette` accepts `develop` only. Branch rules: none exist (see the handoff).
 - Docker Desktop starts only when the supervisor works on the project (supervisor, 2026-10-26): recette is offline
@@ -106,6 +109,9 @@ waiting for the merge of PR #25.)
   the agent at the supervisor's request), manual test passed. CI on `develop` green; recette at the next start.
 - 2.2a — Design-system foundations + static primitives — merged 2026-11-09 (PR #24, `859e749`, squash-merged by
   the agent at the supervisor's request), manual test passed (keyboard walkthrough of `/dev/components`).
+- 2.2b — Form components and pending submissions — merged 2026-11-10 (PR #25, `45a2ee3`, squash-merged by the
+  agent at the supervisor's request), manual test passed. CI on `develop` green, the recette tag moved; recette
+  installs it at the next Docker Desktop start.
 
 ## What exists now (so a new session does not have to rediscover it)
 - pnpm 11 workspace + Turborepo: `apps/web` (Next.js 16.3.8, App Router, `src/`), `packages/config`
@@ -118,8 +124,8 @@ waiting for the merge of PR #25.)
   `css/theme.css`, the Tailwind v4 theme (Task 2.1b, `src/tokens/tailwind-theme.ts`). Code: `src/color/` (OKLCH,
   palettes), `src/tokens/` (parse/validate, resolve roles, render). Exports: `@upwilling/design-system` (index),
   `/react`, `/tokens.css`, `/theme.css`, `/base.css`. Vitest projects `tokens` (node, 137 tests: stale-output
-  check, contrast of every pair in both brands, Essai 2 propagation) and `react` (jsdom, 66 component tests).
-- React components (Tasks 2.2a, 2.2b): `packages/design-system/react/`, see the package README (table +
+  check, contrast of every pair in both brands, Essai 2 propagation) and `react` (jsdom, 79 component tests).
+- React components (Tasks 2.2a–2.2c): `packages/design-system/react/`, see the package README (table +
   conventions). A visually hidden label that follows text needs a real space text node before it (accessible
   names differ between jsdom and Chromium otherwise, found in 2.2a).
 - Styling in `apps/web` (Tasks 2.1b, 2.2a): Tailwind 4.3.3 via PostCSS, `src/app/globals.css` (Tailwind + tokens +
@@ -147,8 +153,9 @@ waiting for the merge of PR #25.)
   `tests/factories/**/*.test.ts`, `tests/lint/**/*.test.ts`) and `integration` (`tests/integration/`, one
   placeholder until ADR-005); 240 tests.
   Env for tests: `DEPLOY_ENV=local`, `LOG_LEVEL=fatal`. Scripts in `apps/web`: `test:unit`, `test:integration`.
-- E2E: Playwright 1.64.1, Chromium headless shell only, `apps/web/playwright.config.ts`, `tests/e2e/*.spec.ts` (31 tests;
-  `components.spec.ts` uses `@axe-core/playwright`, `forms.spec.ts` covers the form components).
+- E2E: Playwright 1.64.1, Chromium headless shell only, `apps/web/playwright.config.ts`, `tests/e2e/*.spec.ts` (35 tests;
+  `components.spec.ts` uses `@axe-core/playwright`, `forms.spec.ts` covers the form components, `interactive.spec.ts`
+  the accordion, tabs, dialog and breadcrumbs).
   Runs `next start --port 3100` (`DEPLOY_ENV=local`); Turbo `e2e` depends on `build`. Report + traces on failure.
 - Test data: `apps/web/tests/factories/person.ts` (`buildPerson`), emails restricted to `example.test` / `example.com`.
 - `infra/local/compose.yaml`: Mailpit v1.31.6 only (no database, ADR-005).
@@ -285,6 +292,13 @@ waiting for the merge of PR #25.)
   built-in texts are required props (`newTabLabel`, `loadingLabel`, Spinner `label`); a loading `Button` is
   natively `disabled` + `aria-busy` (announcing pending forms is 2.2b's job); focus ring = outline (survives forced
   colors); Lucide icons pinned to a release at least two weeks old; jsdom 30 (not the 4-day-old 31).
+- Task 2.2c (supervisor "Go" on the plan, 2026-11-10): native first. `<details>` for the accordion (keyboard and
+  expanded state from the browser, no JavaScript, exclusive mode by `name`), `<dialog>` + `showModal()` for the
+  dialog (top layer and inert page beat a JavaScript focus trap; `command`/`commandfor` are not in React 19.2's
+  types and too recent for phones that cannot update), Radix only for Tabs (HTML has none). The Tabs wrapper turned
+  out not to need `"use client"` (Radix's own files carry it); `Dialog` is the second Client Component of the
+  design system. No `Toast` (WCAG 2.2.1, no flow needs it). Initial focus = the dialog's close button (first
+  focusable); no backdrop-click close.
 - Smoke tests: no `| grep -q` under `pipefail` (2026-11-01). `-q` exits at the first match, the writer then fails on the
   closed pipe, and `pipefail` turns the match into a miss: reproduced 5 out of 5 times, and it failed a `develop` run.
   Use `| grep ... >/dev/null`, which reads to the end. Each of the five smoke tests says so below its `set` line.
@@ -359,7 +373,6 @@ waiting for the merge of PR #25.)
   before `docker builder prune` (it removes other projects' build cache too).
 
 ## Waiting on human / PO
-- Supervisor: squash-merge PR #24 (Task 2.2a, manual test passed 2026-11-09), or ask the agent to merge it.
 - PO (M2 design review, Task 2.5): the generated role colors, which changed the brand pages slightly in Task 2.1a
   (academy green `#2E7D34` → `#1E832B`, association blue `#0070D8` → `#006BCF`, body text `#16233A` → `#1C2128`,
   muted text `#4B5563` → `#636E7F`); confirm the brand colors with the vector logo files (TR-01b).
@@ -400,8 +413,7 @@ waiting for the merge of PR #25.)
 - Large `docker`/Windows disk checks are slow here (antivirus): scan targeted folders, not the whole drive.
 
 ## Next step (exact)
-1. Merge of PR #25 (squash; Task 2.2b, manual test passed 2026-11-10), by the supervisor or the agent on request.
+1. Merge of PR #26 (squash; Task 2.2c, manual test passed 2026-11-10), by the supervisor or the agent on request.
 2. After the merge: sync `develop`, check CI on `develop` and recette, delete the branch.
-3. Then Task 2.2c — Interactive components (`Accordion`, `Tabs`, `Dialog`, `Breadcrumbs`, `Toast` if needed; post
-   its plan first, including the headless-library decision). Do not start it before the supervisor's go.
+3. Then Task 2.3 — Storybook & visual regression (post its plan first). Do not start it before the supervisor's go.
 4. Still waiting on the human: branch protection, the backup key copy, the Oracle VM (see "Waiting on human").

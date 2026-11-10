@@ -71,10 +71,12 @@ test("choice cards: arrows move the choice and the card shows the keyboard focus
   await expect(onSite).toBeChecked();
 
   // A mouse click anywhere on a card selects it, without the keyboard focus ring.
+  // The card's title text, scoped to the card: the tabs of Task 2.2c also have a "Données" tab.
   const data = page.getByRole("checkbox", { name: "Données" });
-  await page.getByText("Données", { exact: true }).click();
+  const dataCard = page.locator("label").filter({ has: data });
+  await dataCard.getByText("Données", { exact: true }).click();
   await expect(data).toBeChecked();
-  await expect(page.locator("label").filter({ has: data })).toHaveCSS("outline-style", "none");
+  await expect(dataCard).toHaveCSS("outline-style", "none");
 });
 
 test("a pending submission is announced, keeps the focus and cannot be sent twice", async ({

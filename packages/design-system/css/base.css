@@ -37,3 +37,11 @@
     scroll-behavior: auto !important;
   }
 }
+
+/*
+ * While a modal dialog is open (Dialog, Task 2.2c), the page behind it does not scroll. The browser
+ * already makes that page inert; this only stops the wheel and touch scrolling from moving it.
+ */
+html:has(dialog:modal) {
+  overflow: hidden;
+}

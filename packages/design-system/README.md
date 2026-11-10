@@ -67,12 +67,12 @@ Lint refuses what bypasses the tokens, in `apps/web` and in `react/` (shared rul
 colors, font sizes and spacing in CSS (`stylelint.config.mjs`). An exception needs a disable comment that
 says why (`-- <reason>`).
 
-## React components (Tasks 2.2a, 2.2b)
+## React components (Tasks 2.2a–2.2c)
 
 `react/`, imported as `@upwilling/design-system/react`. Server Components (no `"use client"`) except
-`SubmitButton`, styled with token classes only; every visible or announced text comes from props
-(French copy lives in the application). Preview: `/dev/components` on any site host, locally and on
-recette.
+`SubmitButton` and `Dialog`, styled with token classes only; every visible or announced text comes from
+props (French copy lives in the application). Preview: `/dev/components` on any site host, locally and
+on recette.
 
 | Group      | Components                                                                                                     |
 | ---------- | -------------------------------------------------------------------------------------------------------------- |
@@ -83,6 +83,8 @@ recette.
 | Forms      | `Field` (+ `Input`, `Textarea`, `Select`, `FileInput`), `Checkbox`, `Fieldset`, `RadioGroup`, `ChoiceCards`    |
 | Submission | `SubmitButton` (Client Component: pending state of the enclosing `<form action={…}>`)                          |
 | Feedback   | `Spinner` (labelled status or decorative), `Skeleton`, `Alert`, `EmptyState`                                   |
+| Disclosure | `Accordion` (native `<details>`), `Tabs` (Radix), `Dialog` (Client Component: native modal `<dialog>`)         |
+| Navigation | `Breadcrumbs`                                                                                                  |
 
 Conventions:
 
@@ -106,8 +108,26 @@ Conventions:
   announces `pendingLabel` in a status region that is on the page from the start.
 - `Alert` takes `role="alert"` or `role="status"` only when it appears after the page has loaded; a
   polite message is announced reliably when its `role="status"` container was already there.
+- Native first, Radix only where HTML has nothing (Task 2.2c). `Accordion` is `<details>`/`<summary>`:
+  the browser handles Tab, Enter, Space and the expanded state, with no JavaScript; `exclusive` groups
+  the panels with a shared `name` (one open at a time); titles are plain text (a heading inside
+  `<summary>` is not announced the same way everywhere). `Tabs` renders `@radix-ui/react-tabs` parts
+  (the WAI-ARIA tabs pattern: one Tab stop, arrows/Home/End select, Tab enters the panel); Radix ships
+  `"use client"`, so the wrapper stays a Server Component and the panels render on the server. Tab
+  `value`s are id-like (Radix builds element ids from them); only the selected panel is in the page.
+- `Dialog` uses `showModal()`: top layer, the rest of the page inert, Escape closes, focus goes to the
+  close button and back to the trigger. It needs `closeLabel` (the close button is an icon). A button
+  that only closes it goes in `<form method="dialog">`. Clicking the backdrop does not close it. While
+  it is open the page does not scroll (`css/base.css`).
+- `Breadcrumbs` takes the pages above (`items`) and the `current` page's title, which is text with
+  `aria-current="page"`; the separators are hidden from assistive technology.
+- No `Toast`: nothing needs a message that disappears on its own. Results stay on the page (`Alert`
+  in a status region); a vanishing message is easy to miss with a screen reader and leaves no time to
+  read it (WCAG 2.2.1). Add one when a flow needs feedback without a page change.
 - Tests (`react/*.test.tsx`, jsdom): roles, accessible names, keyboard, variants, and an axe-core check
-  (color contrast is measured in the e2e test, in Chromium).
+  (color contrast is measured in the e2e test, in Chromium). jsdom has no `showModal()` and does not
+  group `<details name>`: the dialog and the accordion's behavior are tested in Chromium
+  (`apps/web/tests/e2e/interactive.spec.ts`).
 
 Tailwind in an application must scan this folder: `@source` in `apps/web/src/app/globals.css`.
 `css/tailwind.css` is this package's own entry (lint now, Storybook in Task 2.3).
