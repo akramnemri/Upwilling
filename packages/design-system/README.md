@@ -67,11 +67,12 @@ Lint refuses what bypasses the tokens, in `apps/web` and in `react/` (shared rul
 colors, font sizes and spacing in CSS (`stylelint.config.mjs`). An exception needs a disable comment that
 says why (`-- <reason>`).
 
-## React components (Task 2.2a)
+## React components (Tasks 2.2a, 2.2b)
 
-`react/`, imported as `@upwilling/design-system/react`. Server Components (no `"use client"`), styled
-with token classes only; every visible or announced text comes from props (French copy lives in the
-application). Preview: `/dev/components` on any site host, locally and on recette.
+`react/`, imported as `@upwilling/design-system/react`. Server Components (no `"use client"`) except
+`SubmitButton`, styled with token classes only; every visible or announced text comes from props
+(French copy lives in the application). Preview: `/dev/components` on any site host, locally and on
+recette.
 
 | Group      | Components                                                                                                     |
 | ---------- | -------------------------------------------------------------------------------------------------------------- |
@@ -79,7 +80,9 @@ application). Preview: `/dev/components` on any site host, locally and on recett
 | Typography | `Heading` (level ≠ size), `Text`, `Eyebrow`                                                                    |
 | Actions    | `Button` (primary, secondary, ghost, link; sm/md/lg; icon; loading), `ButtonLink`, `Link`                      |
 | Content    | `Icon` (Lucide), `Badge`, `Chip`, `AnnouncementPill`, `Card` + `CardMedia/Header/Body/Footer`                  |
-| Feedback   | `Spinner` (labelled status or decorative), `Skeleton`                                                          |
+| Forms      | `Field` (+ `Input`, `Textarea`, `Select`, `FileInput`), `Checkbox`, `Fieldset`, `RadioGroup`, `ChoiceCards`    |
+| Submission | `SubmitButton` (Client Component: pending state of the enclosing `<form action={…}>`)                          |
+| Feedback   | `Spinner` (labelled status or decorative), `Skeleton`, `Alert`, `EmptyState`                                   |
 
 Conventions:
 
@@ -91,6 +94,18 @@ Conventions:
   `loading` it is disabled and reads `loadingLabel` after its text.
 - Icons: import each Lucide icon by name and pass the component (`icon={ArrowRight}`); decorative unless
   given a `label`.
+- Forms: a `Field` passes its wiring (`id`, `aria-describedby` = help then error, `aria-invalid`,
+  `required`) to its control through a render prop: `{(control) => <Input name="email" {...control} />}`.
+  `useId()` works in Server Components; a context would not. Help and error sit between the label and
+  the control. A required field takes `required` + `requiredLabel` (e.g. "(obligatoire)"), shown and read
+  in the label. Groups (`Fieldset`, `RadioGroup`, `ChoiceCards`) put help and error on the `fieldset`
+  (`aria-invalid` is not allowed on a group). Checkboxes and radios are native, tinted with
+  `accent-primary`; a choice card is a `<label>` around its input (`has-checked:`, `has-focus-visible:`).
+- `SubmitButton` goes inside a `<form action={…}>`. While the action runs it shows a spinner, uses
+  `aria-disabled` (a `disabled` button would drop the keyboard focus), ignores clicks and Enter, and
+  announces `pendingLabel` in a status region that is on the page from the start.
+- `Alert` takes `role="alert"` or `role="status"` only when it appears after the page has loaded; a
+  polite message is announced reliably when its `role="status"` container was already there.
 - Tests (`react/*.test.tsx`, jsdom): roles, accessible names, keyboard, variants, and an axe-core check
   (color contrast is measured in the e2e test, in Chromium).
 

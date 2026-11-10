@@ -98,7 +98,7 @@ export function Link({ tone = "primary", className, ...rest }: LinkProps) {
 }
 
 const BUTTON_BASE =
-  "inline-flex items-center justify-center gap-2 rounded-md font-semibold leading-tight whitespace-nowrap select-none transition-colors duration-fast focus-visible:focus-ring disabled:cursor-not-allowed disabled:opacity-60";
+  "inline-flex items-center justify-center gap-2 rounded-md font-semibold leading-tight whitespace-nowrap select-none transition-colors duration-fast focus-visible:focus-ring disabled:cursor-not-allowed disabled:opacity-60 aria-disabled:cursor-not-allowed aria-disabled:opacity-60";
 
 const BUTTON_VARIANTS = {
   primary: "bg-primary text-primary-contrast hover:bg-primary-hover",

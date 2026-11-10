@@ -56,7 +56,7 @@ test("a loading button is disabled and named with its loading label", async ({ p
 test("animations stop when the visitor asks for reduced motion", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto(localUrl("upwilling.localhost", "/dev/components"));
-  const ring = page.getByRole("status").locator("svg");
-  await expect(ring).toHaveCSS("animation-iteration-count", "1");
-  await expect(page.getByRole("status")).toHaveText("Chargement des formations");
+  // The page has other status regions (form submission, Task 2.2b): pick the spinner's.
+  const spinner = page.getByRole("status").filter({ hasText: "Chargement des formations" });
+  await expect(spinner.locator("svg")).toHaveCSS("animation-iteration-count", "1");
 });

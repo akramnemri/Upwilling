@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { Code } from "lucide-react";
+import { CalendarX, Code } from "lucide-react";
 import { describe, expect, it } from "vitest";
 
 import {
@@ -12,7 +12,7 @@ import {
   CardMedia,
   Chip,
 } from "./content.tsx";
-import { Skeleton, Spinner } from "./feedback.tsx";
+import { Alert, EmptyState, Skeleton, Spinner } from "./feedback.tsx";
 import { Icon } from "./icon.tsx";
 import { axeViolations } from "./testing/axe.ts";
 import { Heading, Text } from "./typography.tsx";
@@ -132,6 +132,68 @@ describe("Spinner and Skeleton", () => {
         </AnnouncementPill>
         <Spinner label="Chargement" />
         <Skeleton shape="title" />
+      </div>,
+    );
+    expect(await axeViolations(container)).toEqual([]);
+  });
+});
+
+describe("Alert and EmptyState", () => {
+  it.each(["info", "success", "warning", "danger"] as const)(
+    "Alert %s pairs its status surface with a decorative icon and a contrast-checked title",
+    (tone) => {
+      const { container } = render(
+        <Alert tone={tone} title="Titre">
+          Texte
+        </Alert>,
+      );
+      const box = container.firstElementChild;
+      expect(box?.className).toContain(`bg-${tone}-surface`);
+      expect(box?.querySelector("svg")?.getAttribute("aria-hidden")).toBe("true");
+      expect(screen.getByText("Titre").className).toContain(`text-${tone}-text`);
+      expect(box?.hasAttribute("role")).toBe(false);
+    },
+  );
+
+  it("Alert takes a heading for its title and a live role only when asked", () => {
+    render(
+      <Alert tone="danger" title="Le formulaire contient 2 erreurs" titleLevel={2} role="alert">
+        <ul>
+          <li>Saisissez votre nom.</li>
+          <li>Choisissez une formation.</li>
+        </ul>
+      </Alert>,
+    );
+    const alert = screen.getByRole("alert");
+    expect(screen.getByRole("heading", { level: 2 }).textContent).toBe(
+      "Le formulaire contient 2 erreurs",
+    );
+    expect(alert.querySelectorAll("li")).toHaveLength(2);
+  });
+
+  it("EmptyState has a heading at the given level, a description and an action", () => {
+    render(
+      <EmptyState
+        icon={CalendarX}
+        title="Aucune session programmée"
+        titleLevel={3}
+        description="Revenez bientôt ou contactez-nous."
+        action={<a href="/contact">Nous contacter</a>}
+      />,
+    );
+    screen.getByRole("heading", { level: 3, name: "Aucune session programmée" });
+    screen.getByText("Revenez bientôt ou contactez-nous.");
+    screen.getByRole("link", { name: "Nous contacter" });
+  });
+
+  it("have no axe violations", async () => {
+    const { container } = render(
+      <div>
+        <Alert tone="warning" title="Places limitées">
+          Plus que trois places.
+        </Alert>
+        <Alert tone="success" role="status" title="Demande envoyée" />
+        <EmptyState icon={CalendarX} title="Aucun résultat" titleLevel={2} />
       </div>,
     );
     expect(await axeViolations(container)).toEqual([]);

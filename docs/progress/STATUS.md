@@ -109,6 +109,8 @@ primitives, manual test passed, waiting for the merge of PR #24.)
   checks). CI on `develop` green; recette picks it up at the next Docker Desktop start.
 - 2.1b — Tailwind v4 mapping + design-token lint rules — merged 2026-11-09 (PR #23, `3703398`, squash-merged by
   the agent at the supervisor's request), manual test passed. CI on `develop` green; recette at the next start.
+- 2.2a — Design-system foundations + static primitives — merged 2026-11-09 (PR #24, `859e749`, squash-merged by
+  the agent at the supervisor's request), manual test passed (keyboard walkthrough of `/dev/components`).
 
 ## What exists now (so a new session does not have to rediscover it)
 - pnpm 11 workspace + Turborepo: `apps/web` (Next.js 16.3.8, App Router, `src/`), `packages/config`
