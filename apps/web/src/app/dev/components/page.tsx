@@ -26,6 +26,7 @@ import { notFound } from "next/navigation";
 
 import { getEnv } from "../../../lib/env";
 import { FormsPreview } from "./forms-preview";
+import { InteractivePreview } from "./interactive-preview";
 import { PreviewSection } from "./preview-section";
 
 // Rendered per request: the brand comes from the Host header (root layout), and at build time there is
@@ -35,7 +36,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Aperçu des composants" };
 
 /**
- * Component preview (Tasks 2.2a, 2.2b): every component of @upwilling/design-system/react in the brand
+ * Component preview (Tasks 2.2a–2.2c): every component of @upwilling/design-system/react in the brand
  * of the current host, for the keyboard walkthrough. Synthetic copy. Local and recette only; the route
  * rules also refuse /dev in production.
  */
@@ -49,7 +50,7 @@ export default function ComponentPreviewPage() {
       <Section spacing="sm" aria-labelledby="apercu">
         <Container>
           <Stack gap="3">
-            <Eyebrow>Design system · tâches 2.2a et 2.2b</Eyebrow>
+            <Eyebrow>Design system · tâches 2.2a à 2.2c</Eyebrow>
             <Heading level={1} id="apercu" tone="primary">
               Aperçu des composants
             </Heading>
@@ -224,6 +225,7 @@ export default function ComponentPreviewPage() {
       </PreviewSection>
 
       <FormsPreview />
+      <InteractivePreview />
     </main>
   );
 }

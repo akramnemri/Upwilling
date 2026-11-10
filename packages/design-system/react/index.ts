@@ -1,6 +1,7 @@
-// React components of the design system (Tasks 2.2a, 2.2b). Brand-agnostic: they use semantic token
+// React components of the design system (Tasks 2.2a–2.2c). Brand-agnostic: they use semantic token
 // classes only, and every visible or announced text comes from props (French copy lives in the
-// application). Server Components, except `SubmitButton` (`"use client"`).
+// application). Server Components, except `SubmitButton` and `Dialog` (`"use client"`); `Tabs` renders
+// Radix parts, which are Client Components of their own.
 
 export {
   Button,
@@ -37,6 +38,15 @@ export {
   type RadioGroupProps,
 } from "./choices.tsx";
 export { cx } from "./cx.ts";
+export { Dialog, type DialogProps } from "./dialog.tsx";
+export {
+  Accordion,
+  type AccordionItem,
+  type AccordionProps,
+  type TabItem,
+  Tabs,
+  type TabsProps,
+} from "./disclosure.tsx";
 export {
   Alert,
   type AlertProps,
@@ -79,6 +89,7 @@ export {
   Stack,
   type StackProps,
 } from "./layout.tsx";
+export { type BreadcrumbLink, Breadcrumbs, type BreadcrumbsProps } from "./navigation.tsx";
 export {
   Eyebrow,
   type EyebrowProps,

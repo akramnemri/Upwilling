@@ -1,7 +1,8 @@
 # ADR-018 — Pinned toolchain and framework versions
 
 - Status: Accepted (supervisor merged PR #1, 2026-10-18; lint tooling rows added in Task 0.2; CI tooling added in Task 0.6;
-  styling rows added in Task 2.1b; component and accessibility testing rows added in Task 2.2a)
+  styling rows added in Task 2.1b; component and accessibility testing rows added in Task 2.2a; Radix Tabs added in
+  Task 2.2c)
 - Date: 2026-10-18
 - Verified on: 2026-10-18, from official sources only (no remembered versions)
 
@@ -45,6 +46,7 @@ Upgrades are deliberate PRs (`chore(deps)`), never drive-by changes.
 | Prettier | **3.9.10** | 3.9.10 | Latest. |
 | `eslint-plugin-better-tailwindcss` | **4.10.0** (dependency of `packages/config`, since Task 2.2a) | 4.10.0 (2026-10-19) | Lints Tailwind v4 classes against the generated theme (`no-unknown-classes`) and forbids arbitrary values (`no-restricted-classes`). Peer ranges: ESLint `^9`, Tailwind `^4.1.17`. Added in Task 2.1b (apps/web); moved to the shared config in Task 2.2a so the design system's components follow the same rules. |
 | Lucide (`lucide-react`) | **1.61.0** (dependency of `packages/design-system` and `apps/web`) | 1.70.0 (2026-11-06; checked 2026-11-09) | The one open-license icon set of 04 §4 (ISC), tree-shaken (`sideEffects: false`, named imports). It publishes almost daily: the pin is the latest release at least two weeks old. Peer range accepts React 19. Task 2.2a. |
+| Radix Tabs (`@radix-ui/react-tabs`) | **1.2.1** (dependency of `packages/design-system`) | 1.2.1 (2026-10-12; checked 2026-11-10) | The only headless widget library in the design system (Task 2.2c): HTML has no tabs element, and Radix implements the WAI-ARIA tabs pattern (roles, `aria-selected`/`aria-controls`, one Tab stop, arrow keys, Home/End). Accordion and Dialog use native `<details>` and `<dialog>` instead. MIT; peer range accepts React 19; ships `"use client"` itself. Brings 15 small `@radix-ui/*` packages from the same repository, nothing else. |
 | Testing Library (`@testing-library/react`, `/dom`, `/user-event`) | **16.3.3 / 10.4.2 / 14.6.8** (devDependencies of `packages/design-system`) | same | Component tests by role, accessible name and keyboard. `@testing-library/react` peers: React `^18 \|\| ^19`, `@testing-library/dom` `^10`. Task 2.2a. |
 | jsdom | **30.1.3** (devDependency of `packages/design-system`) | 31.0.0 (2026-11-05) | DOM for the component tests (Vitest accepts any version). 31.0.0 is a new major four days old at Task 2.2a; adopt it later. |
 | axe-core / `@axe-core/playwright` | **4.14.0 / 4.14.0** (devDependencies of `packages/design-system` / `apps/web`) | same | Accessibility rules: in the component tests (jsdom, contrast off) and on the preview page in Chromium (WCAG 2.2 AA tags, contrast on), as 02 §16 asks. MPL-2.0, development only, never shipped. Task 2.2a. |
