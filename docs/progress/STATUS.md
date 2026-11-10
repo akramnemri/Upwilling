@@ -1,7 +1,7 @@
 # STATUS
 
-Updated: 2026-11-10 by Claude (session 7 — Task 2.2a merged; Task 2.2b, form components, automated checks
-passed, PR open, waiting for the supervisor's manual test.)
+Updated: 2026-11-10 by Claude (session 7 — Task 2.2a merged; Task 2.2b, form components, manual test passed,
+waiting for the merge of PR #25.)
 
 ## Handoff for the next session (read first)
 - **M2 is under way.** Task 2.1 is merged (2.1a tokens, 2.1b Tailwind theme + lint). Task 2.2 was split (supervisor
@@ -45,8 +45,8 @@ passed, PR open, waiting for the supervisor's manual test.)
 
 ## Current position
 - Milestone: **M2 — Design system foundation (Essai 2)**, in progress. M1 closed 2026-11-06.
-- Task: **2.2b — Form components** (TR-01, TR-07) — state: **automated checks passed, PR open, waiting for the
-  supervisor's manual test** (supervisor "Go 2.2b", 2026-11-10). Branch `feat/TR-01-forms`.
+- Task: **2.2b — Form components** (TR-01, TR-07) — state: **manual test passed** (supervisor, 2026-11-10),
+  PR #25 open, CI green (SonarCloud included), **waiting for the merge**. Branch `feat/TR-01-forms`.
   - `packages/design-system/react/forms.tsx` (Server Components): `Field` passes `id`, `aria-describedby` (help,
     then error), `aria-invalid` and `required` to its control through a render prop; `Input`, `Textarea`,
     `Select`, `FileInput`, `Checkbox`, `Fieldset`. `choices.tsx`: `RadioGroup`, `ChoiceCards` (a `<label>` card
@@ -400,10 +400,8 @@ passed, PR open, waiting for the supervisor's manual test.)
 - Large `docker`/Windows disk checks are slow here (antivirus): scan targeted folders, not the whole drive.
 
 ## Next step (exact)
-1. Supervisor: manual test of Task 2.2b (PR for `feat/TR-01-forms`, steps in the task report). Fixes, if any, go on
-   the same branch.
-2. After the merge (squash, by the supervisor or the agent on request): sync `develop`, check CI on `develop` and
-   recette, delete the branch.
+1. Merge of PR #25 (squash; Task 2.2b, manual test passed 2026-11-10), by the supervisor or the agent on request.
+2. After the merge: sync `develop`, check CI on `develop` and recette, delete the branch.
 3. Then Task 2.2c — Interactive components (`Accordion`, `Tabs`, `Dialog`, `Breadcrumbs`, `Toast` if needed; post
    its plan first, including the headless-library decision). Do not start it before the supervisor's go.
 4. Still waiting on the human: branch protection, the backup key copy, the Oracle VM (see "Waiting on human").
