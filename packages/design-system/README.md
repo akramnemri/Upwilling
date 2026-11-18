@@ -177,6 +177,9 @@ Every story is screenshotted in both brands (Playwright projects `upwilling` and
   The PR then shows each changed picture; review them like code. CI never commits by itself.
 
 - **When it was not on purpose:** fix the code; the baselines stay.
+- **Known limit (until Task 2.4):** the fonts are system stacks, and in the container `system-ui`
+  resolves to a font without a visible bold: weight changes are not caught yet. When 2.4 self-hosts the
+  fonts, load them in Storybook too and regenerate the baselines.
 - Locally: run Storybook and look (no Docker needed). `node visual/serve.mjs` serves the built
   Storybook on port 6106 for the tests (no dependency).
 

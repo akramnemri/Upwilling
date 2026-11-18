@@ -54,6 +54,9 @@ Updated: 2026-11-18 by Claude (session 9 — Task 2.3a merged; Task 2.3b, visual
     `visual-baselines` artifacts (`--update-snapshots=changed`). `publish` needs `visual`. Turbo task `visual`
     (after `storybook:build`, not cached). Baselines are committed from that artifact (README); first set from the
     first CI run of this PR.
+  - Baselines: 284 PNGs (142 stories × 2 brands, 4.4 MB), from the first CI run's `visual-baselines` artifact.
+    Known limit: in the container `system-ui` resolves to a font with no visible bold, so weight changes are not
+    caught until Task 2.4 self-hosts the fonts (Storybook must load them too; regenerate the baselines then).
   - Manual test (roadmap): change a token on a branch, see `visual` fail with diffs in both brands, revert.
 - GitHub environments (re-checked 2026-11-06): `production` has the supervisor as required reviewer and accepts `main`
   only; `recette` accepts `develop` only. Branch rules: none exist (see the handoff).
