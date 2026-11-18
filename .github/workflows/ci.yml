@@ -123,11 +123,7 @@ jobs:
       - name: Visual regression
         run: pnpm visual
 
-      # Same tests, writing the screenshots that differ or are missing as new baselines.
-      - name: Propose new baselines
-        if: failure()
-        run: pnpm --filter @upwilling/design-system exec playwright test --update-snapshots=changed
-
+      # Before proposing baselines: that run rewrites the report (and passes).
       - name: Upload visual report
         if: failure()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -136,6 +132,11 @@ jobs:
           path: packages/design-system/visual-report/
           if-no-files-found: ignore
           retention-days: 7
+
+      # Same tests, writing the screenshots that differ or are missing as new baselines.
+      - name: Propose new baselines
+        if: failure()
+        run: pnpm --filter @upwilling/design-system exec playwright test --update-snapshots=changed
 
       - name: Upload proposed baselines
         if: failure()
