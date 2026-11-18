@@ -5,6 +5,7 @@ node_modules/
 dist/
 coverage/
 playwright-report/
+storybook-static/
 blob-report/
 test-results/
 next-env.d.ts

@@ -1,0 +1,10 @@
+/*
+ * The page around each story, from the tokens (as the application's body, but on `surface`: the
+ * contrast pairs of `text-muted` and the status colors are checked on it).
+ */
+body {
+  font-family: var(--uw-font-family-body);
+  line-height: var(--uw-line-height-body);
+  color: var(--uw-color-text);
+  background: var(--uw-color-surface);
+}

@@ -2,7 +2,7 @@
 
 - Status: Accepted (supervisor merged PR #1, 2026-10-18; lint tooling rows added in Task 0.2; CI tooling added in Task 0.6;
   styling rows added in Task 2.1b; component and accessibility testing rows added in Task 2.2a; Radix Tabs added in
-  Task 2.2c)
+  Task 2.2c; Storybook moved to 10.6.5 and its Vite rows added in Task 2.3a)
 - Date: 2026-10-18
 - Verified on: 2026-10-18, from official sources only (no remembered versions)
 
@@ -38,7 +38,9 @@ Upgrades are deliberate PRs (`chore(deps)`), never drive-by changes.
 | PostCSS (`postcss`) | **8.5.32** (devDependency of `apps/web`) | 8.5.32 (2026-10-26) | Tailwind's Next.js guide installs it next to `@tailwindcss/postcss` (`apps/web/postcss.config.mjs`). Task 2.1b. |
 | Vitest | **4.1.12** | 5.0.5 (5.0.0 released 2026-09-03) | Payload's template uses Vitest 4 (4.0.18). Vitest 4.1.x is still patched (4.1.12 on 2026-10-15). Vitest 5 can be adopted later. |
 | Playwright (`@playwright/test`) | **1.64.1** | 1.64.1 | Latest. Next.js peer accepts `^1.51.1`. |
-| Storybook (`storybook`, `@storybook/nextjs-vite`) | **10.6.2** | 10.6.2 | Latest; `@storybook/nextjs-vite` peer accepts Next `^16`. Used from Task 2.3; framework choice confirmed then. |
+| Storybook (`storybook`, `@storybook/nextjs-vite`, `@storybook/addon-a11y`, `@storybook/addon-docs`) | **10.6.5** (devDependencies of `packages/design-system`) | 10.6.7 (2026-11-10; checked 2026-11-18) | Task 2.3a. Latest release at least two weeks old (10.6.6 is 13 days old, 10.6.7 eight). `@storybook/nextjs-vite` peers accept Next `^16`, React `^19` and Vite `^8`: it runs `next/link`/`next/image` like the app, on Vite. The a11y addon runs axe-core in the browser (panel only, `test: "todo"`); the docs addon builds the autodocs pages. Development only, never shipped. Replaces the earlier 10.6.2 row (chosen at Task 0.1, before the install). |
+| Vite (`vite`) | **8.3.4** (devDependency of `packages/design-system`) | 8.3.8 (checked 2026-11-18) | Builder of `@storybook/nextjs-vite` (peer `^5 \|\| … \|\| ^8`). Same version Vitest 4.1.12 already resolved in the lockfile, so no second copy. Task 2.3a. |
+| `@tailwindcss/vite` | **4.3.3** (devDependency of `packages/design-system`) | 4.3.5 | Tailwind inside Storybook's Vite build, reading the package's own `css/tailwind.css` (peer Vite `^5.2 \|\| … \|\| ^8`). Same pin as `tailwindcss` (one Tailwind version in the repository). Task 2.3a. |
 | Zod (runtime validation, 02 §1) | **4.6.7** | 4.6.7 | Proposed schema library for env, route input and webhooks. Installed in Task 0.3. |
 | ESLint (`eslint`, `@eslint/js`) | **9.39.5** | 10.13.0 | `eslint-config-next@16.3.8` bundles `eslint-plugin-react`, `-import` and `-jsx-a11y`, whose peer ranges stop at ESLint 9. Payload's template uses ESLint 9. (Added in Task 0.2.) |
 | `eslint-config-next` | **16.3.8** | — | Same version as Next.js. |

@@ -15,7 +15,9 @@
     "tokens": "node scripts/build-tokens.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "storybook": "storybook dev --port 6006 --no-open",
+    "storybook:build": "storybook build"
   },
   "dependencies": {
     "@radix-ui/react-tabs": "1.2.1",
@@ -27,6 +29,10 @@
     "react-dom": "19.2.9"
   },
   "devDependencies": {
+    "@storybook/addon-a11y": "10.6.5",
+    "@storybook/addon-docs": "10.6.5",
+    "@storybook/nextjs-vite": "10.6.5",
+    "@tailwindcss/vite": "4.3.3",
     "@testing-library/dom": "10.4.2",
     "@testing-library/react": "16.3.3",
     "@testing-library/user-event": "14.6.8",
@@ -40,8 +46,10 @@
     "next": "16.3.8",
     "react": "19.2.9",
     "react-dom": "19.2.9",
+    "storybook": "10.6.5",
     "tailwindcss": "4.3.3",
     "typescript": "5.9.3",
+    "vite": "8.3.4",
     "vitest": "4.1.12"
   }
 }
