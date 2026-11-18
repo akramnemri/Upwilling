@@ -151,8 +151,34 @@ pnpm --filter @upwilling/design-system storybook:build  # static site in storybo
 - Browser-only states have a story with a play function: `Forms/SubmitButton` → `Pending`
   (submits a form whose action only waits three seconds) and `Disclosure/Dialog` → `Open` (not on the
   docs page: open it from its own canvas).
-- CI builds Storybook in the `checks` job (`pnpm storybook:build`). Screenshot tests of the stories in
-  both brands come in Task 2.3b.
+- CI builds Storybook in the `checks` job (`pnpm storybook:build`).
+
+## Visual regression (Task 2.3b)
+
+Every story is screenshotted in both brands (Playwright projects `upwilling` and `careerboost`,
+1280 × 800, reduced motion, full page) and compared with its baseline in
+`visual/__screenshots__/<brand>/<story-id>.png`. The list of stories comes from the built Storybook's
+`index.json`: a new story gets a test by itself. A story whose look depends on timing carries the
+`skip-visual` tag (today only `Forms/SubmitButton → Pending`).
+
+- **Only in the pinned container.** Fonts and antialiasing differ between systems, so screenshots
+  are taken only in `mcr.microsoft.com/playwright:v1.64.1-noble` (pinned by digest, ADR-018), in
+  CI's `visual` job. `playwright.config.ts` refuses to run without `UPWILLING_VISUAL=container`,
+  which that job sets. `publish` waits for it.
+- **When a story changes on purpose** (or a new story has no baseline), the `visual` job fails and
+  uploads two artifacts: `visual-report` (Playwright report with expected / actual / diff) and
+  `visual-baselines` (the screenshots that differ or were missing, at their baseline paths).
+  To approve: check the report, then download the baselines into the branch and commit them:
+
+  ```bash
+  gh run download <run-id> --name visual-baselines --dir packages/design-system/visual/__screenshots__
+  ```
+
+  The PR then shows each changed picture; review them like code. CI never commits by itself.
+
+- **When it was not on purpose:** fix the code; the baselines stay.
+- Locally: run Storybook and look (no Docker needed). `node visual/serve.mjs` serves the built
+  Storybook on port 6106 for the tests (no dependency).
 
 **Provisional values:** the brand colors were read from the logos (`docs/ai/04_DESIGN_SYSTEM.md` §2) and
 must be confirmed with the vector source files (TR-01b); the role mapping and fonts wait for the PO's M2

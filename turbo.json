@@ -25,6 +25,11 @@
     "dev": {
       "cache": false,
       "persistent": true
+    },
+    "visual": {
+      "dependsOn": ["storybook:build"],
+      "cache": false,
+      "passThroughEnv": ["UPWILLING_VISUAL"]
     }
   }
 }

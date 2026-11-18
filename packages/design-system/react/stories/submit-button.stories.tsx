@@ -44,6 +44,8 @@ export const WithIcon: Story = { args: { icon: Send } };
 export const Secondary: Story = { args: { variant: "secondary" } };
 /** Submits the form on load (play function): the pending state lasts three seconds. */
 export const Pending: Story = {
+  // Timing-dependent (three seconds): no screenshot test (visual/stories.spec.ts).
+  tags: ["skip-visual"],
   play: async ({ canvas, userEvent }) => {
     await userEvent.click(canvas.getByRole("button", { name: "Envoyer la demande" }));
   },
