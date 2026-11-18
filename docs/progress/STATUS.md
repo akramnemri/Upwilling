@@ -43,8 +43,10 @@ Updated: 2026-11-18 by Claude (session 10 — Task 2.3b merged; Task 2.4 split, 
 
 ## Current position
 - Milestone: **M2 — Design system foundation (Essai 2)**, in progress. M1 closed 2026-11-06.
-- Task: **2.4a — Self-hosted fonts** (TR-01) — state: **implemented, PR open**, waiting for CI, the baselines from
-  its `visual-baselines` artifact, and the supervisor's manual test. Branch `feat/TR-01-fonts`.
+- Task: **2.4a — Self-hosted fonts** (TR-01) — state: **implemented, PR #30 open, baselines committed**, waiting for
+  CI and the supervisor's manual test. Branch `feat/TR-01-fonts`. First CI run: only `visual` failed (260 of 284
+  screenshots changed; the 24 unchanged are icons, skeletons and spinners, which have no text); its
+  `visual-baselines` artifact (run 44391637789) is committed.
   - Fonts: Rubik (display) and Nunito (body), provisional (04 §3; PO to confirm at the 2.5 review). Latin subset,
     one variable `.woff2` per family (35 KB, 39 KB) from Fontsource 5.3.0, copied into
     `packages/design-system/assets/fonts/` with their OFL texts (no npm dependency; ADR-018 row, `assets/LICENSES.md`).
@@ -436,7 +438,7 @@ Updated: 2026-11-18 by Claude (session 10 — Task 2.3b merged; Task 2.4 split, 
 - Large `docker`/Windows disk checks are slow here (antivirus): scan targeted folders, not the whole drive.
 
 ## Next step (exact)
-1. CI on the 2.4a PR; commit the baselines from its `visual-baselines` artifact after checking the report.
+1. CI on PR #30 with the committed baselines (expected green).
 2. Supervisor's manual test of 2.4a (task report in the PR thread), then the merge (squash), by the supervisor or the
    agent on request; after it: sync `develop`, check CI on `develop` and recette, delete the branch.
 3. Then Task 2.4b — `SiteHeader`, `SiteFooter`, layout per tenant (plan already approved with 2.4a's; restate it
