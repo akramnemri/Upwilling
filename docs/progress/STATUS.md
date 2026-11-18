@@ -43,7 +43,8 @@ Updated: 2026-11-18 by Claude (session 9 — Task 2.3a merged; Task 2.3b, visual
 
 ## Current position
 - Milestone: **M2 — Design system foundation (Essai 2)**, in progress. M1 closed 2026-11-06.
-- Task: **2.3b — Visual regression** (TR-01) — state: **PR open** (supervisor "Go" on the plan, 2026-11-18). Branch
+- Task: **2.3b — Visual regression** (TR-01) — state: **manual test passed** (run by the agent at the supervisor's
+  request, 2026-11-18), PR #28 open, waiting for the merge (supervisor "Go" on the plan, 2026-11-18). Branch
   `feat/TR-01-visual-regression`.
   - `packages/design-system/playwright.config.ts` (projects `upwilling`/`careerboost`, 1280×800, reduced motion,
     snapshots `visual/__screenshots__/<brand>/<story-id>.png`; refuses to run without `UPWILLING_VISUAL=container`),
@@ -57,7 +58,10 @@ Updated: 2026-11-18 by Claude (session 9 — Task 2.3a merged; Task 2.3b, visual
   - Baselines: 284 PNGs (142 stories × 2 brands, 4.4 MB), from the first CI run's `visual-baselines` artifact.
     Known limit: in the container `system-ui` resolves to a font with no visible bold, so weight changes are not
     caught until Task 2.4 self-hosts the fonts (Storybook must load them too; regenerate the baselines then).
-  - Manual test (roadmap): change a token on a branch, see `visual` fail with diffs in both brands, revert.
+  - Manual test (roadmap), draft PR #29 (closed, branch deleted): Career Boost's blue `#0070D8` → `#5B3FD0` made
+    `visual` fail with 59 diffs, all in `careerboost`, none in `upwilling` (Essai 2 case 2). It also showed the
+    report was overwritten by the propose run: fixed (`edffc6a`, report uploaded first), re-run showed
+    expected / actual / diff images.
 - GitHub environments (re-checked 2026-11-06): `production` has the supervisor as required reviewer and accepts `main`
   only; `recette` accepts `develop` only. Branch rules: none exist (see the handoff).
 - Docker Desktop starts only when the supervisor works on the project (supervisor, 2026-10-26): recette is offline
