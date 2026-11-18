@@ -70,6 +70,11 @@ jobs:
       - name: Build
         run: pnpm build
 
+      # The design system's Storybook (Task 2.3a): a story that no longer compiles fails here.
+      # Telemetry is off in .storybook/main.ts.
+      - name: Storybook build
+        run: pnpm storybook:build
+
       - name: Install Playwright browser
         run: pnpm --filter @upwilling/web exec playwright install --with-deps chromium --only-shell
 

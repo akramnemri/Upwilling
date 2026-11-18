@@ -1,15 +1,15 @@
 # STATUS
 
-Updated: 2026-11-10 by Claude (session 8 — Task 2.2b merged; Task 2.2c, interactive components, manual test
-passed, waiting for the merge of PR #26.)
+Updated: 2026-11-18 by Claude (session 9 — Task 2.2c merged; Task 2.3a, Storybook, PR open, waiting for the
+supervisor's manual test.)
 
 ## Handoff for the next session (read first)
-- **M2 is under way.** Task 2.1 is merged (2.1a tokens, 2.1b Tailwind theme + lint). Task 2.2 was split (supervisor
-  "Go 2.2a", 2026-11-09): **2.2a** foundations + static primitives (merged), **2.2b** forms (merged),
-  **2.2c** interactive (`Accordion`, `Tabs`, `Dialog`, `Breadcrumbs`; no `Toast`; this branch). Native `<details>` and
-  `<dialog>`, Radix only for Tabs (supervisor "Go" on the plan, 2026-11-10). After 2.2c: Task 2.3 (Storybook + visual
-  regression). `SiteHeader`/`SiteFooter` stay in 2.4. How-to: `packages/design-system/README.md`. Previews:
-  `/dev/tokens` and `/dev/components` on either site host (local, recette).
+- **M2 is under way.** Tasks 2.1 (tokens, Tailwind theme + lint) and 2.2 (2.2a foundations + static primitives,
+  2.2b forms, 2.2c interactive) are merged. Task 2.3 was split (supervisor "Go", 2026-11-18): **2.3a** Storybook
+  (this branch, `feat/TR-01-storybook`), then **2.3b** visual regression (separate branch: Playwright over the built
+  Storybook in the pinned `mcr.microsoft.com/playwright:v1.64.1-noble` image, baselines from a CI artifact).
+  `SiteHeader`/`SiteFooter` stay in 2.4. How-to: `packages/design-system/README.md`. Previews: `/dev/tokens` and
+  `/dev/components` on either site host (local, recette), and Storybook (`pnpm --filter @upwilling/design-system storybook`).
 - **Production approval, one-off exception:** on 2026-11-06 the supervisor's own approval of the first production
   deployment did not register (CI run 42240836809 on `main`, `a7e47a8`, PR #21); they told the agent "you do the
   approve", and the agent approved it through the GitHub API with a comment saying so. Checked 2026-11-09: the
@@ -44,24 +44,20 @@ passed, waiting for the merge of PR #26.)
 
 ## Current position
 - Milestone: **M2 — Design system foundation (Essai 2)**, in progress. M1 closed 2026-11-06.
-- Task: **2.2c — Interactive components** (TR-01, TR-07) — state: **manual test passed** (supervisor, 2026-11-10),
-  PR #26 open, **waiting for the merge**. Branch `feat/TR-01-interactive`.
-  - `packages/design-system/react/disclosure.tsx` (Server Components): `Accordion` = native `<details>`/`<summary>`
-    (`exclusive` → shared `name` from `useId()`, `defaultOpen`; plain-text titles), `Tabs` = `@radix-ui/react-tabs`
-    parts (Radix ships `"use client"` itself, so the wrapper needs none; label, items, `defaultValue`; selected tab
-    filled with the primary color). `navigation.tsx`: `Breadcrumbs` (`nav` landmark, `ol`, current page as text with
-    `aria-current="page"`). `dialog.tsx` (`"use client"`, `showModal()`): `Dialog` (title = name, optional
-    description, required `closeLabel`, `footer`; `<form method="dialog">` closes without code; no backdrop close).
-    `css/base.css`: the page does not scroll while a modal is open (`html:has(dialog:modal)`).
-  - No `Toast` (no flow needs a vanishing message; README says when to add one).
-  - New dependency `@radix-ui/react-tabs` 1.2.1 (ADR-018 row): 16 `@radix-ui/*` packages, MIT.
-  - Preview `/dev/components`: sections "Accordéon", "Onglets", "Boîte de dialogue", "Fil d’Ariane"
-    (`interactive-preview.tsx`).
-  - Tests: 79 component tests (13 new; jsdom has no `showModal()` and no `<details name>` grouping, so the dialog is
-    tested with a stub there); e2e `interactive.spec.ts` (4): accordion keyboard and exclusivity, tabs keys and
-    focusable panel, dialog (focus on close button, page inert in both Tab directions, backdrop click ignored,
-    Escape and `method="dialog"` close, focus back on the trigger, page scroll locked, axe on the open dialog),
-    breadcrumbs landmark.
+- Task: **2.3a — Storybook** (TR-01) — state: **PR open, waiting for the supervisor's manual test** (run Storybook,
+  switch brands, open the a11y panel). Branch `feat/TR-01-storybook`. Task 2.3 split into 2.3a (Storybook) and 2.3b
+  (visual regression), supervisor "Go" on the plan 2026-11-18.
+  - `packages/design-system/.storybook/`: `main.ts` (`@storybook/nextjs-vite`, addons docs + a11y, `@tailwindcss/vite`,
+    telemetry off), `preview.tsx` (imports `css/tailwind.css`; toolbar global `brand` → `data-brand` on `<html>`, set
+    before render; `autodocs` for all; a11y = e2e WCAG 2.2 AA tags, `test: "todo"`; App Router), `preview.css` (body
+    from tokens, on `surface`).
+  - Stories: `react/stories/*.stories.tsx`, 29 files (one per component of 2.2a–2.2c), 143 stories + 29 docs pages.
+    Play functions: `Forms/SubmitButton/Pending`, `Disclosure/Dialog/Open` (excluded from the docs page). Stories are in
+    the design-token lint scope and in the package's tsconfig.
+  - Turbo task `storybook:build` (outputs `storybook-static/**`), root script, CI step in `checks` after Build.
+    ESLint and Prettier ignore `storybook-static/`.
+  - New dev dependencies (ADR-018): Storybook 10.6.5 ×4, `vite` 8.3.4, `@tailwindcss/vite` 4.3.3 (+89 packages).
+  - Next (after the manual test and merge): Task 2.3b, visual regression.
 - GitHub environments (re-checked 2026-11-06): `production` has the supervisor as required reviewer and accepts `main`
   only; `recette` accepts `develop` only. Branch rules: none exist (see the handoff).
 - Docker Desktop starts only when the supervisor works on the project (supervisor, 2026-10-26): recette is offline
@@ -112,6 +108,9 @@ passed, waiting for the merge of PR #26.)
 - 2.2b — Form components and pending submissions — merged 2026-11-10 (PR #25, `45a2ee3`, squash-merged by the
   agent at the supervisor's request), manual test passed. CI on `develop` green, the recette tag moved; recette
   installs it at the next Docker Desktop start.
+- 2.2c — Interactive components (Accordion, Tabs, Dialog, Breadcrumbs) — merged 2026-11-10 (PR #26, `6b02f88`,
+  squash-merged by the agent at the supervisor's request), manual test passed. CI on `develop` green, the recette tag
+  moved; recette installs it at the next Docker Desktop start.
 
 ## What exists now (so a new session does not have to rediscover it)
 - pnpm 11 workspace + Turborepo: `apps/web` (Next.js 16.3.8, App Router, `src/`), `packages/config`
@@ -128,6 +127,8 @@ passed, waiting for the merge of PR #26.)
 - React components (Tasks 2.2a–2.2c): `packages/design-system/react/`, see the package README (table +
   conventions). A visually hidden label that follows text needs a real space text node before it (accessible
   names differ between jsdom and Chromium otherwise, found in 2.2a).
+- Storybook (Task 2.3a): `packages/design-system/.storybook/` + `react/stories/`, brand toolbar, a11y and docs
+  addons; `pnpm --filter @upwilling/design-system storybook` (port 6006) or `storybook:build` (Turbo, CI).
 - Styling in `apps/web` (Tasks 2.1b, 2.2a): Tailwind 4.3.3 via PostCSS, `src/app/globals.css` (Tailwind + tokens +
   theme + base, `@source` on the components); CSS modules that read `--uw-*` tokens remain allowed. Design-token
   lint: `eslint.design-tokens.mjs` (shared rules from `packages/config`) and `stylelint.config.mjs`.
@@ -207,7 +208,7 @@ passed, waiting for the merge of PR #26.)
   (`list`, `check`, `apply`) refuses any server not named `recette`, and restores through a scratch database.
   Test: `infra/server/test/smoke-backup.sh` (also in CI). Runbook: `docs/runbooks/backup-restore.md`. R2 facts and
   variables: `docs/integrations/r2.md` (no real R2 run yet).
-- CI: `.github/workflows/ci.yml`, jobs `checks` (install, format, typecheck, lint, test, build, e2e),
+- CI: `.github/workflows/ci.yml`, jobs `checks` (install, format, typecheck, lint, test, build, Storybook build, e2e),
   `secret-scan` (gitleaks v8.30.1 Docker image, full history), `docker` (image build + `smoke-roles.sh` + `smoke-stacks.sh`, Tasks 1.1b/1.4),
   `shellcheck` (v0.11.0 image, every `*.sh`, Task 1.3), `image` (PRs: amd64 + arm64 native builds, `/api/version`
   check), `publish` + `publish-manifest` (pushes to develop/main, after every other job: GHCR, Task 1.5a),
@@ -299,6 +300,11 @@ passed, waiting for the merge of PR #26.)
   out not to need `"use client"` (Radix's own files carry it); `Dialog` is the second Client Component of the
   design system. No `Toast` (WCAG 2.2.1, no flow needs it). Initial focus = the dialog's close button (first
   focusable); no backdrop-click close.
+- Task 2.3a (supervisor "Go" on the plan, 2026-11-18): Storybook lives in the design-system package with
+  `@storybook/nextjs-vite` (`next/link` as in the app), Tailwind via `@tailwindcss/vite` on the package's own entry.
+  Pins = latest releases at least two weeks old (Storybook 10.6.5, not 10.6.6/10.6.7); Vite 8.3.4 = the copy Vitest
+  already had. a11y addon in `todo` mode (panel only); failing on violations would need the Vitest addon or the
+  test-runner, left for 2.3b if wanted. Browser-only states use play functions instead of new component props.
 - Smoke tests: no `| grep -q` under `pipefail` (2026-11-01). `-q` exits at the first match, the writer then fails on the
   closed pipe, and `pipefail` turns the match into a miss: reproduced 5 out of 5 times, and it failed a `develop` run.
   Use `| grep ... >/dev/null`, which reads to the end. Each of the five smoke tests says so below its `set` line.

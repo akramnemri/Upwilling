@@ -12,6 +12,8 @@
     "react/**/*.ts",
     "react/**/*.tsx",
     "scripts/**/*.ts",
+    ".storybook/**/*.ts",
+    ".storybook/**/*.tsx",
     "vitest.config.ts"
   ]
 }

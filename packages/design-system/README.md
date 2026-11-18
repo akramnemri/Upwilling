@@ -130,7 +130,29 @@ Conventions:
   (`apps/web/tests/e2e/interactive.spec.ts`).
 
 Tailwind in an application must scan this folder: `@source` in `apps/web/src/app/globals.css`.
-`css/tailwind.css` is this package's own entry (lint now, Storybook in Task 2.3).
+`css/tailwind.css` is this package's own entry (class lint and Storybook).
+
+## Storybook (Task 2.3a)
+
+```bash
+pnpm --filter @upwilling/design-system storybook        # http://localhost:6006
+pnpm --filter @upwilling/design-system storybook:build  # static site in storybook-static/ (git-ignored)
+```
+
+- `.storybook/main.ts`: framework `@storybook/nextjs-vite` (so `next/link` works as in the App
+  Router), Tailwind through `@tailwindcss/vite`, addons docs and a11y, telemetry off.
+- `.storybook/preview.tsx`: imports `css/tailwind.css`; the **Marque** toolbar menu (UpWilling /
+  Career Boost) sets `data-brand` on `<html>` before the story renders, as the application does from
+  the host. Every component gets a docs page (`autodocs`).
+- Accessibility panel: axe-core with the e2e rule set (WCAG 2.2 AA tags), in `todo` mode: results
+  show in the panel, nothing fails yet. Contrast is measured there in a real browser.
+- Stories: `react/stories/<component>.stories.tsx`, one file per component, one story per variant
+  and state, synthetic French copy passed as props. They are in the design-token lint scope.
+- Browser-only states have a story with a play function: `Forms/SubmitButton` → `Pending`
+  (submits a form whose action only waits three seconds) and `Disclosure/Dialog` → `Open` (not on the
+  docs page: open it from its own canvas).
+- CI builds Storybook in the `checks` job (`pnpm storybook:build`). Screenshot tests of the stories in
+  both brands come in Task 2.3b.
 
 **Provisional values:** the brand colors were read from the logos (`docs/ai/04_DESIGN_SYSTEM.md` §2) and
 must be confirmed with the vector source files (TR-01b); the role mapping and fonts wait for the PO's M2
