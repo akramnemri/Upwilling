@@ -29,7 +29,7 @@
     "visual": {
       "dependsOn": ["storybook:build"],
       "cache": false,
-      "passThroughEnv": ["UPWILLING_VISUAL"]
+      "passThroughEnv": ["UPWILLING_VISUAL", "PLAYWRIGHT_BROWSERS_PATH"]
     }
   }
 }
