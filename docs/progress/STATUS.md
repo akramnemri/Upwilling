@@ -1,14 +1,14 @@
 # STATUS
 
-Updated: 2026-11-18 by Claude (session 9 — Task 2.3a merged; Task 2.3b, visual regression, PR open.)
+Updated: 2026-11-18 by Claude (session 10 — Task 2.3b merged; Task 2.4 split, 2.4a self-hosted fonts, PR open.)
 
 ## Handoff for the next session (read first)
-- **M2 is under way.** Tasks 2.1 (tokens, Tailwind theme + lint) and 2.2 (2.2a foundations + static primitives,
-  2.2b forms, 2.2c interactive) are merged. Task 2.3 was split (supervisor "Go", 2026-11-18): **2.3a** Storybook
-  (merged), then **2.3b** visual regression (this branch, `feat/TR-01-visual-regression`: Playwright over the built
-  Storybook in the pinned `mcr.microsoft.com/playwright:v1.64.1-noble` image, baselines from a CI artifact).
-  `SiteHeader`/`SiteFooter` stay in 2.4. How-to: `packages/design-system/README.md`. Previews: `/dev/tokens` and
-  `/dev/components` on either site host (local, recette), and Storybook (`pnpm --filter @upwilling/design-system storybook`).
+- **M2 is under way.** Tasks 2.1 (tokens, Tailwind theme + lint), 2.2 (2.2a–c components) and 2.3 (2.3a Storybook,
+  2.3b visual regression) are merged. Task 2.4 was split (supervisor "Go 2.4a" on the plan, 2026-11-18): **2.4a**
+  self-hosted fonts (this branch, `feat/TR-01-fonts`), then **2.4b** `SiteHeader`, `SiteFooter` and the page layout
+  per tenant (shown on a `/dev` page; `/` stays the under-construction page until M5, so placeholders never reach
+  production). How-to: `packages/design-system/README.md`. Previews: `/dev/tokens` and `/dev/components` on either
+  site host (local, recette), and Storybook (`pnpm --filter @upwilling/design-system storybook`).
 - **Production approval, one-off exception:** on 2026-11-06 the supervisor's own approval of the first production
   deployment did not register (CI run 42240836809 on `main`, `a7e47a8`, PR #21); they told the agent "you do the
   approve", and the agent approved it through the GitHub API with a comment saying so. Checked 2026-11-09: the
@@ -43,25 +43,22 @@ Updated: 2026-11-18 by Claude (session 9 — Task 2.3a merged; Task 2.3b, visual
 
 ## Current position
 - Milestone: **M2 — Design system foundation (Essai 2)**, in progress. M1 closed 2026-11-06.
-- Task: **2.3b — Visual regression** (TR-01) — state: **manual test passed** (run by the agent at the supervisor's
-  request, 2026-11-18), PR #28 open, waiting for the merge (supervisor "Go" on the plan, 2026-11-18). Branch
-  `feat/TR-01-visual-regression`.
-  - `packages/design-system/playwright.config.ts` (projects `upwilling`/`careerboost`, 1280×800, reduced motion,
-    snapshots `visual/__screenshots__/<brand>/<story-id>.png`; refuses to run without `UPWILLING_VISUAL=container`),
-    `visual/stories.spec.ts` (one test per story from `storybook-static/index.json`; waits for Storybook's render
-    phase `completed`/`finished`, i.e. after play functions, and for fonts), `visual/serve.mjs` (static server, no
-    dependency, port 6106). Tag `skip-visual` on `Forms/SubmitButton → Pending` (timing).
-  - CI job `visual` in the pinned image (digest in ADR-018), `--user 1001`; on failure: `visual-report` and
-    `visual-baselines` artifacts (`--update-snapshots=changed`). `publish` needs `visual`. Turbo task `visual`
-    (after `storybook:build`, not cached). Baselines are committed from that artifact (README); first set from the
-    first CI run of this PR.
-  - Baselines: 284 PNGs (142 stories × 2 brands, 4.4 MB), from the first CI run's `visual-baselines` artifact.
-    Known limit: in the container `system-ui` resolves to a font with no visible bold, so weight changes are not
-    caught until Task 2.4 self-hosts the fonts (Storybook must load them too; regenerate the baselines then).
-  - Manual test (roadmap), draft PR #29 (closed, branch deleted): Career Boost's blue `#0070D8` → `#5B3FD0` made
-    `visual` fail with 59 diffs, all in `careerboost`, none in `upwilling` (Essai 2 case 2). It also showed the
-    report was overwritten by the propose run: fixed (`edffc6a`, report uploaded first), re-run showed
-    expected / actual / diff images.
+- Task: **2.4a — Self-hosted fonts** (TR-01) — state: **implemented, PR #30 open, baselines committed**, waiting for
+  CI and the supervisor's manual test. Branch `feat/TR-01-fonts`. First CI run: only `visual` failed (260 of 284
+  screenshots changed; the 24 unchanged are icons, skeletons and spinners, which have no text); its
+  `visual-baselines` artifact (run 44391637789) is committed.
+  - Fonts: Rubik (display) and Nunito (body), provisional (04 §3; PO to confirm at the 2.5 review). Latin subset,
+    one variable `.woff2` per family (35 KB, 39 KB) from Fontsource 5.3.0, copied into
+    `packages/design-system/assets/fonts/` with their OFL texts (no npm dependency; ADR-018 row, `assets/LICENSES.md`).
+  - `packages/design-system/fonts/index.ts` (`@upwilling/design-system/fonts`): `next/font/local`, each font sets a
+    CSS variable (`--uw-font-face-display`/`-body`); `fontVariables` goes on `<html>` in the root layout and in
+    Storybook's preview (Storybook's Next.js Vite plugin compiles `next/font/local`; checked in the built Storybook).
+    Tokens: `--uw-font-family-*` = `var(--uw-font-face-*, system-ui)` then the system stack. Mono unchanged.
+  - The app preloads both files from its own origin, `font-display: swap`, size-adjusted Arial fallback (no shift).
+  - Visual spec: loads every declared font face before the screenshot (`document.fonts.ready` alone resolved before
+    a story's font was requested). Every baseline changes: regenerated from the CI `visual-baselines` artifact.
+  - Tests: `src/fonts.test.ts` (module ↔ tokens ↔ files ↔ licenses), e2e `fonts.spec.ts` (both hosts: two
+    same-origin preloads, body uses the font, both faces load, font responses 200).
 - GitHub environments (re-checked 2026-11-06): `production` has the supervisor as required reviewer and accepts `main`
   only; `recette` accepts `develop` only. Branch rules: none exist (see the handoff).
 - Docker Desktop starts only when the supervisor works on the project (supervisor, 2026-10-26): recette is offline
@@ -119,6 +116,11 @@ Updated: 2026-11-18 by Claude (session 9 — Task 2.3a merged; Task 2.3b, visual
   squash-merged by the agent at the supervisor's request), manual test passed (run by the agent with the supervisor:
   brand switch, axe on every story in both brands = 0 violations, pending SubmitButton, open Dialog). CI on `develop`:
   `publish (arm64)` failed once on GHCR `unknown blob` (registry side); re-run of the failed jobs green, recette tag moved.
+- 2.3b — Visual regression (Playwright screenshots of every story in both brands, CI job `visual`) — merged
+  2026-11-18 (PR #28, `9959952`, squash-merged by the agent at the supervisor's request), manual test passed (run by
+  the agent at the supervisor's request on draft PR #29, since closed and its branch deleted: a changed Career Boost
+  blue failed `visual` with diffs in `careerboost` only). CI on `develop` green on the first run, recette tag moved;
+  recette installs it at the next Docker Desktop start.
 
 ## What exists now (so a new session does not have to rediscover it)
 - pnpm 11 workspace + Turborepo: `apps/web` (Next.js 16.3.8, App Router, `src/`), `packages/config`
@@ -317,6 +319,10 @@ Updated: 2026-11-18 by Claude (session 9 — Task 2.3a merged; Task 2.3b, visual
   local baselines: Windows fonts differ); baselines committed, approved by committing the CI artifact (no CI write
   access, no auto-commit). A manual `workflow_dispatch` update workflow was dropped: GitHub only dispatches workflows
   present on the default branch, and the failing job's artifact does the same job. Desktop width only for now.
+- Task 2.4 split (supervisor "Go 2.4a" on the plan, 2026-11-18) into 2.4a (fonts) and 2.4b (header, footer, layout).
+  2.4a: provisional Rubik + Nunito (04 §3; no PO font choice yet); `next/font/local` with committed files rather than
+  `next/font/google` (no build depends on reaching Google); one variable file per family instead of 04 §3's "2 weights
+  per family" (the tokens use four weights; approved with the plan); no italics; mono stays a system stack.
 - Smoke tests: no `| grep -q` under `pipefail` (2026-11-01). `-q` exits at the first match, the writer then fails on the
   closed pipe, and `pipefail` turns the match into a miss: reproduced 5 out of 5 times, and it failed a `develop` run.
   Use `| grep ... >/dev/null`, which reads to the end. Each of the five smoke tests says so below its `set` line.
@@ -354,7 +360,7 @@ Updated: 2026-11-18 by Claude (session 9 — Task 2.3a merged; Task 2.3b, visual
 ## Open issues / risks
 - Brand colors, role mapping, status colors and the neutral (slate) are provisional (TR-01b, PO's M2 design review).
   The academy primary passes 4.5:1 on `surface-muted` by a small margin (4.51): a darker muted surface moves it to
-  step 700 automatically. Fonts are system stacks until Task 2.4.
+  step 700 automatically. Fonts (Rubik, Nunito, Task 2.4a) are provisional too.
 - The design-token lint covers `apps/web` and `packages/design-system/react`; the token sources and generator of
   the design system define raw values by design. Stylelint runs in `apps/web` only (the design system's CSS is
   generated, plus the hand-written `base.css`).
@@ -394,6 +400,7 @@ Updated: 2026-11-18 by Claude (session 9 — Task 2.3a merged; Task 2.3b, visual
 - PO (M2 design review, Task 2.5): the generated role colors, which changed the brand pages slightly in Task 2.1a
   (academy green `#2E7D34` → `#1E832B`, association blue `#0070D8` → `#006BCF`, body text `#16233A` → `#1C2128`,
   muted text `#4B5563` → `#636E7F`); confirm the brand colors with the vector logo files (TR-01b).
+- PO (M2 design review, Task 2.5): confirm or replace the fonts (Rubik for titles, Nunito for text, Task 2.4a).
 - Supervisor: **apply branch protection** to `develop` and `main` (`docs/runbooks/github-repository-settings.md`):
   none exists today, so a direct push or a merge with failing CI would not be stopped.
 - PO: read `docs/phase0/essai-1.md` (Essai 1's answers for the Phase 0 decision session, Task 4.3).
@@ -431,7 +438,9 @@ Updated: 2026-11-18 by Claude (session 9 — Task 2.3a merged; Task 2.3b, visual
 - Large `docker`/Windows disk checks are slow here (antivirus): scan targeted folders, not the whole drive.
 
 ## Next step (exact)
-1. Merge of PR #26 (squash; Task 2.2c, manual test passed 2026-11-10), by the supervisor or the agent on request.
-2. After the merge: sync `develop`, check CI on `develop` and recette, delete the branch.
-3. Then Task 2.3 — Storybook & visual regression (post its plan first). Do not start it before the supervisor's go.
+1. CI on PR #30 with the committed baselines (expected green).
+2. Supervisor's manual test of 2.4a (task report in the PR thread), then the merge (squash), by the supervisor or the
+   agent on request; after it: sync `develop`, check CI on `develop` and recette, delete the branch.
+3. Then Task 2.4b — `SiteHeader`, `SiteFooter`, layout per tenant (plan already approved with 2.4a's; restate it
+   briefly before starting). Do not start it before the supervisor's go.
 4. Still waiting on the human: branch protection, the backup key copy, the Oracle VM (see "Waiting on human").

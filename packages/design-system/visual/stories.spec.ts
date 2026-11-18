@@ -37,7 +37,13 @@ for (const story of stories) {
       ).__STORYBOOK_PREVIEW__?.currentRender?.phase;
       return phase === "completed" || phase === "finished";
     });
-    await page.evaluate(() => document.fonts.ready);
+    // `document.fonts.ready` alone can resolve before the browser has asked for a font the story
+    // uses (it starts a load only at layout). Loading every declared face first removes that race;
+    // a face the story does not use changes nothing on screen.
+    await page.evaluate(async () => {
+      await Promise.all([...document.fonts].map((face) => face.load().catch(() => face)));
+      await document.fonts.ready;
+    });
     await expect(page.locator("html")).toHaveAttribute("data-brand", brand);
     await expect(page).toHaveScreenshot(`${story.id}.png`, { fullPage: true });
   });

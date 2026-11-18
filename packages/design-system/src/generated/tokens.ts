@@ -739,8 +739,8 @@ export const BASE_TOKENS: Readonly<Record<string, Readonly<Record<string, string
     "--uw-section-space-lg": "clamp(4rem, 5.2174vw + 2.8261rem, 7rem)"
   },
   "font-family": {
-    "--uw-font-family-display": "system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
-    "--uw-font-family-body": "system-ui, -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+    "--uw-font-family-display": "var(--uw-font-face-display, system-ui), -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
+    "--uw-font-family-body": "var(--uw-font-face-body, system-ui), -apple-system, \"Segoe UI\", Roboto, \"Helvetica Neue\", Arial, sans-serif",
     "--uw-font-family-mono": "ui-monospace, SFMono-Regular, Menlo, Consolas, \"Liberation Mono\", monospace"
   },
   "font-size": {

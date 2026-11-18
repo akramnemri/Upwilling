@@ -3,6 +3,12 @@ import "./preview.css";
 
 import type { Decorator, Preview } from "@storybook/nextjs-vite";
 
+import { fontVariables } from "../fonts/index.ts";
+
+// The same self-hosted fonts as the application, defined on `<html>` as the root layout does
+// (Storybook's Next.js framework compiles `next/font/local`). Screenshots depend on them.
+document.documentElement.classList.add(...fontVariables.split(" "));
+
 const BRANDS = ["upwilling", "careerboost"] as const;
 type Brand = (typeof BRANDS)[number];
 

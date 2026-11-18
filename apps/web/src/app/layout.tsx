@@ -1,5 +1,6 @@
 import "./globals.css";
 
+import { fontVariables } from "@upwilling/design-system/fonts";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import type { ReactNode } from "react";
@@ -24,7 +25,8 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
 
   return (
     // `data-brand` selects the brand's block in tokens.css: every `--uw-color-*` variable depends on it.
-    <html lang="fr" data-brand={brand}>
+    // `fontVariables` defines the self-hosted fonts the `--uw-font-family-*` tokens read.
+    <html lang="fr" data-brand={brand} className={fontVariables}>
       <body className={styles.body}>{children}</body>
     </html>
   );
