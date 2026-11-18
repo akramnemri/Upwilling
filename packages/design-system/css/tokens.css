@@ -211,17 +211,17 @@
 [data-brand="careerboost"] {
   color-scheme: light;
   /* Palettes: previews and tints. Text and components use the roles below. */
-  --uw-palette-primary-50: #F1F7FF;
-  --uw-palette-primary-100: #E1EEFF;
-  --uw-palette-primary-200: #C3DDFF;
-  --uw-palette-primary-300: #9CC7FF;
-  --uw-palette-primary-400: #69ACFF;
-  --uw-palette-primary-500: #2E8CF6;
-  --uw-palette-primary-600: #006BCF;
-  --uw-palette-primary-700: #0056A9;
-  --uw-palette-primary-800: #004387;
-  --uw-palette-primary-900: #003266;
-  --uw-palette-primary-950: #002045;
+  --uw-palette-primary-50: #F5F6FF;
+  --uw-palette-primary-100: #EAEBFF;
+  --uw-palette-primary-200: #D6D6FF;
+  --uw-palette-primary-300: #BDBCFF;
+  --uw-palette-primary-400: #A09BFF;
+  --uw-palette-primary-500: #8373FF;
+  --uw-palette-primary-600: #664EDF;
+  --uw-palette-primary-700: #533ABD;
+  --uw-palette-primary-800: #412B99;
+  --uw-palette-primary-900: #301F75;
+  --uw-palette-primary-950: #1E124F;
   --uw-palette-accent-50: #FFF5EB;
   --uw-palette-accent-100: #FFE9D3;
   --uw-palette-accent-200: #FCD2AA;
@@ -309,12 +309,12 @@
   --uw-color-border: #D6DBE3;
   --uw-color-border-strong: #818D9F;
   --uw-color-primary-contrast: #FFFFFF;
-  --uw-color-primary: #006BCF;
-  --uw-color-primary-hover: #0056A9;
+  --uw-color-primary: #664EDF;
+  --uw-color-primary-hover: #533ABD;
   --uw-color-accent: #F89808;
   --uw-color-accent-contrast: #1C2128;
   --uw-color-support: #389840;
-  --uw-color-focus-ring: #2E8CF6;
+  --uw-color-focus-ring: #8373FF;
   --uw-color-success: #00842B;
   --uw-color-success-surface: #F0FAF0;
   --uw-color-success-text: #00842B;
