@@ -2,7 +2,7 @@
 
 - Status: Accepted (supervisor merged PR #1, 2026-10-18; lint tooling rows added in Task 0.2; CI tooling added in Task 0.6;
   styling rows added in Task 2.1b; component and accessibility testing rows added in Task 2.2a; Radix Tabs added in
-  Task 2.2c; Storybook moved to 10.6.5 and its Vite rows added in Task 2.3a; Playwright image added in Task 2.3b)
+  Task 2.2c; Storybook moved to 10.6.5 and its Vite rows added in Task 2.3a; Playwright image added in Task 2.3b; brand font files added in Task 2.4a)
 - Date: 2026-10-18
 - Verified on: 2026-10-18, from official sources only (no remembered versions)
 
@@ -41,6 +41,7 @@ Upgrades are deliberate PRs (`chore(deps)`), never drive-by changes.
 | Storybook (`storybook`, `@storybook/nextjs-vite`, `@storybook/addon-a11y`, `@storybook/addon-docs`) | **10.6.5** (devDependencies of `packages/design-system`) | 10.6.7 (2026-11-10; checked 2026-11-18) | Task 2.3a. Latest release at least two weeks old (10.6.6 is 13 days old, 10.6.7 eight). `@storybook/nextjs-vite` peers accept Next `^16`, React `^19` and Vite `^8`: it runs `next/link`/`next/image` like the app, on Vite. The a11y addon runs axe-core in the browser (panel only, `test: "todo"`); the docs addon builds the autodocs pages. Development only, never shipped. Replaces the earlier 10.6.2 row (chosen at Task 0.1, before the install). |
 | Vite (`vite`) | **8.3.4** (devDependency of `packages/design-system`) | 8.3.8 (checked 2026-11-18) | Builder of `@storybook/nextjs-vite` (peer `^5 \|\| … \|\| ^8`). Same version Vitest 4.1.12 already resolved in the lockfile, so no second copy. Task 2.3a. |
 | `@tailwindcss/vite` | **4.3.3** (devDependency of `packages/design-system`) | 4.3.5 | Tailwind inside Storybook's Vite build, reading the package's own `css/tailwind.css` (peer Vite `^5.2 \|\| … \|\| ^8`). Same pin as `tailwindcss` (one Tailwind version in the repository). Task 2.3a. |
+| Brand font files (Rubik, Nunito: latin subset, variable weight axis, `.woff2`) | **Fontsource 5.3.0** (`@fontsource-variable/rubik`, `@fontsource-variable/nunito`; files copied into `packages/design-system/assets/fonts/`, not a dependency) | 5.3.0 (2026-07-19; checked 2026-11-18) | Task 2.4a. Loaded with `next/font/local` (built into Next.js), so builds never reach Google Fonts. Provisional choice from 04 §3 (PO to confirm). SIL OFL 1.1, license texts next to the files, rows in `assets/LICENSES.md`. Updating a file changes rendering: regenerate the visual baselines in the same PR. |
 | Zod (runtime validation, 02 §1) | **4.6.7** | 4.6.7 | Proposed schema library for env, route input and webhooks. Installed in Task 0.3. |
 | ESLint (`eslint`, `@eslint/js`) | **9.39.5** | 10.13.0 | `eslint-config-next@16.3.8` bundles `eslint-plugin-react`, `-import` and `-jsx-a11y`, whose peer ranges stop at ESLint 9. Payload's template uses ESLint 9. (Added in Task 0.2.) |
 | `eslint-config-next` | **16.3.8** | — | Same version as Next.js. |

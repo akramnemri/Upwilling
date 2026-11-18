@@ -11,6 +11,7 @@
     "src/**/*.tsx",
     "react/**/*.ts",
     "react/**/*.tsx",
+    "fonts/**/*.ts",
     "scripts/**/*.ts",
     ".storybook/**/*.ts",
     ".storybook/**/*.tsx",

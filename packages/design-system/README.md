@@ -153,6 +153,35 @@ pnpm --filter @upwilling/design-system storybook:build  # static site in storybo
   docs page: open it from its own canvas).
 - CI builds Storybook in the `checks` job (`pnpm storybook:build`).
 
+## Fonts (Task 2.4a)
+
+Two self-hosted variable fonts, latin subset (covers French: é, à, ç, œ, €, ’), from Fontsource 5.3.0
+(ADR-018), SIL OFL 1.1 (`assets/fonts/OFL-*.txt`, rows in `assets/LICENSES.md`):
+
+| Token                                       | Font                     | File                                          |
+| ------------------------------------------- | ------------------------ | --------------------------------------------- |
+| `--uw-font-family-display` (`font-display`) | Rubik, weights 300–900   | `assets/fonts/rubik-latin-wght-normal.woff2`  |
+| `--uw-font-family-body` (default)           | Nunito, weights 200–1000 | `assets/fonts/nunito-latin-wght-normal.woff2` |
+
+`--uw-font-family-mono` stays a system stack (nothing shows code yet).
+
+- `fonts/index.ts` (`@upwilling/design-system/fonts`) declares them with `next/font/local`: each one
+  only defines a CSS variable (`--uw-font-face-display`, `--uw-font-face-body`) through a class.
+  `fontVariables` holds both classes; the root layout puts it on `<html>`, and Storybook's preview does
+  the same (its Next.js framework compiles `next/font/local`).
+- The tokens read the variable first and keep the system stack after it
+  (`var(--uw-font-face-body, system-ui), -apple-system, …`), so a page without the classes (such as
+  `global-error.tsx`) still has a font.
+- In the application, next/font preloads both files from the site's own origin, sets
+  `font-display: swap`, and adds a fallback face (local Arial with size and line metrics adjusted to
+  the web font), so the swap does not move the layout.
+- One variable file per family instead of 04 §3's "2 weights per family": the tokens use four weights
+  (400, 600, 700, 800), and one file each (35 KB and 39 KB) weighs less than four static files.
+  No italic files: nothing is italic yet (the browser would slant the upright face).
+- Changing a font: replace the file and its license row, update `fonts/index.ts`, then regenerate the
+  visual baselines (every story changes). `src/fonts.test.ts` checks that the module, the tokens, the
+  files and `assets/LICENSES.md` agree.
+
 ## Visual regression (Task 2.3b)
 
 Every story is screenshotted in both brands (Playwright projects `upwilling` and `careerboost`,
@@ -177,21 +206,21 @@ Every story is screenshotted in both brands (Playwright projects `upwilling` and
   The PR then shows each changed picture; review them like code. CI never commits by itself.
 
 - **When it was not on purpose:** fix the code; the baselines stay.
-- **Known limit (until Task 2.4):** the fonts are system stacks, and in the container `system-ui`
-  resolves to a font without a visible bold: weight changes are not caught yet. When 2.4 self-hosts the
-  fonts, load them in Storybook too and regenerate the baselines.
+- **Fonts:** Storybook loads the same self-hosted fonts as the application (see "Fonts"), and the test
+  loads every declared font face before the screenshot, so weight changes show up. (Before Task 2.4a
+  the system stack resolved, in the container, to a font with no visible bold.)
 - Locally: run Storybook and look (no Docker needed). `node visual/serve.mjs` serves the built
   Storybook on port 6106 for the tests (no dependency).
 
 **Provisional values:** the brand colors were read from the logos (`docs/ai/04_DESIGN_SYSTEM.md` §2) and
-must be confirmed with the vector source files (TR-01b); the role mapping and fonts wait for the PO's M2
-design review. Fonts are system stacks until Task 2.4.
+must be confirmed with the vector source files (TR-01b); the role mapping and the fonts (Rubik and
+Nunito, from 04 §3) wait for the PO's M2 design review.
 
 ## Other files
 
 - `src/contrast.ts` — WCAG contrast ratio.
 - `src/color/` — OKLCH conversions and palette generation (no dependency).
-- `assets/LICENSES.md` — origin and rights of every brand file used by the sites.
+- `assets/LICENSES.md` — origin and rights of every brand file and font used by the sites.
 
 The package is consumed as TypeScript source (`apps/web` lists it in `transpilePackages`). Relative
 imports carry the `.ts` extension so Node can run the generator directly (type stripping, Node 24).

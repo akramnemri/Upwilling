@@ -55,8 +55,8 @@
   --uw-section-space-sm: clamp(2rem, 1.7391vw + 1.6087rem, 3rem);
   --uw-section-space-md: clamp(3rem, 3.4783vw + 2.2174rem, 5rem);
   --uw-section-space-lg: clamp(4rem, 5.2174vw + 2.8261rem, 7rem);
-  --uw-font-family-display: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --uw-font-family-body: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --uw-font-family-display: var(--uw-font-face-display, system-ui), -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --uw-font-family-body: var(--uw-font-face-body, system-ui), -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --uw-font-family-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
   --uw-font-size-xs: 0.75rem;
   --uw-font-size-sm: 0.875rem;
