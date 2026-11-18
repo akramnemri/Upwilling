@@ -1,12 +1,11 @@
 # STATUS
 
-Updated: 2026-11-18 by Claude (session 9 — Task 2.2c merged; Task 2.3a, Storybook, PR open, waiting for the
-supervisor's manual test.)
+Updated: 2026-11-18 by Claude (session 9 — Task 2.3a merged; Task 2.3b, visual regression, PR open.)
 
 ## Handoff for the next session (read first)
 - **M2 is under way.** Tasks 2.1 (tokens, Tailwind theme + lint) and 2.2 (2.2a foundations + static primitives,
   2.2b forms, 2.2c interactive) are merged. Task 2.3 was split (supervisor "Go", 2026-11-18): **2.3a** Storybook
-  (this branch, `feat/TR-01-storybook`), then **2.3b** visual regression (separate branch: Playwright over the built
+  (merged), then **2.3b** visual regression (this branch, `feat/TR-01-visual-regression`: Playwright over the built
   Storybook in the pinned `mcr.microsoft.com/playwright:v1.64.1-noble` image, baselines from a CI artifact).
   `SiteHeader`/`SiteFooter` stay in 2.4. How-to: `packages/design-system/README.md`. Previews: `/dev/tokens` and
   `/dev/components` on either site host (local, recette), and Storybook (`pnpm --filter @upwilling/design-system storybook`).
@@ -44,20 +43,25 @@ supervisor's manual test.)
 
 ## Current position
 - Milestone: **M2 — Design system foundation (Essai 2)**, in progress. M1 closed 2026-11-06.
-- Task: **2.3a — Storybook** (TR-01) — state: **PR open, waiting for the supervisor's manual test** (run Storybook,
-  switch brands, open the a11y panel). Branch `feat/TR-01-storybook`. Task 2.3 split into 2.3a (Storybook) and 2.3b
-  (visual regression), supervisor "Go" on the plan 2026-11-18.
-  - `packages/design-system/.storybook/`: `main.ts` (`@storybook/nextjs-vite`, addons docs + a11y, `@tailwindcss/vite`,
-    telemetry off), `preview.tsx` (imports `css/tailwind.css`; toolbar global `brand` → `data-brand` on `<html>`, set
-    before render; `autodocs` for all; a11y = e2e WCAG 2.2 AA tags, `test: "todo"`; App Router), `preview.css` (body
-    from tokens, on `surface`).
-  - Stories: `react/stories/*.stories.tsx`, 29 files (one per component of 2.2a–2.2c), 143 stories + 29 docs pages.
-    Play functions: `Forms/SubmitButton/Pending`, `Disclosure/Dialog/Open` (excluded from the docs page). Stories are in
-    the design-token lint scope and in the package's tsconfig.
-  - Turbo task `storybook:build` (outputs `storybook-static/**`), root script, CI step in `checks` after Build.
-    ESLint and Prettier ignore `storybook-static/`.
-  - New dev dependencies (ADR-018): Storybook 10.6.5 ×4, `vite` 8.3.4, `@tailwindcss/vite` 4.3.3 (+89 packages).
-  - Next (after the manual test and merge): Task 2.3b, visual regression.
+- Task: **2.3b — Visual regression** (TR-01) — state: **manual test passed** (run by the agent at the supervisor's
+  request, 2026-11-18), PR #28 open, waiting for the merge (supervisor "Go" on the plan, 2026-11-18). Branch
+  `feat/TR-01-visual-regression`.
+  - `packages/design-system/playwright.config.ts` (projects `upwilling`/`careerboost`, 1280×800, reduced motion,
+    snapshots `visual/__screenshots__/<brand>/<story-id>.png`; refuses to run without `UPWILLING_VISUAL=container`),
+    `visual/stories.spec.ts` (one test per story from `storybook-static/index.json`; waits for Storybook's render
+    phase `completed`/`finished`, i.e. after play functions, and for fonts), `visual/serve.mjs` (static server, no
+    dependency, port 6106). Tag `skip-visual` on `Forms/SubmitButton → Pending` (timing).
+  - CI job `visual` in the pinned image (digest in ADR-018), `--user 1001`; on failure: `visual-report` and
+    `visual-baselines` artifacts (`--update-snapshots=changed`). `publish` needs `visual`. Turbo task `visual`
+    (after `storybook:build`, not cached). Baselines are committed from that artifact (README); first set from the
+    first CI run of this PR.
+  - Baselines: 284 PNGs (142 stories × 2 brands, 4.4 MB), from the first CI run's `visual-baselines` artifact.
+    Known limit: in the container `system-ui` resolves to a font with no visible bold, so weight changes are not
+    caught until Task 2.4 self-hosts the fonts (Storybook must load them too; regenerate the baselines then).
+  - Manual test (roadmap), draft PR #29 (closed, branch deleted): Career Boost's blue `#0070D8` → `#5B3FD0` made
+    `visual` fail with 59 diffs, all in `careerboost`, none in `upwilling` (Essai 2 case 2). It also showed the
+    report was overwritten by the propose run: fixed (`edffc6a`, report uploaded first), re-run showed
+    expected / actual / diff images.
 - GitHub environments (re-checked 2026-11-06): `production` has the supervisor as required reviewer and accepts `main`
   only; `recette` accepts `develop` only. Branch rules: none exist (see the handoff).
 - Docker Desktop starts only when the supervisor works on the project (supervisor, 2026-10-26): recette is offline
@@ -111,6 +115,10 @@ supervisor's manual test.)
 - 2.2c — Interactive components (Accordion, Tabs, Dialog, Breadcrumbs) — merged 2026-11-10 (PR #26, `6b02f88`,
   squash-merged by the agent at the supervisor's request), manual test passed. CI on `develop` green, the recette tag
   moved; recette installs it at the next Docker Desktop start.
+- 2.3a — Storybook (brand toolbar, a11y and docs addons, 143 stories) — merged 2026-11-18 (PR #27, `9b2ec50`,
+  squash-merged by the agent at the supervisor's request), manual test passed (run by the agent with the supervisor:
+  brand switch, axe on every story in both brands = 0 violations, pending SubmitButton, open Dialog). CI on `develop`:
+  `publish (arm64)` failed once on GHCR `unknown blob` (registry side); re-run of the failed jobs green, recette tag moved.
 
 ## What exists now (so a new session does not have to rediscover it)
 - pnpm 11 workspace + Turborepo: `apps/web` (Next.js 16.3.8, App Router, `src/`), `packages/config`
@@ -208,7 +216,7 @@ supervisor's manual test.)
   (`list`, `check`, `apply`) refuses any server not named `recette`, and restores through a scratch database.
   Test: `infra/server/test/smoke-backup.sh` (also in CI). Runbook: `docs/runbooks/backup-restore.md`. R2 facts and
   variables: `docs/integrations/r2.md` (no real R2 run yet).
-- CI: `.github/workflows/ci.yml`, jobs `checks` (install, format, typecheck, lint, test, build, Storybook build, e2e),
+- CI: `.github/workflows/ci.yml`, jobs `checks` (install, format, typecheck, lint, test, build, Storybook build, e2e), `visual` (Task 2.3b),
   `secret-scan` (gitleaks v8.30.1 Docker image, full history), `docker` (image build + `smoke-roles.sh` + `smoke-stacks.sh`, Tasks 1.1b/1.4),
   `shellcheck` (v0.11.0 image, every `*.sh`, Task 1.3), `image` (PRs: amd64 + arm64 native builds, `/api/version`
   check), `publish` + `publish-manifest` (pushes to develop/main, after every other job: GHCR, Task 1.5a),
@@ -305,6 +313,10 @@ supervisor's manual test.)
   Pins = latest releases at least two weeks old (Storybook 10.6.5, not 10.6.6/10.6.7); Vite 8.3.4 = the copy Vitest
   already had. a11y addon in `todo` mode (panel only); failing on violations would need the Vitest addon or the
   test-runner, left for 2.3b if wanted. Browser-only states use play functions instead of new component props.
+- Task 2.3b (supervisor "Go" on the plan, 2026-11-18): screenshots only in the pinned Playwright container (no
+  local baselines: Windows fonts differ); baselines committed, approved by committing the CI artifact (no CI write
+  access, no auto-commit). A manual `workflow_dispatch` update workflow was dropped: GitHub only dispatches workflows
+  present on the default branch, and the failing job's artifact does the same job. Desktop width only for now.
 - Smoke tests: no `| grep -q` under `pipefail` (2026-11-01). `-q` exits at the first match, the writer then fails on the
   closed pipe, and `pipefail` turns the match into a miss: reproduced 5 out of 5 times, and it failed a `develop` run.
   Use `| grep ... >/dev/null`, which reads to the end. Each of the five smoke tests says so below its `set` line.

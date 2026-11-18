@@ -17,7 +17,8 @@
     "lint": "eslint .",
     "test": "vitest run",
     "storybook": "storybook dev --port 6006 --no-open",
-    "storybook:build": "storybook build"
+    "storybook:build": "storybook build",
+    "visual": "playwright test"
   },
   "dependencies": {
     "@radix-ui/react-tabs": "1.2.1",
@@ -29,6 +30,7 @@
     "react-dom": "19.2.9"
   },
   "devDependencies": {
+    "@playwright/test": "1.64.1",
     "@storybook/addon-a11y": "10.6.5",
     "@storybook/addon-docs": "10.6.5",
     "@storybook/nextjs-vite": "10.6.5",

@@ -19,6 +19,8 @@ coverage/
 playwright-report/
 blob-report/
 test-results/
+visual-results/
+visual-report/
 playwright/.cache/
 
 # Environment files: only the example templates are committed

@@ -15,6 +15,7 @@
     "test": "turbo run test",
     "e2e": "turbo run e2e",
     "storybook:build": "turbo run storybook:build",
+    "visual": "turbo run visual",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },

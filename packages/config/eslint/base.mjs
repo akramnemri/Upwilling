@@ -17,6 +17,8 @@ export const baseConfig = defineConfig([
     "**/blob-report/**",
     "**/test-results/**",
     "**/storybook-static/**",
+    "**/visual-results/**",
+    "**/visual-report/**",
   ]),
   js.configs.recommended,
   tseslint.configs.recommendedTypeChecked,

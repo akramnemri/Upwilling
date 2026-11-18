@@ -2,7 +2,7 @@
 
 - Status: Accepted (supervisor merged PR #1, 2026-10-18; lint tooling rows added in Task 0.2; CI tooling added in Task 0.6;
   styling rows added in Task 2.1b; component and accessibility testing rows added in Task 2.2a; Radix Tabs added in
-  Task 2.2c; Storybook moved to 10.6.5 and its Vite rows added in Task 2.3a)
+  Task 2.2c; Storybook moved to 10.6.5 and its Vite rows added in Task 2.3a; Playwright image added in Task 2.3b)
 - Date: 2026-10-18
 - Verified on: 2026-10-18, from official sources only (no remembered versions)
 
@@ -72,6 +72,7 @@ with the version in a trailing comment. Upgrades are `chore(ci)` PRs that update
 | `actions/upload-artifact` | **v7.0.2** | `cf430e030ddbb5b0abf93d22962f4752f3646cd9` | Playwright report, on failure only. |
 | shellcheck (Docker image `koalaman/shellcheck`) | **v0.11.0** | `sha256:61862eba1fcf09a484ebcc6feea46f1782532571a34ed51fedf90dd25f925a8d` | Lints every `*.sh` in the repository (Task 1.3). Latest release (2025-08-04). |
 | gitleaks (Docker image `ghcr.io/gitleaks/gitleaks`) | **v8.30.1** | `sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f` | Run directly instead of `gitleaks-action` (fewer third-party parts, no licence question). |
+| Playwright (Docker image `mcr.microsoft.com/playwright`) | **v1.64.1-noble** | `sha256:2f05f8a734509a7b3f26a912639488ee08f58a7b292d14d62271bcff9038768f` | Container of CI's `visual` job (Task 2.3b, checked 2026-11-18): same Playwright as the pinned `@playwright/test`, with its browsers and fonts, so screenshots match the committed baselines. Ubuntu 24.04. Upgrading it (or Playwright) changes rendering: regenerate the baselines in the same PR. `@playwright/test` 1.64.1 is also a devDependency of `packages/design-system` (same pin as `apps/web`). |
 
 ### Container base image (added in Task 1.1b, verified 2026-10-19)
 

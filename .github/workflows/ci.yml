@@ -90,6 +90,63 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
+  # Visual regression of the design system (Task 2.3b): every Storybook story in both brands,
+  # compared with the committed baselines (packages/design-system/visual/__screenshots__/). Runs in
+  # the pinned Playwright image so fonts and antialiasing match the baselines (ADR-018).
+  # On a difference the job fails and uploads two artifacts: the report (expected / actual / diff)
+  # and the proposed baselines. Approving a change = committing those baselines (README).
+  visual:
+    name: visual
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    container:
+      image: mcr.microsoft.com/playwright:v1.64.1-noble@sha256:2f05f8a734509a7b3f26a912639488ee08f58a7b292d14d62271bcff9038768f
+      options: --user 1001
+    env:
+      UPWILLING_VISUAL: container
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Builds Storybook (Turbo dependency), then compares every story with its baseline.
+      - name: Visual regression
+        run: pnpm visual
+
+      # Before proposing baselines: that run rewrites the report (and passes).
+      - name: Upload visual report
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: visual-report
+          path: packages/design-system/visual-report/
+          if-no-files-found: ignore
+          retention-days: 7
+
+      # Same tests, writing the screenshots that differ or are missing as new baselines.
+      - name: Propose new baselines
+        if: failure()
+        run: pnpm --filter @upwilling/design-system exec playwright test --update-snapshots=changed
+
+      - name: Upload proposed baselines
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: visual-baselines
+          path: packages/design-system/visual/__screenshots__/
+          if-no-files-found: ignore
+          retention-days: 7
+
   secret-scan:
     name: secret-scan
     runs-on: ubuntu-latest
@@ -196,7 +253,7 @@ jobs:
   publish:
     name: publish (${{ matrix.arch }})
     if: github.event_name == 'push'
-    needs: [checks, secret-scan, docker, shellcheck]
+    needs: [checks, visual, secret-scan, docker, shellcheck]
     permissions:
       contents: read
       packages: write
