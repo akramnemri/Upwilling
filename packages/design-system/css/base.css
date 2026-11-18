@@ -39,6 +39,14 @@
 }
 
 /*
+ * Anchors clear the sticky site header (SiteHeader, Task 2.4b): its row is `h-16` (space-16), plus
+ * space-4 so a section title does not touch it. Only while such a header is on the page.
+ */
+html:has([data-site-header]) {
+  scroll-padding-top: calc(var(--uw-space-16) + var(--uw-space-4));
+}
+
+/*
  * While a modal dialog is open (Dialog, Task 2.2c), the page behind it does not scroll. The browser
  * already makes that page inert; this only stops the wheel and touch scrolling from moving it.
  */

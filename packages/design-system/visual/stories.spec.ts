@@ -15,6 +15,9 @@ interface IndexEntry {
 
 /** Stories whose look depends on timing (e.g. a 3-second pending state) carry this tag. */
 const SKIP_TAG = "skip-visual";
+/** Stories shown at phone width (e.g. the header's mobile menu) carry this tag (Task 2.4b). */
+const MOBILE_TAG = "visual-mobile";
+const MOBILE_VIEWPORT = { width: 375, height: 812 };
 
 const index = JSON.parse(
   readFileSync(join(import.meta.dirname, "../storybook-static/index.json"), "utf8"),
@@ -27,6 +30,9 @@ const stories = Object.values(index.entries).filter(
 for (const story of stories) {
   test(story.id, async ({ page }, testInfo) => {
     const brand = String(testInfo.project.metadata["brand"]);
+    if ((story.tags ?? []).includes(MOBILE_TAG)) {
+      await page.setViewportSize(MOBILE_VIEWPORT);
+    }
     await page.goto(`/iframe.html?id=${story.id}&viewMode=story&globals=brand:${brand}`);
     // Rendered and its play function done (Storybook's own render phases), fonts loaded.
     await page.waitForFunction(() => {

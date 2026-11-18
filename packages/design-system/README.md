@@ -54,7 +54,8 @@ namespace. Every utility reads a `--uw-*` variable, so the same class gives each
 | Layout                                    | `md:`, `lg:` (breakpoints), `@md:` and `max-w-prose` (containers)                                                                                        |
 
 `duration`, `z-index`, `border-width` and `focus-ring` have no Tailwind namespace: the generator writes
-`@utility` classes for them instead (`duration-fast`, `z-modal`, `border-thick`, `focus-visible:focus-ring`).
+`@utility` classes for them instead (`duration-fast`, `z-modal`, `border-thick`, `focus-visible:focus-ring`);
+border widths also exist per side and axis (`border-b-thin`, `border-x-thin`, Task 2.4b).
 `transition-*` utilities default to `--uw-duration-base` and `--uw-easing-standard`. A new token group
 must be mapped in `src/tokens/tailwind-theme.ts`, or the generator stops.
 
@@ -67,10 +68,10 @@ Lint refuses what bypasses the tokens, in `apps/web` and in `react/` (shared rul
 colors, font sizes and spacing in CSS (`stylelint.config.mjs`). An exception needs a disable comment that
 says why (`-- <reason>`).
 
-## React components (Tasks 2.2a–2.2c)
+## React components (Tasks 2.2a–2.2c, 2.4b)
 
 `react/`, imported as `@upwilling/design-system/react`. Server Components (no `"use client"`) except
-`SubmitButton` and `Dialog`, styled with token classes only; every visible or announced text comes from
+`SubmitButton`, `Dialog` and the header's `SiteMenu`, styled with token classes only; every visible or announced text comes from
 props (French copy lives in the application). Preview: `/dev/components` on any site host, locally and
 on recette.
 
@@ -84,7 +85,7 @@ on recette.
 | Submission | `SubmitButton` (Client Component: pending state of the enclosing `<form action={…}>`)                          |
 | Feedback   | `Spinner` (labelled status or decorative), `Skeleton`, `Alert`, `EmptyState`                                   |
 | Disclosure | `Accordion` (native `<details>`), `Tabs` (Radix), `Dialog` (Client Component: native modal `<dialog>`)         |
-| Navigation | `Breadcrumbs`                                                                                                  |
+| Navigation | `Breadcrumbs`, `SiteHeader` (mobile menu: Client Component `SiteMenu`), `SiteFooter`                           |
 
 Conventions:
 
@@ -119,6 +120,18 @@ Conventions:
   close button and back to the trigger. It needs `closeLabel` (the close button is an icon). A button
   that only closes it goes in `<form method="dialog">`. Clicking the backdrop does not close it. While
   it is open the page does not scroll (`css/base.css`).
+- `SiteHeader` (Task 2.4b): sticky `banner` with a logo slot (the app passes a link to the home
+  page), a labelled `nav`, and an optional call to action (shown in the row from `sm`, and at the
+  bottom of the open menu below it). Below `md` the links sit behind a "Menu" button (WAI-ARIA
+  disclosure: `aria-expanded`, `aria-controls`); Escape closes the panel and returns focus to the
+  button, choosing a link closes it. Only `SiteMenu` runs in the browser; before it hydrates, the
+  links stay hidden on phones (the footer repeats them). While a header is on the page,
+  `css/base.css` sets `scroll-padding-top` so an anchor's title is not hidden under it.
+- `SiteFooter` (Task 2.4b): `contentinfo` on `surface-muted`: optional link columns (each a `nav`
+  named by its level-2 title), then the legal entity line (a prop: the tenant's legal details, never
+  written here) with an optional note, and the legal links in their own `nav`.
+- Header and footer links are not underlined (lists inside a `nav` are recognisable as links);
+  they underline on hover. Text links elsewhere keep `Link`, always underlined.
 - `Breadcrumbs` takes the pages above (`items`) and the `current` page's title, which is text with
   `aria-current="page"`; the separators are hidden from assistive technology.
 - No `Toast`: nothing needs a message that disappears on its own. Results stay on the page (`Alert`
@@ -188,7 +201,9 @@ Every story is screenshotted in both brands (Playwright projects `upwilling` and
 1280 × 800, reduced motion, full page) and compared with its baseline in
 `visual/__screenshots__/<brand>/<story-id>.png`. The list of stories comes from the built Storybook's
 `index.json`: a new story gets a test by itself. A story whose look depends on timing carries the
-`skip-visual` tag (today only `Forms/SubmitButton → Pending`).
+`skip-visual` tag (today only `Forms/SubmitButton → Pending`). A story tagged `visual-mobile`
+(the header's and footer's phone-width stories) is screenshotted at 375 × 812 instead; in
+Storybook it opens in the "Large mobile" viewport.
 
 - **Only in the pinned container.** Fonts and antialiasing differ between systems, so screenshots
   are taken only in `mcr.microsoft.com/playwright:v1.64.1-noble` (pinned by digest, ADR-018), in

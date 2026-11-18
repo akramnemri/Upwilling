@@ -1,6 +1,6 @@
 // React components of the design system (Tasks 2.2a–2.2c). Brand-agnostic: they use semantic token
 // classes only, and every visible or announced text comes from props (French copy lives in the
-// application). Server Components, except `SubmitButton` and `Dialog` (`"use client"`); `Tabs` renders
+// application). Server Components, except `SubmitButton`, `Dialog` and the header's `SiteMenu` (`"use client"`); `Tabs` renders
 // Radix parts, which are Client Components of their own.
 
 export {
@@ -90,6 +90,14 @@ export {
   type StackProps,
 } from "./layout.tsx";
 export { type BreadcrumbLink, Breadcrumbs, type BreadcrumbsProps } from "./navigation.tsx";
+export {
+  SiteFooter,
+  type SiteFooterColumn,
+  type SiteFooterProps,
+  SiteHeader,
+  type SiteHeaderProps,
+  type SiteLink,
+} from "./site.tsx";
 export {
   Eyebrow,
   type EyebrowProps,

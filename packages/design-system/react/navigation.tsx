@@ -3,7 +3,7 @@ import { ChevronRight } from "lucide-react";
 import { Link } from "./actions.tsx";
 import { Icon } from "./icon.tsx";
 
-// Navigation aids (Task 2.2c). `SiteHeader` and `SiteFooter` come in Task 2.4.
+// Navigation aids (Task 2.2c). `SiteHeader` and `SiteFooter` live in site.tsx (Task 2.4b).
 
 export interface BreadcrumbLink {
   readonly label: string;

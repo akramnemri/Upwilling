@@ -28,7 +28,8 @@ export type NewTabProps =
 type AnchorProps = Omit<ComponentPropsWithoutRef<"a">, "href" | "target" | "rel"> &
   NewTabProps & { readonly href: string; readonly children: ReactNode };
 
-function Anchor({
+/** Internal to the package (the site header and footer use it for links without an underline). */
+export function Anchor({
   href,
   newTab,
   newTabLabel,

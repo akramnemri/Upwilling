@@ -1,14 +1,14 @@
 # STATUS
 
-Updated: 2026-11-18 by Claude (session 10 — Task 2.3b merged; Task 2.4 split, 2.4a self-hosted fonts, PR open.)
+Updated: 2026-11-18 by Claude (session 10 — Tasks 2.3b and 2.4a merged; Task 2.4b, header/footer/layout, PR open.)
 
 ## Handoff for the next session (read first)
-- **M2 is under way.** Tasks 2.1 (tokens, Tailwind theme + lint), 2.2 (2.2a–c components) and 2.3 (2.3a Storybook,
-  2.3b visual regression) are merged. Task 2.4 was split (supervisor "Go 2.4a" on the plan, 2026-11-18): **2.4a**
-  self-hosted fonts (this branch, `feat/TR-01-fonts`), then **2.4b** `SiteHeader`, `SiteFooter` and the page layout
-  per tenant (shown on a `/dev` page; `/` stays the under-construction page until M5, so placeholders never reach
-  production). How-to: `packages/design-system/README.md`. Previews: `/dev/tokens` and `/dev/components` on either
-  site host (local, recette), and Storybook (`pnpm --filter @upwilling/design-system storybook`).
+- **M2 is under way.** Tasks 2.1 (tokens, Tailwind theme + lint), 2.2 (2.2a–c components), 2.3 (2.3a Storybook,
+  2.3b visual regression) and 2.4a (self-hosted fonts) are merged. **2.4b** (this branch, `feat/TR-01-site-chrome`):
+  `SiteHeader`, `SiteFooter` and the page layout per tenant, shown on `/dev/site` only (`/` stays the
+  under-construction page until M5, so the legal placeholders never reach production). Then 2.5 (section patterns,
+  PO design review). How-to: `packages/design-system/README.md`. Previews: `/dev/tokens`, `/dev/components` and
+  `/dev/site` on either site host (local, recette), and Storybook (`pnpm --filter @upwilling/design-system storybook`).
 - **Production approval, one-off exception:** on 2026-11-06 the supervisor's own approval of the first production
   deployment did not register (CI run 42240836809 on `main`, `a7e47a8`, PR #21); they told the agent "you do the
   approve", and the agent approved it through the GitHub API with a comment saying so. Checked 2026-11-09: the
@@ -43,22 +43,23 @@ Updated: 2026-11-18 by Claude (session 10 — Task 2.3b merged; Task 2.4 split, 
 
 ## Current position
 - Milestone: **M2 — Design system foundation (Essai 2)**, in progress. M1 closed 2026-11-06.
-- Task: **2.4a — Self-hosted fonts** (TR-01) — state: **implemented, PR #30 open, baselines committed**, waiting for
-  CI and the supervisor's manual test. Branch `feat/TR-01-fonts`. First CI run: only `visual` failed (260 of 284
-  screenshots changed; the 24 unchanged are icons, skeletons and spinners, which have no text); its
-  `visual-baselines` artifact (run 44391637789) is committed.
-  - Fonts: Rubik (display) and Nunito (body), provisional (04 §3; PO to confirm at the 2.5 review). Latin subset,
-    one variable `.woff2` per family (35 KB, 39 KB) from Fontsource 5.3.0, copied into
-    `packages/design-system/assets/fonts/` with their OFL texts (no npm dependency; ADR-018 row, `assets/LICENSES.md`).
-  - `packages/design-system/fonts/index.ts` (`@upwilling/design-system/fonts`): `next/font/local`, each font sets a
-    CSS variable (`--uw-font-face-display`/`-body`); `fontVariables` goes on `<html>` in the root layout and in
-    Storybook's preview (Storybook's Next.js Vite plugin compiles `next/font/local`; checked in the built Storybook).
-    Tokens: `--uw-font-family-*` = `var(--uw-font-face-*, system-ui)` then the system stack. Mono unchanged.
-  - The app preloads both files from its own origin, `font-display: swap`, size-adjusted Arial fallback (no shift).
-  - Visual spec: loads every declared font face before the screenshot (`document.fonts.ready` alone resolved before
-    a story's font was requested). Every baseline changes: regenerated from the CI `visual-baselines` artifact.
-  - Tests: `src/fonts.test.ts` (module ↔ tokens ↔ files ↔ licenses), e2e `fonts.spec.ts` (both hosts: two
-    same-origin preloads, body uses the font, both faces load, font responses 200).
+- Task: **2.4b — Header, footer & layout** (TR-01) — state: **implemented, PR #31 open, baselines committed**,
+  waiting for CI and the supervisor's manual test. Branch `feat/TR-01-site-chrome`. First CI run: only `visual`
+  failed, on the 16 new screenshots (8 stories × 2 brands); the 284 existing ones matched. Baselines from run
+  44401553218.
+  - Design system (`react/site.tsx`, `react/site-menu.tsx`): `SiteHeader` (sticky `banner`, logo slot, labelled
+    `nav`, optional CTA; below `md` a "Menu" disclosure button: `aria-expanded`/`aria-controls`, Escape closes and
+    returns focus, a chosen link closes it; `SiteMenu` is the third Client Component) and `SiteFooter`
+    (`contentinfo`: optional link columns, legal entity line as a prop, legal links `nav`). `css/base.css`:
+    `scroll-padding-top` while a `[data-site-header]` is on the page. Generator: per-side border widths
+    (`border-b-thin`…). Stories for every variant, phone-width ones tagged `visual-mobile` (the visual spec shoots
+    them at 375 × 812).
+  - App (`modules/content`): `SITE_CHROME` per tenant (French copy, anchor nav, CTA, footer columns, legal links to
+    the future Task 5.2 paths) with `PLACEHOLDER_LEGAL_ENTITY` ("[À compléter par le PO] …", plus the training
+    declaration number for the academy); `SiteLayout` (skip link "Aller au contenu", header with the brand logo via
+    `next/image` at a fixed size, `main#contenu`, footer); `/dev/site` (one section per anchor, local + recette).
+  - Tests: `react/site.test.tsx` (8, jsdom + axe), e2e `site.spec.ts` (6: both hosts, desktop and 375 px, keyboard-only
+    menu, Escape, anchor title below the sticky header, no horizontal scroll, axe with the menu open).
 - GitHub environments (re-checked 2026-11-06): `production` has the supervisor as required reviewer and accepts `main`
   only; `recette` accepts `develop` only. Branch rules: none exist (see the handoff).
 - Docker Desktop starts only when the supervisor works on the project (supervisor, 2026-10-26): recette is offline
@@ -121,6 +122,10 @@ Updated: 2026-11-18 by Claude (session 10 — Task 2.3b merged; Task 2.4 split, 
   the agent at the supervisor's request on draft PR #29, since closed and its branch deleted: a changed Career Boost
   blue failed `visual` with diffs in `careerboost` only). CI on `develop` green on the first run, recette tag moved;
   recette installs it at the next Docker Desktop start.
+- 2.4a — Self-hosted fonts (Rubik, Nunito, `next/font/local`, also in Storybook) — merged 2026-11-18 (PR #30,
+  `72f6c4c`, squash-merged by the agent at the supervisor's request), manual test run by the agent at the supervisor's
+  request (CLS 0.006 at 375 px, 0.003 at 1024 px, fonts from each site's own host). Baselines regenerated from CI
+  run 44391637789 (260 of 284 changed). CI on `develop` green on the first run, recette tag moved.
 
 ## What exists now (so a new session does not have to rediscover it)
 - pnpm 11 workspace + Turborepo: `apps/web` (Next.js 16.3.8, App Router, `src/`), `packages/config`
@@ -157,7 +162,7 @@ Updated: 2026-11-18 by Claude (session 10 — Task 2.3b merged; Task 2.4 split, 
 - Routes: `/` (brand page per site, simple page on the admin host), `/api/health`, `/api/ready`, `/api/version`
   (commit baked into the image as `APP_VERSION`, "local" otherwise; public on site hosts, Task 1.5a),
   local-only `/api/dev/test-error` and `/dev/test-error`; `/dev/tokens` (local + recette, Task 2.1a) and
-  `/dev/components` (local + recette, Task 2.2a). Every `/dev/*`
+  `/dev/components` (local + recette, Task 2.2a), `/dev/site` (local + recette, Task 2.4b). Every `/dev/*`
   path is refused in production by the route rules;
   `error.tsx`, `global-error.tsx`, `not-found.tsx` (French).
 - Tests (Task 0.5): Vitest 4.1.12 projects in `apps/web/vitest.config.ts`: `unit` (`src/**/*.test.ts`,
@@ -323,6 +328,12 @@ Updated: 2026-11-18 by Claude (session 10 — Task 2.3b merged; Task 2.4 split, 
   2.4a: provisional Rubik + Nunito (04 §3; no PO font choice yet); `next/font/local` with committed files rather than
   `next/font/google` (no build depends on reaching Google); one variable file per family instead of 04 §3's "2 weights
   per family" (the tokens use four weights; approved with the plan); no italics; mono stays a system stack.
+- Task 2.4b (supervisor "Go 2.4b", 2026-11-18, plan approved with 2.4's): disclosure navigation, not a modal
+  dialog (the WAI-ARIA pattern for site menus; no focus trap needed); one `nav` whose list is hidden behind the
+  button below `md` and shown in the row from `md` (no duplicated links). Nav and footer links are not underlined
+  (context makes them links), unlike `Link`. The layout is a component, not a route-group layout yet: `/` stays the
+  under-construction page, and the M5 public route group will use `SiteLayout`. Logo images are decorative inside a
+  link named "<site>, accueil" (the visible name is part of it, WCAG 2.5.3).
 - Smoke tests: no `| grep -q` under `pipefail` (2026-11-01). `-q` exits at the first match, the writer then fails on the
   closed pipe, and `pipefail` turns the match into a miss: reproduced 5 out of 5 times, and it failed a `develop` run.
   Use `| grep ... >/dev/null`, which reads to the end. Each of the five smoke tests says so below its `set` line.
@@ -410,6 +421,8 @@ Updated: 2026-11-18 by Claude (session 10 — Task 2.3b merged; Task 2.4 split, 
 - PO: confirm the 35-day retention (TR-08). Before the first restore of real data into recette: decide whether and
   how that is allowed (ADR-026).
 - Supervisor (when wanted): whether the R2 checkout asks for a card; the Sentry organization, EU, for Task 1.6b.
+- PO: the legal details shown in each site's footer (01 §6: name, legal form, address, SIRET; for the academy
+  also the training declaration number). Until then `PLACEHOLDER_LEGAL_ENTITY` (Task 2.4b) keeps `/dev/site` only.
 - PO: public contact address for each site (organization mailbox, e.g. a `contact@` address); academy logo files
   (SVG, + favicon); vector source of the Career Boost logo; validation of the French copy in
   `apps/web/src/modules/content/under-construction.ts`. **Before go-live** the two `contactEmail: null` must be filled.
@@ -438,9 +451,9 @@ Updated: 2026-11-18 by Claude (session 10 — Task 2.3b merged; Task 2.4 split, 
 - Large `docker`/Windows disk checks are slow here (antivirus): scan targeted folders, not the whole drive.
 
 ## Next step (exact)
-1. CI on PR #30 with the committed baselines (expected green).
-2. Supervisor's manual test of 2.4a (task report in the PR thread), then the merge (squash), by the supervisor or the
-   agent on request; after it: sync `develop`, check CI on `develop` and recette, delete the branch.
-3. Then Task 2.4b — `SiteHeader`, `SiteFooter`, layout per tenant (plan already approved with 2.4a's; restate it
-   briefly before starting). Do not start it before the supervisor's go.
+1. CI on PR #31 with the committed baselines (expected green).
+2. Supervisor's manual test of 2.4b (`/dev/site` on both hosts, phone and desktop, menu by keyboard), then the merge
+   (squash), by the supervisor or the agent on request; after it: sync `develop`, check CI on `develop`, delete the
+   branch.
+3. Then Task 2.5 — Section patterns (post its plan first). Do not start it before the supervisor's go.
 4. Still waiting on the human: branch protection, the backup key copy, the Oracle VM (see "Waiting on human").
