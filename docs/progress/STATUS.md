@@ -43,8 +43,10 @@ Updated: 2026-11-18 by Claude (session 10 — Tasks 2.3b and 2.4a merged; Task 2
 
 ## Current position
 - Milestone: **M2 — Design system foundation (Essai 2)**, in progress. M1 closed 2026-11-06.
-- Task: **2.4b — Header, footer & layout** (TR-01) — state: **implemented, PR open**, waiting for CI, the new
-  baselines from its `visual-baselines` artifact, and the supervisor's manual test. Branch `feat/TR-01-site-chrome`.
+- Task: **2.4b — Header, footer & layout** (TR-01) — state: **implemented, PR #31 open, baselines committed**,
+  waiting for CI and the supervisor's manual test. Branch `feat/TR-01-site-chrome`. First CI run: only `visual`
+  failed, on the 16 new screenshots (8 stories × 2 brands); the 284 existing ones matched. Baselines from run
+  44401553218.
   - Design system (`react/site.tsx`, `react/site-menu.tsx`): `SiteHeader` (sticky `banner`, logo slot, labelled
     `nav`, optional CTA; below `md` a "Menu" disclosure button: `aria-expanded`/`aria-controls`, Escape closes and
     returns focus, a chosen link closes it; `SiteMenu` is the third Client Component) and `SiteFooter`
@@ -449,7 +451,7 @@ Updated: 2026-11-18 by Claude (session 10 — Tasks 2.3b and 2.4a merged; Task 2
 - Large `docker`/Windows disk checks are slow here (antivirus): scan targeted folders, not the whole drive.
 
 ## Next step (exact)
-1. CI on the 2.4b PR; commit the baselines from its `visual-baselines` artifact after checking the report.
+1. CI on PR #31 with the committed baselines (expected green).
 2. Supervisor's manual test of 2.4b (`/dev/site` on both hosts, phone and desktop, menu by keyboard), then the merge
    (squash), by the supervisor or the agent on request; after it: sync `develop`, check CI on `develop`, delete the
    branch.
