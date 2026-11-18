@@ -3,6 +3,17 @@ import { baseTokenVariable, colorRoleVariable } from "../css-variables.ts";
 /** The generated Tailwind v4 theme, relative to the package root. Never edited by hand. */
 export const GENERATED_THEME_PATH = "css/theme.css";
 
+/** Utility prefix and CSS property for each side of a border-width token, as Tailwind names them. */
+const BORDER_SIDES = [
+  ["", "border-width"],
+  ["x-", "border-inline-width"],
+  ["y-", "border-block-width"],
+  ["t-", "border-top-width"],
+  ["r-", "border-right-width"],
+  ["b-", "border-bottom-width"],
+  ["l-", "border-left-width"],
+] as const;
+
 interface ThemeNamespace {
   /** Tailwind theme variable prefix (https://tailwindcss.com/docs/theme, "Theme variable namespaces"). */
   readonly prefix: string;
@@ -63,12 +74,15 @@ const UTILITY_GROUPS: ReadonlyMap<string, (tokens: TokenList) => string[]> = new
   ],
   [
     "border-width",
+    // All sides (`border-thin`) and one side or axis (`border-b-thin`, `border-x-thin`, Task 2.4b).
     (tokens) =>
-      tokens.map(({ name }) =>
-        utility(`border-${name}`, [
-          "border-style: var(--tw-border-style, solid)",
-          `border-width: var(${baseTokenVariable("border-width", name)})`,
-        ]),
+      tokens.flatMap(({ name }) =>
+        BORDER_SIDES.map(([side, property]) =>
+          utility(`border-${side}${name}`, [
+            "border-style: var(--tw-border-style, solid)",
+            `${property}: var(${baseTokenVariable("border-width", name)})`,
+          ]),
+        ),
       ),
   ],
   [

@@ -57,6 +57,9 @@ describe("css/theme.css (Tailwind v4 theme)", () => {
       "@utility border-thick {\n  border-style: var(--tw-border-style, solid);\n  border-width: var(--uw-border-width-thick);\n}",
     );
     expect(utilities).toContain(
+      "@utility border-b-thin {\n  border-style: var(--tw-border-style, solid);\n  border-bottom-width: var(--uw-border-width-thin);\n}",
+    );
+    expect(utilities).toContain(
       "@utility focus-ring {\n  outline: var(--uw-focus-ring-width) solid var(--uw-color-focus-ring);\n  outline-offset: var(--uw-focus-ring-offset);\n}",
     );
   });
