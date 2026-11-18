@@ -5,7 +5,7 @@
 // link is chosen need JavaScript. The links themselves are rendered on the server (`children`).
 
 import { Menu, X } from "lucide-react";
-import { type MouseEvent, type ReactNode, useEffect, useId, useRef, useState } from "react";
+import { type ReactNode, useEffect, useId, useRef, useState } from "react";
 
 import { cx } from "./cx.ts";
 import { Icon } from "./icon.tsx";
@@ -28,6 +28,7 @@ export interface SiteMenuProps {
 export function SiteMenu({ label, menuLabel, children }: SiteMenuProps) {
   const [open, setOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const panelId = useId();
 
   useEffect(() => {
@@ -40,15 +41,21 @@ export function SiteMenu({ label, menuLabel, children }: SiteMenuProps) {
         buttonRef.current?.focus();
       }
     }
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [open]);
-
-  function closeOnLinkClick(event: MouseEvent<HTMLDivElement>) {
-    if (event.target instanceof Element && event.target.closest("a") !== null) {
-      setOpen(false);
+    // Choosing a link closes the panel (Enter on a link fires a click too). The listener sits on
+    // the panel, not as a React `onClick` prop: the panel is a container, not a control.
+    function onClick(event: MouseEvent) {
+      if (event.target instanceof Element && event.target.closest("a") !== null) {
+        setOpen(false);
+      }
     }
-  }
+    const panel = panelRef.current;
+    document.addEventListener("keydown", onKeyDown);
+    panel?.addEventListener("click", onClick);
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      panel?.removeEventListener("click", onClick);
+    };
+  }, [open]);
 
   return (
     <nav aria-label={label} className="ml-auto md:ml-0 md:flex-1">
@@ -63,11 +70,9 @@ export function SiteMenu({ label, menuLabel, children }: SiteMenuProps) {
         <Icon icon={open ? X : Menu} size="md" />
         {menuLabel}
       </button>
-      {/* The click handler only notices a link being followed (Enter on a link fires a click too); */}
-      {/* the container is not a control. */}
       <div
+        ref={panelRef}
         id={panelId}
-        onClick={closeOnLinkClick}
         className={cx(
           "max-md:absolute max-md:inset-x-0 max-md:top-full max-md:border-b-thin max-md:border-border max-md:bg-surface max-md:px-gutter-page max-md:py-4 max-md:shadow-md",
           !open && "max-md:hidden",

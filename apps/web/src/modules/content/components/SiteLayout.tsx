@@ -15,7 +15,10 @@ const MAIN_ID = "contenu";
  * `data-brand` on `<html>` (root layout). The public route group of Milestone 5 wraps its pages in
  * it; until then only `/dev/site` uses it (the legal details are still placeholders).
  */
-export function SiteLayout({ tenant, children }: { tenant: TenantSlug; children: ReactNode }) {
+export function SiteLayout({
+  tenant,
+  children,
+}: Readonly<{ tenant: TenantSlug; children: ReactNode }>) {
   const chrome = SITE_CHROME[tenant];
 
   return (
@@ -56,7 +59,7 @@ const LOGO_HEIGHT = 48;
 
 /** The brand's logo as a link to the home page; the academy shows its mark and name until the PO
  * sends its logo files. The images are decorative: the link's name says where it goes. */
-function SiteLogo({ tenant, homeLabel }: { tenant: TenantSlug; homeLabel: string }) {
+function SiteLogo({ tenant, homeLabel }: Readonly<{ tenant: TenantSlug; homeLabel: string }>) {
   const brand = UNDER_CONSTRUCTION[tenant];
   const logo = brand.logo;
 
