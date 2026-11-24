@@ -174,12 +174,17 @@ export interface HeroPanelProps {
 /**
  * Our own hero illustration, drawn in HTML and CSS with tokens: a console panel with floating status
  * cards ("Session inter · 8 places"). It is one image for assistive technology (`label`), so its
- * parts are not read one by one.
+ * parts are not read one by one. Below `lg` the panel sits lower, so the top card stays clear of its
+ * window title.
  */
 export function HeroPanel({ label, windowTitle, lines, cards = [], className }: HeroPanelProps) {
   const [first, second] = cards;
   return (
-    <div role="img" aria-label={label} className={cx("relative px-4 pb-12 pt-10", className)}>
+    <div
+      role="img"
+      aria-label={label}
+      className={cx("relative px-4 pb-12 pt-16 lg:pt-10", className)}
+    >
       <div
         aria-hidden="true"
         className="overflow-hidden rounded-xl border-thin border-border bg-text text-text-inverse shadow-lg"
