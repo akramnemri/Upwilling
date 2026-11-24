@@ -1,13 +1,12 @@
 # STATUS
 
-Updated: 2026-11-25 by Claude (session 10 — Task 2.4b and the tech-stack page merged; Task 2.5a, static section
-patterns, PR open.)
+Updated: 2026-11-25 by Claude (session 10 — Task 2.5a merged; Task 2.5b, interactive section patterns, PR open.)
 
 ## Handoff for the next session (read first)
 - **M2 is under way.** Tasks 2.1 (tokens, Tailwind theme + lint), 2.2 (2.2a–c components), 2.3 (2.3a Storybook,
   2.3b visual regression) and 2.4 (2.4a fonts, 2.4b `SiteHeader`/`SiteFooter`/page layout on `/dev/site` only) are
-  merged. **2.5** is split (supervisor's go, 2026-11-25): **2.5a** (this branch, `feat/TR-01-section-patterns-static`)
-  static sections; 2.5b interactive sections (LogoStrip, CatalogueGrid, PricingTiers, FaqAccordion, Testimonials);
+  merged. **2.5** is split (supervisor's go, 2026-11-25): 2.5a static sections (merged); **2.5b** (this branch,
+  `feat/TR-01-section-patterns-interactive`) interactive sections (LogoStrip, CatalogueGrid, PricingTiers, FaqAccordion, Testimonials);
   2.5c the rest (ContactCta, NewsGrid, DocumentList, RichTextSection), a `/dev/demo` page per brand and the
   `docs/phase0/essai-2.md` skeleton, then the PO design review. Technology overview: `docs/tech-stack.md`. How-to: `packages/design-system/README.md`. Previews: `/dev/tokens`, `/dev/components` and
   `/dev/site` on either site host (local, recette), and Storybook (`pnpm --filter @upwilling/design-system storybook`).
@@ -49,15 +48,15 @@ patterns, PR open.)
 
 ## Current position
 - Milestone: **M2 — Design system foundation (Essai 2)**, in progress. M1 closed 2026-11-06.
-- Task: **2.5a — Section patterns, static part** (TR-01) — state: **implemented, PR open**, waiting for CI (new
+- Task: **2.5b — Section patterns, interactive part** (TR-01) — state: **implemented, PR open**, waiting for CI (new
   baselines expected to fail the first `visual` run) and the supervisor's manual test. Branch
-  `feat/TR-01-section-patterns-static`.
-  - Design system (`react/sections.tsx`, server components, no browser JavaScript): `Hero` (+ `HeroPanel`, our own
-    HTML/CSS console illustration with floating status cards, one named image), `StatsBand` (description list,
-    optional note), `PainPoints`, `AudienceTracks`, `FeatureBento` (wide tiles span two columns), `ProcessSteps`
-    (ordered list, `deliverableLabel`). Shared props: `id`, `background` (surface, muted, primary). Every word from
-    props; synthetic copy in stories says it is an example.
-  - Stories: 16 (5 tagged `visual-mobile`), so 32 new screenshots. Tests: `react/sections.test.tsx` (8, jsdom + axe).
+  `feat/TR-01-section-patterns-interactive`.
+  - Design system (`react/sections.tsx`): `LogoStrip` (CSS-only scrolling in `css/base.css`, `[data-marquee]`: pauses
+    on hover, focus and a pause checkbox, static under reduced motion, loop copy `aria-hidden`), `CatalogueGrid`
+    (category `Tabs` over cards, title = link; no tabs for one category), `PricingTiers` (highlighted tier marked in
+    words), `FaqAccordion` (`Accordion` beside the title), `Testimonials` (`figure`/`blockquote`/`figcaption`).
+  - Stories: 13 (4 tagged `visual-mobile`), so 26 new screenshots; the strip's screenshots show it at rest (the visual
+    tests run with reduced motion). Tests: 8 more in `react/sections.test.tsx` (16 in all).
   - No app page yet: the sections reach `/dev/demo` in 2.5c.
 - GitHub environments (re-checked 2026-11-06): `production` has the supervisor as required reviewer and accepts `main`
   only; `recette` accepts `develop` only. Branch rules: none exist (see the handoff).
@@ -131,6 +130,11 @@ patterns, PR open.)
   failure (S1082, click handler on the menu panel) was fixed in `9abb6de`. CI on `develop` green, recette tag moved.
 - Docs: `docs/tech-stack.md` (technologies, versions, reasons; summarizes ADR-018 and the ADRs) — merged 2026-11-19
   (PR #32, `53090de`) at the supervisor's request.
+- 2.5a — Section patterns, static part (`Hero` + `HeroPanel`, `StatsBand`, `PainPoints`, `AudienceTracks`,
+  `FeatureBento`, `ProcessSteps`) — merged 2026-11-25 (PR #33, `e816f6d`, squash-merged by the agent at the
+  supervisor's request), manual test run by the agent at the supervisor's request (axe-core on the 16 stories × 2
+  brands: 0 violations; no horizontal scroll at 375 px). 32 new baselines; the hero panel's phone spacing was fixed
+  after the first review. CI on `develop` green, recette tag moved.
 
 ## What exists now (so a new session does not have to rediscover it)
 - pnpm 11 workspace + Turborepo: `apps/web` (Next.js 16.3.8, App Router, `src/`), `packages/config`
@@ -456,8 +460,10 @@ patterns, PR open.)
 - Large `docker`/Windows disk checks are slow here (antivirus): scan targeted folders, not the whole drive.
 
 ## Next step (exact)
-1. CI on the 2.5a PR: commit the `visual-baselines` artifact after looking at the new screenshots, then CI green.
-2. Supervisor's manual test of 2.5a (Storybook, "Sections" group, both brands, phone width), then the merge (squash),
-   by the supervisor or the agent on request; after it: sync `develop`, check CI on `develop`, delete the branch.
-3. Then Task 2.5b — interactive sections (post its plan first). Do not start it before the supervisor's go.
+1. CI on the 2.5b PR: commit the `visual-baselines` artifact after looking at the new screenshots, then CI green.
+2. Supervisor's manual test of 2.5b (Storybook, "Sections" group: the strip scrolls, pauses on hover, focus and its
+   checkbox, and stays still under reduced motion; catalogue tabs by keyboard; both brands, phone width), then the
+   merge (squash), by the supervisor or the agent on request; after it: sync `develop`, check CI, delete the branch.
+3. Then Task 2.5c — ContactCta, NewsGrid, DocumentList, RichTextSection, `/dev/demo` per brand and the
+   `docs/phase0/essai-2.md` skeleton (post its plan first). Do not start it before the supervisor's go.
 4. Still waiting on the human: branch protection, the backup key copy, the Oracle VM (see "Waiting on human").

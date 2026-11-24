@@ -47,6 +47,53 @@ html:has([data-site-header]) {
 }
 
 /*
+ * LogoStrip (Task 2.5b): the strip moves only when the visitor has not asked for reduced motion.
+ * At rest (and under reduced motion) it is one list that wraps; the second copy and the pause control
+ * are hidden. While it moves, the two copies sit side by side and slide by half their width (one
+ * copy), so the loop is seamless; hover, keyboard focus and the pause checkbox stop it (WCAG 2.2.2).
+ * Unlayered rules: they win over the utility classes on the same elements.
+ */
+[data-marquee-copy],
+[data-marquee-pause] {
+  display: none;
+}
+
+@keyframes uw-marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-marquee-viewport] {
+    overflow: hidden;
+  }
+
+  [data-marquee-track] {
+    width: max-content;
+    animation: uw-marquee 40s linear infinite;
+  }
+
+  [data-marquee-track] > ul {
+    flex-wrap: nowrap;
+  }
+
+  [data-marquee-copy] {
+    display: flex;
+  }
+
+  [data-marquee-pause] {
+    display: inline-flex;
+  }
+
+  [data-marquee]:hover [data-marquee-track],
+  [data-marquee]:focus-within [data-marquee-track],
+  [data-marquee]:has([data-marquee-pause] input:checked) [data-marquee-track] {
+    animation-play-state: paused;
+  }
+}
+
+/*
  * While a modal dialog is open (Dialog, Task 2.2c), the page behind it does not scroll. The browser
  * already makes that page inert; this only stops the wheel and touch scrolling from moving it.
  */

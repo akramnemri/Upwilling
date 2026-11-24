@@ -1,16 +1,22 @@
 import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { CalendarCheck, Compass } from "lucide-react";
 import { describe, expect, it } from "vitest";
 
 import { ButtonLink } from "./actions.tsx";
 import {
   AudienceTracks,
+  CatalogueGrid,
+  FaqAccordion,
   FeatureBento,
   Hero,
   HeroPanel,
+  LogoStrip,
   PainPoints,
+  PricingTiers,
   ProcessSteps,
   StatsBand,
+  Testimonials,
 } from "./sections.tsx";
 import { axeViolations } from "./testing/axe.ts";
 
@@ -185,6 +191,173 @@ describe("ProcessSteps", () => {
     expect(within(list).getAllByRole("listitem")).toHaveLength(3);
     // The label and the deliverable are one paragraph, read together.
     expect(within(list).getByText("Document A").textContent).toBe("Livrable : Document A");
+    expect(await axeViolations(container)).toEqual([]);
+  });
+});
+
+describe("LogoStrip", () => {
+  const items = [{ label: "Linux" }, { label: "Yocto" }];
+
+  it("exposes one list to assistive technology; the loop copy is hidden", async () => {
+    const { container } = render(
+      <LogoStrip title="Technologies" items={items} pauseLabel="Mettre en pause le défilement" />,
+    );
+    const region = screen.getByRole("region", { name: "Technologies" });
+    const lists = within(region).getAllByRole("list");
+    expect(lists).toHaveLength(1);
+    expect(
+      within(lists[0] as HTMLElement)
+        .getAllByRole("listitem")
+        .map((item) => item.textContent),
+    ).toEqual(["Linux", "Yocto"]);
+    const copy = region.querySelector("[data-marquee-copy]");
+    expect(copy?.getAttribute("aria-hidden")).toBe("true");
+    expect(await axeViolations(container)).toEqual([]);
+  });
+
+  it("has a labelled pause checkbox (CSS stops the scrolling while it is checked)", async () => {
+    render(<LogoStrip title="Technologies" items={items} pauseLabel="Mettre en pause" />);
+    const pause = screen.getByRole("checkbox", { name: "Mettre en pause" });
+    expect(pause.closest("[data-marquee]")).not.toBeNull();
+    await userEvent.setup().click(pause);
+    expect((pause as HTMLInputElement).checked).toBe(true);
+  });
+});
+
+describe("CatalogueGrid", () => {
+  const items = [
+    {
+      title: "Formation 1",
+      href: "/formations/1",
+      badge: "Débutant",
+      facts: ["3 jours"],
+      price: "Sur devis",
+    },
+    { title: "Formation 2", href: "/formations/2", chips: ["Thème A"] },
+  ];
+
+  it("shows category tabs over cards whose title is the link", async () => {
+    const { container } = render(
+      <CatalogueGrid
+        title="Catalogue"
+        tabsLabel="Domaines"
+        categories={[
+          { value: "toutes", label: "Toutes", items },
+          { value: "a", label: "Domaine A", items: items.slice(0, 1) },
+        ]}
+      />,
+    );
+    const tablist = screen.getByRole("tablist", { name: "Domaines" });
+    expect(
+      within(tablist)
+        .getAllByRole("tab")
+        .map((tab) => tab.textContent),
+    ).toEqual(["Toutes", "Domaine A"]);
+    const panel = screen.getByRole("tabpanel");
+    const link = within(panel).getByRole("link", { name: "Formation 1" });
+    expect(link.getAttribute("href")).toBe("/formations/1");
+    expect(link.closest("h3")).not.toBeNull();
+    expect(within(panel).getByText("Sur devis")).toBeDefined();
+    expect(await axeViolations(container)).toEqual([]);
+  });
+
+  it("switches category with the tabs", async () => {
+    render(
+      <CatalogueGrid
+        title="Catalogue"
+        tabsLabel="Domaines"
+        categories={[
+          { value: "toutes", label: "Toutes", items },
+          { value: "a", label: "Domaine A", items: items.slice(1) },
+        ]}
+      />,
+    );
+    await userEvent.setup().click(screen.getByRole("tab", { name: "Domaine A" }));
+    const panel = screen.getByRole("tabpanel");
+    expect(within(panel).queryByRole("link", { name: "Formation 1" })).toBeNull();
+    expect(within(panel).getByRole("link", { name: "Formation 2" })).toBeDefined();
+  });
+
+  it("renders the grid without tabs for a single category", () => {
+    render(
+      <CatalogueGrid
+        title="Catalogue"
+        tabsLabel="Domaines"
+        categories={[{ value: "toutes", label: "Toutes", items }]}
+      />,
+    );
+    expect(screen.queryByRole("tablist")).toBeNull();
+    expect(screen.getAllByRole("heading", { level: 3 })).toHaveLength(2);
+  });
+});
+
+describe("PricingTiers", () => {
+  it("marks the highlighted tier in words, not by color alone", async () => {
+    const { container } = render(
+      <PricingTiers
+        title="Formules"
+        highlightLabel="Le plus choisi"
+        note="Tarifs d’exemple."
+        tiers={[
+          { name: "Formule A", price: "10 €", features: ["Point 1"] },
+          {
+            name: "Formule B",
+            price: "20 €",
+            period: "par an",
+            features: ["Point 1", "Point 2"],
+            highlighted: true,
+          },
+        ]}
+      />,
+    );
+    const tierB = screen.getByRole("heading", { level: 3, name: "Formule B" }).closest("li");
+    const tierA = screen.getByRole("heading", { level: 3, name: "Formule A" }).closest("li");
+    expect(within(tierB as HTMLElement).getByText("Le plus choisi")).toBeDefined();
+    expect(within(tierA as HTMLElement).queryByText("Le plus choisi")).toBeNull();
+    expect(within(tierB as HTMLElement).getByText("par an")).toBeDefined();
+    expect(screen.getByText("Tarifs d’exemple.")).toBeDefined();
+    expect(await axeViolations(container)).toEqual([]);
+  });
+});
+
+describe("FaqAccordion", () => {
+  it("renders each question as a native disclosure with its answer in the page", async () => {
+    const { container } = render(
+      <FaqAccordion
+        title="Questions fréquentes"
+        items={[
+          { question: "Question 1 ?", answer: "Réponse 1" },
+          { question: "Question 2 ?", answer: "Réponse 2" },
+        ]}
+      />,
+    );
+    const region = screen.getByRole("region", { name: "Questions fréquentes" });
+    const details = region.querySelectorAll("details");
+    expect(details).toHaveLength(2);
+    expect(details[0]?.querySelector("summary")?.textContent).toBe("Question 1 ?");
+    expect(within(region).getByText("Réponse 2")).toBeDefined();
+    expect(await axeViolations(container)).toEqual([]);
+  });
+});
+
+describe("Testimonials", () => {
+  it("renders each quote as a figure with its author", async () => {
+    const { container } = render(
+      <Testimonials
+        title="Témoignages"
+        note="Témoignages fictifs."
+        items={[
+          { quote: "Citation 1", name: "Prénom A.", role: "Rôle" },
+          { quote: "Citation 2", name: "Prénom B." },
+        ]}
+      />,
+    );
+    const figures = screen.getAllByRole("figure");
+    expect(figures).toHaveLength(2);
+    const first = figures[0] as HTMLElement;
+    expect(first.querySelector("blockquote")?.textContent).toBe("Citation 1");
+    expect(first.querySelector("figcaption")?.textContent).toBe("Prénom A.Rôle");
+    expect(screen.getByText("Témoignages fictifs.")).toBeDefined();
     expect(await axeViolations(container)).toEqual([]);
   });
 });
