@@ -91,6 +91,30 @@ export {
 } from "./layout.tsx";
 export { type BreadcrumbLink, Breadcrumbs, type BreadcrumbsProps } from "./navigation.tsx";
 export {
+  type AudienceTrack,
+  AudienceTracks,
+  type AudienceTracksProps,
+  type Feature,
+  FeatureBento,
+  type FeatureBentoProps,
+  Hero,
+  HeroPanel,
+  type HeroPanelCard,
+  type HeroPanelProps,
+  type HeroProps,
+  type PainPoint,
+  PainPoints,
+  type PainPointsProps,
+  type ProcessStep,
+  ProcessSteps,
+  type ProcessStepsProps,
+  type SectionBackground,
+  type SectionPatternProps,
+  type StatItem,
+  StatsBand,
+  type StatsBandProps,
+} from "./sections.tsx";
+export {
   SiteFooter,
   type SiteFooterColumn,
   type SiteFooterProps,

@@ -68,24 +68,25 @@ Lint refuses what bypasses the tokens, in `apps/web` and in `react/` (shared rul
 colors, font sizes and spacing in CSS (`stylelint.config.mjs`). An exception needs a disable comment that
 says why (`-- <reason>`).
 
-## React components (Tasks 2.2a–2.2c, 2.4b)
+## React components (Tasks 2.2a–2.2c, 2.4b, 2.5a)
 
 `react/`, imported as `@upwilling/design-system/react`. Server Components (no `"use client"`) except
 `SubmitButton`, `Dialog` and the header's `SiteMenu`, styled with token classes only; every visible or announced text comes from
 props (French copy lives in the application). Preview: `/dev/components` on any site host, locally and
 on recette.
 
-| Group      | Components                                                                                                     |
-| ---------- | -------------------------------------------------------------------------------------------------------------- |
-| Layout     | `Container` (token width + page gutter), `Section` (rhythm, background + matching text color), `Stack`, `Grid` |
-| Typography | `Heading` (level ≠ size), `Text`, `Eyebrow`                                                                    |
-| Actions    | `Button` (primary, secondary, ghost, link; sm/md/lg; icon; loading), `ButtonLink`, `Link`                      |
-| Content    | `Icon` (Lucide), `Badge`, `Chip`, `AnnouncementPill`, `Card` + `CardMedia/Header/Body/Footer`                  |
-| Forms      | `Field` (+ `Input`, `Textarea`, `Select`, `FileInput`), `Checkbox`, `Fieldset`, `RadioGroup`, `ChoiceCards`    |
-| Submission | `SubmitButton` (Client Component: pending state of the enclosing `<form action={…}>`)                          |
-| Feedback   | `Spinner` (labelled status or decorative), `Skeleton`, `Alert`, `EmptyState`                                   |
-| Disclosure | `Accordion` (native `<details>`), `Tabs` (Radix), `Dialog` (Client Component: native modal `<dialog>`)         |
-| Navigation | `Breadcrumbs`, `SiteHeader` (mobile menu: Client Component `SiteMenu`), `SiteFooter`                           |
+| Group      | Components                                                                                                       |
+| ---------- | ---------------------------------------------------------------------------------------------------------------- |
+| Layout     | `Container` (token width + page gutter), `Section` (rhythm, background + matching text color), `Stack`, `Grid`   |
+| Typography | `Heading` (level ≠ size), `Text`, `Eyebrow`                                                                      |
+| Actions    | `Button` (primary, secondary, ghost, link; sm/md/lg; icon; loading), `ButtonLink`, `Link`                        |
+| Content    | `Icon` (Lucide), `Badge`, `Chip`, `AnnouncementPill`, `Card` + `CardMedia/Header/Body/Footer`                    |
+| Forms      | `Field` (+ `Input`, `Textarea`, `Select`, `FileInput`), `Checkbox`, `Fieldset`, `RadioGroup`, `ChoiceCards`      |
+| Submission | `SubmitButton` (Client Component: pending state of the enclosing `<form action={…}>`)                            |
+| Feedback   | `Spinner` (labelled status or decorative), `Skeleton`, `Alert`, `EmptyState`                                     |
+| Disclosure | `Accordion` (native `<details>`), `Tabs` (Radix), `Dialog` (Client Component: native modal `<dialog>`)           |
+| Navigation | `Breadcrumbs`, `SiteHeader` (mobile menu: Client Component `SiteMenu`), `SiteFooter`                             |
+| Sections   | `Hero` (+ `HeroPanel` illustration), `StatsBand`, `PainPoints`, `AudienceTracks`, `FeatureBento`, `ProcessSteps` |
 
 Conventions:
 
@@ -130,6 +131,16 @@ Conventions:
 - `SiteFooter` (Task 2.4b): `contentinfo` on `surface-muted`: optional link columns (each a `nav`
   named by its level-2 title), then the legal entity line (a prop: the tenant's legal details, never
   written here) with an optional note, and the legal links in their own `nav`.
+- Section patterns (Task 2.5a, `react/sections.tsx`; 04 §1 and §4): full-width `Section`s labelled
+  by their own title (`Hero` holds the page's only h1, the others an h2, their items h3). Static props
+  only (CMS blocks map onto them in M5), every word from props, no browser JavaScript. Shared props:
+  `id` (anchor target), `background` (`surface`, `muted`, `primary`; eyebrow and lead switch to the
+  inherited color on `primary`, where muted text would fail contrast). `HeroPanel` is our own
+  illustration in HTML and CSS (console + up to two floating status cards), one named image for
+  assistive technology. `StatsBand` is a description list (label, then figure); its `note` says when
+  figures are examples. `ProcessSteps` is an ordered list; a deliverable is preceded by
+  `deliverableLabel` (e.g. "Livrable :"), so it does not rely on layout. Placeholder copy in stories
+  says it is an example ("Chiffre d’exemple", "fictif").
 - Header and footer links are not underlined (lists inside a `nav` are recognisable as links);
   they underline on hover. Text links elsewhere keep `Link`, always underlined.
 - `Breadcrumbs` takes the pages above (`items`) and the `current` page's title, which is text with
