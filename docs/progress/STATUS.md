@@ -1,13 +1,15 @@
 # STATUS
 
-Updated: 2026-11-18 by Claude (session 10 — Tasks 2.3b and 2.4a merged; Task 2.4b, header/footer/layout, PR open.)
+Updated: 2026-11-25 by Claude (session 10 — Task 2.4b and the tech-stack page merged; Task 2.5a, static section
+patterns, PR open.)
 
 ## Handoff for the next session (read first)
 - **M2 is under way.** Tasks 2.1 (tokens, Tailwind theme + lint), 2.2 (2.2a–c components), 2.3 (2.3a Storybook,
-  2.3b visual regression) and 2.4a (self-hosted fonts) are merged. **2.4b** (this branch, `feat/TR-01-site-chrome`):
-  `SiteHeader`, `SiteFooter` and the page layout per tenant, shown on `/dev/site` only (`/` stays the
-  under-construction page until M5, so the legal placeholders never reach production). Then 2.5 (section patterns,
-  PO design review). How-to: `packages/design-system/README.md`. Previews: `/dev/tokens`, `/dev/components` and
+  2.3b visual regression) and 2.4 (2.4a fonts, 2.4b `SiteHeader`/`SiteFooter`/page layout on `/dev/site` only) are
+  merged. **2.5** is split (supervisor's go, 2026-11-25): **2.5a** (this branch, `feat/TR-01-section-patterns-static`)
+  static sections; 2.5b interactive sections (LogoStrip, CatalogueGrid, PricingTiers, FaqAccordion, Testimonials);
+  2.5c the rest (ContactCta, NewsGrid, DocumentList, RichTextSection), a `/dev/demo` page per brand and the
+  `docs/phase0/essai-2.md` skeleton, then the PO design review. Technology overview: `docs/tech-stack.md`. How-to: `packages/design-system/README.md`. Previews: `/dev/tokens`, `/dev/components` and
   `/dev/site` on either site host (local, recette), and Storybook (`pnpm --filter @upwilling/design-system storybook`).
 - **Production approval, one-off exception:** on 2026-11-06 the supervisor's own approval of the first production
   deployment did not register (CI run 42240836809 on `main`, `a7e47a8`, PR #21); they told the agent "you do the
@@ -30,6 +32,10 @@ Updated: 2026-11-18 by Claude (session 10 — Tasks 2.3b and 2.4a merged; Task 2
 - **Hosting for the test phase** (supervisor, 2026-10-20): the domain and the server are not ready, so the
   **supervisor's laptop is the server**, and public access must be free with no bank card. Pull-based deploys
   (ADR-024, accepted); public access through Tailscale Funnel (ADR-025, accepted, Task 1.5c).
+- **Recette was down 2026-11-13 → 2026-11-19:** all 11 UpWilling containers had been stopped by hand at the same
+  moment (16:37 UTC); `unless-stopped` does not restart containers stopped that way when Docker Desktop starts. The
+  agent restarted them at the supervisor's request (`docker start`, database first); the agent then deployed
+  `c6c6dc1`. If recette is down while Docker Desktop runs, check `docker ps -a --filter name=upwilling` first.
 - **Recette runs on the laptop** since 2026-10-26: `C:\upwilling-server\agent` (deploy agent, `DEPLOY_STACKS=recette`
   by default) deployed `93903a4` automatically; `C:\upwilling-server\recette\.env` holds the generated database
   password (never displayed). Set up by the agent at the supervisor's request: agreed exception, ADR-025.
@@ -43,23 +49,16 @@ Updated: 2026-11-18 by Claude (session 10 — Tasks 2.3b and 2.4a merged; Task 2
 
 ## Current position
 - Milestone: **M2 — Design system foundation (Essai 2)**, in progress. M1 closed 2026-11-06.
-- Task: **2.4b — Header, footer & layout** (TR-01) — state: **implemented, PR #31 open, baselines committed**,
-  waiting for CI and the supervisor's manual test. Branch `feat/TR-01-site-chrome`. First CI run: only `visual`
-  failed, on the 16 new screenshots (8 stories × 2 brands); the 284 existing ones matched. Baselines from run
-  44401553218.
-  - Design system (`react/site.tsx`, `react/site-menu.tsx`): `SiteHeader` (sticky `banner`, logo slot, labelled
-    `nav`, optional CTA; below `md` a "Menu" disclosure button: `aria-expanded`/`aria-controls`, Escape closes and
-    returns focus, a chosen link closes it; `SiteMenu` is the third Client Component) and `SiteFooter`
-    (`contentinfo`: optional link columns, legal entity line as a prop, legal links `nav`). `css/base.css`:
-    `scroll-padding-top` while a `[data-site-header]` is on the page. Generator: per-side border widths
-    (`border-b-thin`…). Stories for every variant, phone-width ones tagged `visual-mobile` (the visual spec shoots
-    them at 375 × 812).
-  - App (`modules/content`): `SITE_CHROME` per tenant (French copy, anchor nav, CTA, footer columns, legal links to
-    the future Task 5.2 paths) with `PLACEHOLDER_LEGAL_ENTITY` ("[À compléter par le PO] …", plus the training
-    declaration number for the academy); `SiteLayout` (skip link "Aller au contenu", header with the brand logo via
-    `next/image` at a fixed size, `main#contenu`, footer); `/dev/site` (one section per anchor, local + recette).
-  - Tests: `react/site.test.tsx` (8, jsdom + axe), e2e `site.spec.ts` (6: both hosts, desktop and 375 px, keyboard-only
-    menu, Escape, anchor title below the sticky header, no horizontal scroll, axe with the menu open).
+- Task: **2.5a — Section patterns, static part** (TR-01) — state: **implemented, PR open**, waiting for CI (new
+  baselines expected to fail the first `visual` run) and the supervisor's manual test. Branch
+  `feat/TR-01-section-patterns-static`.
+  - Design system (`react/sections.tsx`, server components, no browser JavaScript): `Hero` (+ `HeroPanel`, our own
+    HTML/CSS console illustration with floating status cards, one named image), `StatsBand` (description list,
+    optional note), `PainPoints`, `AudienceTracks`, `FeatureBento` (wide tiles span two columns), `ProcessSteps`
+    (ordered list, `deliverableLabel`). Shared props: `id`, `background` (surface, muted, primary). Every word from
+    props; synthetic copy in stories says it is an example.
+  - Stories: 16 (5 tagged `visual-mobile`), so 32 new screenshots. Tests: `react/sections.test.tsx` (8, jsdom + axe).
+  - No app page yet: the sections reach `/dev/demo` in 2.5c.
 - GitHub environments (re-checked 2026-11-06): `production` has the supervisor as required reviewer and accepts `main`
   only; `recette` accepts `develop` only. Branch rules: none exist (see the handoff).
 - Docker Desktop starts only when the supervisor works on the project (supervisor, 2026-10-26): recette is offline
@@ -126,6 +125,12 @@ Updated: 2026-11-18 by Claude (session 10 — Tasks 2.3b and 2.4a merged; Task 2
   `72f6c4c`, squash-merged by the agent at the supervisor's request), manual test run by the agent at the supervisor's
   request (CLS 0.006 at 375 px, 0.003 at 1024 px, fonts from each site's own host). Baselines regenerated from CI
   run 44391637789 (260 of 284 changed). CI on `develop` green on the first run, recette tag moved.
+- 2.4b — Header, footer & layout (`SiteHeader`, `SiteFooter`, `SiteLayout` on `/dev/site`) — merged 2026-11-19 (PR #31,
+  `c6c6dc1`, squash-merged by the agent at the supervisor's request), manual test run by the agent at the supervisor's
+  request (keyboard menu, anchor below the header, CLS 0 on both hosts). Before the merge, a SonarCloud quality-gate
+  failure (S1082, click handler on the menu panel) was fixed in `9abb6de`. CI on `develop` green, recette tag moved.
+- Docs: `docs/tech-stack.md` (technologies, versions, reasons; summarizes ADR-018 and the ADRs) — merged 2026-11-19
+  (PR #32, `53090de`) at the supervisor's request.
 
 ## What exists now (so a new session does not have to rediscover it)
 - pnpm 11 workspace + Turborepo: `apps/web` (Next.js 16.3.8, App Router, `src/`), `packages/config`
@@ -451,9 +456,8 @@ Updated: 2026-11-18 by Claude (session 10 — Tasks 2.3b and 2.4a merged; Task 2
 - Large `docker`/Windows disk checks are slow here (antivirus): scan targeted folders, not the whole drive.
 
 ## Next step (exact)
-1. CI on PR #31 with the committed baselines (expected green).
-2. Supervisor's manual test of 2.4b (`/dev/site` on both hosts, phone and desktop, menu by keyboard), then the merge
-   (squash), by the supervisor or the agent on request; after it: sync `develop`, check CI on `develop`, delete the
-   branch.
-3. Then Task 2.5 — Section patterns (post its plan first). Do not start it before the supervisor's go.
+1. CI on the 2.5a PR: commit the `visual-baselines` artifact after looking at the new screenshots, then CI green.
+2. Supervisor's manual test of 2.5a (Storybook, "Sections" group, both brands, phone width), then the merge (squash),
+   by the supervisor or the agent on request; after it: sync `develop`, check CI on `develop`, delete the branch.
+3. Then Task 2.5b — interactive sections (post its plan first). Do not start it before the supervisor's go.
 4. Still waiting on the human: branch protection, the backup key copy, the Oracle VM (see "Waiting on human").
