@@ -1,15 +1,15 @@
-import { Check, type LucideIcon, Quote } from "lucide-react";
+import { Check, FileText, type LucideIcon, Quote } from "lucide-react";
 import { type ReactNode, useId } from "react";
 
 import { Anchor } from "./actions.tsx";
-import { Badge, Card, CardBody, CardFooter, CardHeader, Chip } from "./content.tsx";
+import { Badge, Card, CardBody, CardFooter, CardHeader, CardMedia, Chip } from "./content.tsx";
 import { cx } from "./cx.ts";
 import { Accordion, Tabs } from "./disclosure.tsx";
 import { Icon } from "./icon.tsx";
 import { Container, Section } from "./layout.tsx";
 import { Eyebrow, Heading, Text } from "./typography.tsx";
 
-// Section patterns (Tasks 2.5a and 2.5b, 04_DESIGN_SYSTEM.md §1 and §4). Each one is a full-width
+// Section patterns (Tasks 2.5a–2.5c, 04_DESIGN_SYSTEM.md §1 and §4). Each one is a full-width
 // `Section` labelled by its own title. They render on the server, take every word from props (French
 // copy lives in the CMS or the app, never here) and fetch nothing: the CMS blocks of Milestone 5 map
 // onto these props. Only `CatalogueGrid`'s tabs (Radix) run in the browser; `LogoStrip` moves with
@@ -1020,6 +1020,292 @@ export function Testimonials({
             {note}
           </Text>
         )}
+      </Container>
+    </Section>
+  );
+}
+
+// ---------------------------------------------------------------------------------------------------
+// Contact call to action
+
+export interface ContactStep {
+  readonly title: string;
+  readonly text: string;
+}
+
+export interface ContactCtaProps extends SectionPatternProps {
+  readonly eyebrow?: string | undefined;
+  readonly title: ReactNode;
+  readonly lead?: ReactNode;
+  /** Names the list of steps ("Et ensuite ?"). */
+  readonly stepsTitle: string;
+  /** What happens after the visitor writes, in order (three is usual). */
+  readonly steps: readonly ContactStep[];
+  /**
+   * The form, built by the app with the form components (`Field`, `ChoiceCards`…) and its own action:
+   * this section only lays it out.
+   */
+  readonly form: ReactNode;
+}
+
+/**
+ * Low-friction contact: on the left the title and "what happens next" as numbered steps, on the
+ * right the short form in a raised panel (one column on phones, form last). Default background
+ * `muted`.
+ */
+export function ContactCta({
+  id,
+  background = "muted",
+  className,
+  eyebrow,
+  title,
+  lead,
+  stepsTitle,
+  steps,
+  form,
+}: ContactCtaProps) {
+  const titleId = useId();
+  const stepsId = useId();
+  const onPrimary = background === "primary";
+  return (
+    <Section id={id} background={background} aria-labelledby={titleId} className={className}>
+      <Container className="grid gap-gap-lg lg:grid-cols-2">
+        <div className="flex flex-col gap-8">
+          <SectionIntro
+            titleId={titleId}
+            eyebrow={eyebrow}
+            title={title}
+            lead={lead}
+            background={background}
+          />
+          <div className="flex flex-col gap-4">
+            <Heading level={3} size="lg" id={stepsId}>
+              {stepsTitle}
+            </Heading>
+            <ol aria-labelledby={stepsId} className="flex flex-col gap-4">
+              {steps.map((step, index) => (
+                <li key={step.title} className="flex gap-4">
+                  {/* The list is ordered for assistive technology; the number is for the eye. */}
+                  <span
+                    aria-hidden="true"
+                    className={cx(
+                      "flex size-8 shrink-0 items-center justify-center rounded-full font-display font-bold",
+                      onPrimary ? "bg-surface text-primary" : "bg-primary text-primary-contrast",
+                    )}
+                  >
+                    {index + 1}
+                  </span>
+                  <div className="flex flex-col gap-1">
+                    <Text weight="semibold">{step.title}</Text>
+                    <Text tone={onPrimary ? "inherit" : "muted"}>{step.text}</Text>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </div>
+        <div className="rounded-lg border-thin border-border bg-surface-raised p-6 text-text shadow-md">
+          {form}
+        </div>
+      </Container>
+    </Section>
+  );
+}
+
+// ---------------------------------------------------------------------------------------------------
+// News grid
+
+export interface NewsItem {
+  readonly title: string;
+  /** The article's page. The title is the link. */
+  readonly href: string;
+  /** The date as it reads ("12 mars 2027"). */
+  readonly date: string;
+  /** The same date, machine-readable for `<time>` ("2027-03-12"). */
+  readonly dateTime: string;
+  readonly excerpt?: string;
+  /** A category label ("Événement"), shown as a badge. */
+  readonly tag?: string;
+  /** An image with its own size and alt text (often `alt=""`: the title says it all). */
+  readonly media?: ReactNode;
+}
+
+export interface NewsGridProps extends SectionPatternProps {
+  readonly eyebrow?: string | undefined;
+  readonly title: ReactNode;
+  readonly lead?: ReactNode;
+  readonly items: readonly NewsItem[];
+  /** A link to all news, under the grid ("Toutes les actualités"). */
+  readonly action?: ReactNode;
+}
+
+/** The latest news as cards (CB-05, AC-14): date, optional tag and image, title as the link. */
+export function NewsGrid({
+  id,
+  background = "surface",
+  className,
+  eyebrow,
+  title,
+  lead,
+  items,
+  action,
+}: NewsGridProps) {
+  const titleId = useId();
+  return (
+    <Section id={id} background={background} aria-labelledby={titleId} className={className}>
+      <Container className="flex flex-col gap-gap-lg">
+        <SectionIntro
+          titleId={titleId}
+          eyebrow={eyebrow}
+          title={title}
+          lead={lead}
+          background={background}
+        />
+        <ul className="grid gap-gap-md md:grid-cols-2 lg:grid-cols-3">
+          {items.map((item) => (
+            <Card as="li" key={item.href}>
+              {item.media !== undefined && <CardMedia>{item.media}</CardMedia>}
+              <CardHeader>
+                <div className="flex flex-wrap items-center gap-2">
+                  {item.tag !== undefined && <Badge tone="info">{item.tag}</Badge>}
+                  <Text as="span" size="sm" tone="muted">
+                    <time dateTime={item.dateTime}>{item.date}</time>
+                  </Text>
+                </div>
+                <Heading level={3} size="xl">
+                  <Anchor
+                    href={item.href}
+                    className="rounded-sm hover:text-primary hover:underline hover:underline-offset-4 focus-visible:focus-ring"
+                  >
+                    {item.title}
+                  </Anchor>
+                </Heading>
+              </CardHeader>
+              {item.excerpt !== undefined && (
+                <CardBody>
+                  <Text tone="muted">{item.excerpt}</Text>
+                </CardBody>
+              )}
+            </Card>
+          ))}
+        </ul>
+        {action !== undefined && <div className="flex">{action}</div>}
+      </Container>
+    </Section>
+  );
+}
+
+// ---------------------------------------------------------------------------------------------------
+// Document list
+
+export interface DocumentItem {
+  readonly title: string;
+  /** The file's address. */
+  readonly href: string;
+  /** The file format as it reads ("PDF"). Announced with the link, so nobody downloads by surprise. */
+  readonly format: string;
+  /** The file size as it reads ("240 Ko"). */
+  readonly size?: string;
+  readonly description?: string;
+  /** The document's date as it reads ("Mis à jour le 3 février 2027"). */
+  readonly date?: string;
+}
+
+export interface DocumentListProps extends SectionPatternProps {
+  readonly eyebrow?: string | undefined;
+  readonly title: ReactNode;
+  readonly lead?: ReactNode;
+  readonly items: readonly DocumentItem[];
+}
+
+/**
+ * Official documents to download (CB-08): one row per file, its title as the link, then format and
+ * size, which are part of the link's name ("Statuts (PDF, 240 Ko)").
+ */
+export function DocumentList({
+  id,
+  background = "surface",
+  className,
+  eyebrow,
+  title,
+  lead,
+  items,
+}: DocumentListProps) {
+  const titleId = useId();
+  return (
+    <Section id={id} background={background} aria-labelledby={titleId} className={className}>
+      <Container width="lg" className="flex flex-col gap-gap-lg">
+        <SectionIntro
+          titleId={titleId}
+          eyebrow={eyebrow}
+          title={title}
+          lead={lead}
+          background={background}
+        />
+        <ul className="flex flex-col rounded-lg border-thin border-border bg-surface-raised text-text">
+          {items.map((item) => {
+            const details = item.size === undefined ? item.format : `${item.format}, ${item.size}`;
+            return (
+              <li
+                key={item.href}
+                className="flex items-start gap-4 border-t-thin border-border p-4 first:border-t-0 sm:p-6"
+              >
+                <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-surface-muted text-primary">
+                  <Icon icon={FileText} size="lg" />
+                </span>
+                <div className="flex flex-col gap-1">
+                  <Anchor
+                    href={item.href}
+                    className="rounded-sm font-semibold text-primary underline underline-offset-4 hover:text-primary-hover focus-visible:focus-ring"
+                  >
+                    {item.title}
+                    {/* A real space keeps the details a separate phrase in the accessible name. */}{" "}
+                    <span className="text-sm font-regular text-text-muted">({details})</span>
+                  </Anchor>
+                  {item.description !== undefined && <Text tone="muted">{item.description}</Text>}
+                  {item.date !== undefined && (
+                    <Text size="sm" tone="muted">
+                      {item.date}
+                    </Text>
+                  )}
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      </Container>
+    </Section>
+  );
+}
+
+// ---------------------------------------------------------------------------------------------------
+// Rich text section
+
+export interface RichTextSectionProps extends SectionPatternProps {
+  readonly eyebrow?: string | undefined;
+  readonly title: ReactNode;
+  /**
+   * The text as HTML elements (paragraphs, h3, lists, links, blockquote), e.g. the CMS's rich text
+   * rendered by the app. Styled by `css/base.css` (`[data-rich-text]`), at reading width.
+   */
+  readonly children: ReactNode;
+}
+
+/** A titled block of running text (about, mission, legal notice) at a comfortable reading width. */
+export function RichTextSection({
+  id,
+  background = "surface",
+  className,
+  eyebrow,
+  title,
+  children,
+}: RichTextSectionProps) {
+  const titleId = useId();
+  return (
+    <Section id={id} background={background} aria-labelledby={titleId} className={className}>
+      <Container width="prose" className="flex flex-col gap-6">
+        <SectionIntro titleId={titleId} eyebrow={eyebrow} title={title} background={background} />
+        <div data-rich-text="">{children}</div>
       </Container>
     </Section>
   );
