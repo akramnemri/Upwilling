@@ -499,10 +499,13 @@ PR #39 on hold; Task 3.1b, Payload on the servers, PR open on top of it.)
 
 ## Next step (exact)
 1. Supervisor's manual tests of 3.1a (local admin, upload, clean migrations) and 3.1b (see its PR).
-2. **Before merging**, on the laptop: `APP_DB_PASSWORD` and `PAYLOAD_SECRET` in `C:\upwilling-server\recette\.env`,
-   `BACKUP_CONTAINER_RECETTE=upwilling-backup-backup-1` in `C:\upwilling-server\agent\.env` and the agent restarted
-   with the new `agent.sh` + `compose.deploy-agent.yaml` (runbook `local-server.md`). [human, or the agent at the
-   supervisor's request, values never displayed]
+2. **Laptop prepared on 2026-11-26 by the agent, at the supervisor's request** (values generated, never displayed):
+   `APP_DB_PASSWORD` + `PAYLOAD_SECRET` appended to `C:\upwilling-server\recette\.env`; `C:\upwilling-server\agent\.env`
+   created with `BACKUP_CONTAINER_RECETTE=upwilling-backup-backup-1`; `agent.sh` and `compose.deploy-agent.yaml`
+   replaced by PR #40's versions (previous ones in `agent\previous-before-3.1b\`). **Nothing was started:** all
+   UpWilling containers (recette, backup, funnel, agent) were found stopped since 2026-11-24. Before merging, start
+   them (supervisor, Docker Desktop running): the backup container must run, or recette deploys skip the backup with
+   a log line only if `BACKUP_CONTAINER_RECETTE` is unset — set, a stopped one fails the deploy.
 3. Merge #39, then the 3.1b PR, back to back (squash; retarget 3.1b to `develop` after #39); after each: sync
    `develop`, check CI, delete the branch. Then watch the recette deploy (agent log) and create the first admin at once.
 3. In parallel, **PO design review** on recette (`/dev/demo` on both addresses; Docker Desktop must be running), feedback and
