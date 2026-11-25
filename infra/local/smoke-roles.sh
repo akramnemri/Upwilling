@@ -46,6 +46,17 @@ expect_body() {
   fi
 }
 
+# expect_location <port> <Host header> <path> <redirect target>
+expect_location() {
+  local port=$1 host=$2 path=$3 target=$4
+  if curl -s -o /dev/null -D - --max-time 10 -H "Host: $host" "http://127.0.0.1:$port$path" |
+    tr -d '' | grep -iE "^location: (https?://[^/]+)?$target$" >/dev/null; then
+    pass "$host$path on :$port redirects to $target"
+  else
+    fail "$host$path on :$port does not redirect to $target"
+  fi
+}
+
 echo "== Starting web-upwilling, cms and worker (waits until Docker reports them healthy)"
 if ! compose up -d --wait --wait-timeout 120; then
   compose ps -a
@@ -75,8 +86,9 @@ expect_status 404 3001 www.upwilling.localhost /
 expect_status 404 3001 unknown.example /
 
 echo "== cms (APP_ROLE=cms) on :3002"
-expect_status 200 3002 admin.localhost /
-expect_body 3002 admin.localhost / "espace d'administration"
+# The admin host's home redirects to Payload's admin (Task 3.1); the admin itself needs the database.
+expect_status 307 3002 admin.localhost /
+expect_location 3002 admin.localhost / /admin
 expect_status 200 3002 localhost /api/health
 expect_status 404 3002 upwilling.localhost /
 expect_status 404 3002 careerboost.localhost /
