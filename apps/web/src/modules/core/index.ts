@@ -8,3 +8,4 @@ export {
 } from "./routing/route-rules";
 export { TENANT_SLUGS, type HostTarget, type TenantSlug } from "./tenancy/hosts";
 export { normalizeHost, resolveHost } from "./tenancy/resolve-host";
+export { canAccessAdmin, isAuthenticated } from "./access";

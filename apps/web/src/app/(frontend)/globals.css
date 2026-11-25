@@ -12,4 +12,4 @@
 @import "@upwilling/design-system/base.css";
 
 /* Tailwind scans this app by itself; the design system's components live in another package. */
-@source "../../../../packages/design-system/react";
+@source "../../../../../packages/design-system/react";

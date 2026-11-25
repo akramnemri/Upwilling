@@ -9,6 +9,13 @@ import { TENANT_SLUGS } from "../modules/core";
  * Every variable added here must also be documented in `.env.example`.
  * Never read `process.env` elsewhere in server code: use `getEnv()`.
  */
+const R2_VARIABLES = [
+  "R2_ENDPOINT",
+  "R2_ACCESS_KEY_ID",
+  "R2_SECRET_ACCESS_KEY",
+  "R2_PUBLIC_BUCKET",
+] as const;
+
 const envSchema = z
   .object({
     DEPLOY_ENV: z.enum(["local", "recette", "production"]),
@@ -22,6 +29,22 @@ const envSchema = z
       .string()
       .regex(/^([0-9a-f]{40}|local)$/, "must be a full commit SHA or local")
       .default("local"),
+    // Payload (Task 3.1). Optional at startup: Payload itself refuses to start without them
+    // (src/lib/payload-settings.ts), while pages that do not use Payload keep working. Task 3.1b makes them
+    // required for the cms role, together with the server compose files that provide them.
+    DATABASE_URL: z
+      .string()
+      .regex(/^postgres(ql)?:\/\//, "must be a postgres:// connection URL")
+      .optional(),
+    // Signs Payload's login tokens. Generated per environment, never shared between environments.
+    PAYLOAD_SECRET: z.string().min(32, "must be at least 32 characters").optional(),
+    // Folder for uploaded media when R2 is not configured (ADR-008 update, Task 3.1).
+    MEDIA_DIR: z.string().optional(),
+    // Cloudflare R2 (ADR-008): all four or none. None means media stay in MEDIA_DIR.
+    R2_ENDPOINT: z.url({ protocol: /^https$/ }).optional(),
+    R2_ACCESS_KEY_ID: z.string().optional(),
+    R2_SECRET_ACCESS_KEY: z.string().optional(),
+    R2_PUBLIC_BUCKET: z.string().optional(),
   })
   .superRefine((env, ctx) => {
     // A deployed container without a role would serve every host: the opposite of fault isolation.
@@ -45,6 +68,16 @@ const envSchema = z
         path: ["SITE"],
         message: "is invalid: only allowed when APP_ROLE is web",
       });
+    }
+    const r2Variables = R2_VARIABLES.filter((variable) => env[variable] !== undefined);
+    if (r2Variables.length > 0 && r2Variables.length < R2_VARIABLES.length) {
+      for (const variable of R2_VARIABLES.filter((name) => env[name] === undefined)) {
+        ctx.addIssue({
+          code: "custom",
+          path: [variable],
+          message: "is missing (the R2 variables are set together or not at all)",
+        });
+      }
     }
   });
 

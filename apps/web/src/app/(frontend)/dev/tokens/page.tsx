@@ -14,9 +14,9 @@ import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import type { CSSProperties } from "react";
 
-import { getEnv } from "../../../lib/env";
-import { brandForHost } from "../../../modules/content";
-import { resolveHost } from "../../../modules/core";
+import { getEnv } from "../../../../lib/env";
+import { brandForHost } from "../../../../modules/content";
+import { resolveHost } from "../../../../modules/core";
 import styles from "./page.module.css";
 
 // Rendered per request: the brand comes from the Host header, and at build time there is no DEPLOY_ENV.

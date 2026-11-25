@@ -36,7 +36,7 @@ CSS variables (all `--uw-` prefixed):
 - `--uw-palette-<palette>-<step>`: previews and tints (`primary`, `accent`, `support`, `neutral`, statuses).
 - `--uw-<group>-<name>`: everything else (`--uw-space-4`, `--uw-font-size-lg`, `--uw-radius-md`, …).
 
-The application imports both stylesheets once, after Tailwind (`apps/web/src/app/globals.css`), and sets
+The application imports both stylesheets once, after Tailwind (`apps/web/src/app/(frontend)/globals.css`), and sets
 `data-brand` on `<html>` from the request host. Preview: `/dev/tokens` on any site host, locally and on
 recette (refused in production).
 
@@ -169,7 +169,7 @@ Conventions:
   group `<details name>`: the dialog and the accordion's behavior are tested in Chromium
   (`apps/web/tests/e2e/interactive.spec.ts`).
 
-Tailwind in an application must scan this folder: `@source` in `apps/web/src/app/globals.css`.
+Tailwind in an application must scan this folder: `@source` in `apps/web/src/app/(frontend)/globals.css`.
 `css/tailwind.css` is this package's own entry (class lint and Storybook).
 
 ## Storybook (Task 2.3a)

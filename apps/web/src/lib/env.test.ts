@@ -12,10 +12,10 @@ describe("parseEnv", () => {
   });
 
   it("ignores variables it does not know", () => {
-    expect(parseEnv({ DEPLOY_ENV: "production", APP_ROLE: "cms", PATH: "/usr/bin" })).toEqual({
+    expect(parseEnv({ DEPLOY_ENV: "production", APP_ROLE: "worker", PATH: "/usr/bin" })).toEqual({
       DEPLOY_ENV: "production",
       LOG_LEVEL: "info",
-      APP_ROLE: "cms",
+      APP_ROLE: "worker",
       APP_VERSION: "local",
     });
   });
@@ -106,9 +106,9 @@ describe("parseEnv — container role (APP_ROLE, SITE)", () => {
 describe("parseEnv — APP_VERSION (baked into the image, Task 1.5)", () => {
   it("accepts a full commit SHA", () => {
     const sha = "0123456789abcdef0123456789abcdef01234567";
-    expect(parseEnv({ DEPLOY_ENV: "recette", APP_ROLE: "cms", APP_VERSION: sha }).APP_VERSION).toBe(
-      sha,
-    );
+    expect(
+      parseEnv({ DEPLOY_ENV: "recette", APP_ROLE: "worker", APP_VERSION: sha }).APP_VERSION,
+    ).toBe(sha);
   });
 
   it("refuses anything else, so /api/version never echoes an arbitrary value", () => {
@@ -117,6 +117,49 @@ describe("parseEnv — APP_VERSION (baked into the image, Task 1.5)", () => {
     );
     expect(() => parseEnv({ DEPLOY_ENV: "local", APP_VERSION: "<script>" })).toThrow(
       /APP_VERSION is invalid/,
+    );
+  });
+});
+
+describe("parseEnv — Payload and R2 (Task 3.1)", () => {
+  const cms = {
+    DEPLOY_ENV: "production",
+    APP_ROLE: "cms",
+    DATABASE_URL: "postgres://app:synthetic@postgres:5432/app",
+    PAYLOAD_SECRET: "a".repeat(32),
+  };
+
+  it("accepts a cms container with its database and secret", () => {
+    expect(parseEnv(cms)).toMatchObject({ APP_ROLE: "cms", DATABASE_URL: cms.DATABASE_URL });
+  });
+
+  it("leaves them optional at startup: only Payload itself needs them (Task 3.1b requires them for cms)", () => {
+    expect(parseEnv({ DEPLOY_ENV: "local" }).DATABASE_URL).toBeUndefined();
+    expect(parseEnv({ DEPLOY_ENV: "production", APP_ROLE: "cms" }).PAYLOAD_SECRET).toBeUndefined();
+  });
+
+  it("refuses a short secret and a database URL that is not PostgreSQL", () => {
+    expect(() => parseEnv({ ...cms, PAYLOAD_SECRET: "too-short" })).toThrow(
+      /PAYLOAD_SECRET is invalid: must be at least 32 characters/,
+    );
+    expect(() => parseEnv({ ...cms, DATABASE_URL: "mysql://x" })).toThrow(
+      /DATABASE_URL is invalid/,
+    );
+  });
+
+  it("requires the four R2 variables together", () => {
+    const r2 = {
+      R2_ENDPOINT: "https://account.r2.cloudflarestorage.com",
+      R2_ACCESS_KEY_ID: "synthetic-key-id",
+      R2_SECRET_ACCESS_KEY: "synthetic-secret",
+      R2_PUBLIC_BUCKET: "media",
+    };
+    expect(parseEnv({ ...cms, ...r2 }).R2_PUBLIC_BUCKET).toBe("media");
+    expect(() => parseEnv({ ...cms, R2_ENDPOINT: r2.R2_ENDPOINT })).toThrow(
+      /R2_ACCESS_KEY_ID is missing \(the R2 variables are set together or not at all\)/,
+    );
+    expect(() => parseEnv({ ...cms, ...r2, R2_ENDPOINT: "http://insecure.example" })).toThrow(
+      /R2_ENDPOINT is invalid/,
     );
   });
 });
