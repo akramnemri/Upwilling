@@ -1260,7 +1260,9 @@ export function DocumentList({
                   >
                     {item.title}
                     {/* A real space keeps the details a separate phrase in the accessible name. */}{" "}
-                    <span className="text-sm font-regular text-text-muted">({details})</span>
+                    <span className="text-sm font-regular whitespace-nowrap text-text-muted">
+                      ({details})
+                    </span>
                   </Anchor>
                   {item.description !== undefined && <Text tone="muted">{item.description}</Text>}
                   {item.date !== undefined && (
