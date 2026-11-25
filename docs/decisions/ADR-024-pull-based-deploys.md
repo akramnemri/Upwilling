@@ -58,3 +58,19 @@ pull request from a fork can run its own workflow code on self-hosted runners; G
 
 - A real VPS exists (ADR-021 or a paid one): confirm the agent there, or go back to SSH if there is a reason.
 - More than one server, or deploys need coordination (migrations in Task 3.1 may add a step).
+
+## Update 2026-11-25 — Task 3.1b: database steps before the switch
+
+A new deploy now prepares the database before starting the new containers (`prepare_database` in
+`infra/server/deploy-agent/agent.sh`):
+
+1. `up -d --wait postgres` (same image; untouched when unchanged);
+2. `run --rm db-setup`: the non-superuser role `app` exists, owns database `app` and schema `public`
+   (idempotent SQL, so existing volumes are converted by the first deploy);
+3. pre-migration backup through the stack's running backup container (`BACKUP_CONTAINER_<STACK>`); production
+   refuses to migrate without one, recette logs and goes on;
+4. `run --rm migrate`: the new image's migrations (`APP_ROLE=migrate`, `dist/migrate.mjs`), one transaction each.
+
+Any failure stops the deploy before the switch: the running release keeps serving, the commit is marked failed
+and not retried. Restoring the previous release never runs migrations down: schema changes must stay compatible
+with the previous release (03 §10). Tested in `smoke-deploy.sh` (a release whose migrations fail switches nothing).

@@ -83,3 +83,13 @@ production databases to R2 and a restore into recette. Today (supervisor, 2026-1
 
 - Task 3.1 (roles, migrations), or real personal data are planned (off-site destination, second key holder, the
   restore rule above), or the domain and a real server exist (move to R2, then a fixed quiet hour may be preferred).
+
+## Update 2026-11-25 — Task 3.1b: restores hand the database to the role `app`
+
+When the role `app` exists on the target (db-setup, Task 3.1b), `restore.sh apply` creates the scratch database
+`OWNER app` and runs `pg_restore --no-owner --role=app`: the restored database and every object belong to `app`,
+exactly as after a normal deploy, so Payload can use them at once. Without the role (a stack never deployed with
+Payload), the previous behaviour stays. Checked by `smoke-backup.sh`. Backups still run as the superuser; a
+read-only backup role is deferred (supervisor, 2026-11-25).
+
+Every deploy also takes a backup just before running migrations (ADR-024 update).

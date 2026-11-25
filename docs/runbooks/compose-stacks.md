@@ -84,6 +84,12 @@ Each folder gets a `.env` from the matching template (`infra/server/.env.edge.ex
   `sudo docker run --rm -it caddy:2.11.7-alpine caddy hash-password` and paste it **between single quotes**.
 - Recette and production: `POSTGRES_PASSWORD` from `openssl rand -hex 32` (a different one per stack, both in the
   password manager). `APP_IMAGE`: see §4.
+- Recette and production, since Task 3.1b: `APP_DB_PASSWORD` (the non-superuser role `app` that Payload uses) and
+  `PAYLOAD_SECRET`, each from `openssl rand -hex 32`, different per stack. Production also needs the four `R2_*`
+  values (ADR-008): its cms refuses to start without them.
+- Database steps of a deploy (the agent does them; by hand only when starting a stack without it), in this order:
+  `docker compose -f compose.<stack>.yaml up -d --wait postgres`, then `run --rm db-setup` (creates or updates the
+  role `app`, idempotent), a backup (`backup-restore.md`), `run --rm migrate` (the image's migrations), then `up -d --wait`.
 
 ## 4. The image (until Task 1.5 publishes it)
 

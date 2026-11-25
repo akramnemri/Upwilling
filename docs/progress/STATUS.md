@@ -1,7 +1,7 @@
 # STATUS
 
-Updated: 2026-11-25 by Claude (session 11 — Task 2.6 merged; M3 started in parallel with M2's PO review; Task 3.1a,
-Payload install, PR open.)
+Updated: 2026-11-25 by Claude (session 11 — Task 2.6 merged; M3 started in parallel with M2's PO review; Task 3.1a
+PR #39 on hold; Task 3.1b, Payload on the servers, PR open on top of it.)
 
 ## Handoff for the next session (read first)
 - **M3 started on 2026-11-25, in parallel with M2** (supervisor's choice): M2 is not formally closed, the PO design
@@ -70,6 +70,18 @@ Payload install, PR open.)
   - Push off everywhere; first migration `20261125_185819_initial`; CI: Postgres service, migrations on a clean
     database, pending-migration check, integration tests on `app_test`.
   - ADR updates: 018 (versions), 005 (18 verified), 008 (local storage, R2 wired but off), 014 (cost measured, kept).
+- Task: **3.1b — Payload on the servers** — state: **implemented, PR open** (stacked on #39: branch
+  `feat/m3-payload-servers`, cut from `feat/m3-install-payload`); manual test pending. Supervisor's choices
+  (2026-11-25): one PR; media volume on recette only, production cms requires R2; backup role deferred.
+  - `APP_ROLE=migrate`: `dist/migrate.mjs` (esbuild, ESM, npm packages left external and taken from the standalone
+    `node_modules`), runs the imported migrations, exits 0/1. `cms`/`migrate` require `DATABASE_URL` +
+    `PAYLOAD_SECRET`; production `cms` requires R2. `/api/ready` checks the database where `DATABASE_URL` is set.
+  - Compose: `db-setup` (postgres image, idempotent SQL: role `app`, owner of `app` and `public`) and `migrate`, both
+    under profile `deploy-steps`; cms gets `DATABASE_URL=postgres://app@postgres:5432/app` + `PGPASSWORD`; recette
+    cms mounts volume `media` at `/data/media`.
+  - Agent `prepare_database`: postgres up → db-setup → pre-migration backup (`BACKUP_CONTAINER_<STACK>`; production
+    refuses without it) → migrate → switch. Restores: `pg_restore --role=app` when the role exists.
+  - ADR updates: 024 (deploy order), 026 (restore role), 008 (volume / R2), 005 (role `app`, readiness).
 - GitHub environments (re-checked 2026-11-06): `production` has the supervisor as required reviewer and accepts `main`
   only; `recette` accepts `develop` only. Branch rules: none exist (see the handoff).
 - Docker Desktop starts only when the supervisor works on the project (supervisor, 2026-10-26): recette is offline
@@ -399,12 +411,9 @@ Payload install, PR open.)
 ## Deferred database work (PostgreSQL now confirmed, ADR-005) — Task 3.1a / 3.1b
 - Done in 3.1a: local Postgres container (Task 0.3), database-backed integration tests (Task 0.5), CI service
   container and migration check (Task 0.6).
-- Task 0.4 → 3.1b: `/api/ready` still reports `database: "not_configured"`; the database check and the "stop the DB,
-  ready fails" manual step come with the server wiring.
-- Task 1.4 → 3.1b: the server stacks run Postgres with its `postgres` superuser only; the app's own non-superuser role and
-  `DATABASE_URL` come with Task 3.1.
-- Task 1.6a: backups run as the superuser and restores use `--no-owner`. Task 3.1 adds a backup role, decides how
-  roles are restored (`pg_dump` does not contain them), and wires the pre-migration backup (03 §10) into the agent.
+- Done in 3.1b: readiness database check, "stop the DB, ready fails" in `smoke-stacks.sh` (Task 0.4); role `app`
+  and `DATABASE_URL` on the servers (Task 1.4); restores owned by `app` and the pre-migration backup (Task 1.6a).
+- Still open: a read-only backup role (backups run as the superuser), deferred by the supervisor on 2026-11-25.
 
 ## Open issues / risks
 - Brand colors, role mapping, status colors and the neutral (slate) are provisional (TR-01b, PO's M2 design review).
@@ -489,10 +498,13 @@ Payload install, PR open.)
 - Large `docker`/Windows disk checks are slow here (antivirus): scan targeted folders, not the whole drive.
 
 ## Next step (exact)
-1. Supervisor's manual test of 3.1a (local admin login, image upload into `apps/web/media/`, migrations on a clean
-   database). **Do not merge #39 yet:** it waits for 3.1b.
-2. Task 3.1b (server wiring) after the supervisor's go, branched from `feat/m3-install-payload`. Do not start it
-   before. Then merge #39 and the 3.1b PR back to back (squash); after each: sync `develop`, check CI, delete the branch.
+1. Supervisor's manual tests of 3.1a (local admin, upload, clean migrations) and 3.1b (see its PR).
+2. **Before merging**, on the laptop: `APP_DB_PASSWORD` and `PAYLOAD_SECRET` in `C:\upwilling-server\recette\.env`,
+   `BACKUP_CONTAINER_RECETTE=upwilling-backup-backup-1` in `C:\upwilling-server\agent\.env` and the agent restarted
+   with the new `agent.sh` + `compose.deploy-agent.yaml` (runbook `local-server.md`). [human, or the agent at the
+   supervisor's request, values never displayed]
+3. Merge #39, then the 3.1b PR, back to back (squash; retarget 3.1b to `develop` after #39); after each: sync
+   `develop`, check CI, delete the branch. Then watch the recette deploy (agent log) and create the first admin at once.
 3. In parallel, **PO design review** on recette (`/dev/demo` on both addresses; Docker Desktop must be running), feedback and
    decisions written into `docs/phase0/essai-2.md`. [PO] — the agent does not run it.
 4. Then the supervisor closes M2 (or opens follow-up tasks from the review).

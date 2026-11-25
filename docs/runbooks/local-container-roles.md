@@ -28,6 +28,7 @@ docker compose -f infra/local/compose.roles.yaml up -d --wait
 | `web-upwilling` | `APP_ROLE=web`, `SITE=upwilling` | http://upwilling.localhost:3001 |
 | `cms` | `APP_ROLE=cms` | http://admin.localhost:3002 |
 | `worker` | `APP_ROLE=worker` | no HTTP; `docker compose -f infra/local/compose.roles.yaml logs -f worker` |
+| `migrate` | `APP_ROLE=migrate` | one-off: runs pending Payload migrations, exits 0 or 1 (Task 3.1b). The deploy agent starts it (`run --rm migrate`); not part of this project |
 
 Expected: `http://careerboost.localhost:3001` and `http://upwilling.localhost:3001/admin` answer 404;
 `http://upwilling.localhost:3002` answers 404. Ports are bound to `127.0.0.1` only.

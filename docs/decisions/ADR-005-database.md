@@ -65,3 +65,10 @@ last, or when a concrete database is provided.
 ## Revisit when
 
 Task 3.1 (Payload compatibility with major 18), or when a new PostgreSQL major is released.
+
+## Update 2026-11-25 — Task 3.1b: the application's own role
+
+The server stacks now give Payload the role `app` (LOGIN, no superuser, no CREATEDB/CREATEROLE), owner of database
+`app` and its `public` schema, created and kept in sync by the one-off `db-setup` service on every deploy
+(password `APP_DB_PASSWORD`). The `postgres` superuser stays for administration, `db-setup` and backups only.
+`/api/ready` checks the database for real in the `cms` container (a count through Payload, 3 s timeout).
