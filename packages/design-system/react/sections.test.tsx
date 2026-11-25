@@ -7,14 +7,18 @@ import { ButtonLink } from "./actions.tsx";
 import {
   AudienceTracks,
   CatalogueGrid,
+  ContactCta,
+  DocumentList,
   FaqAccordion,
   FeatureBento,
   Hero,
   HeroPanel,
   LogoStrip,
+  NewsGrid,
   PainPoints,
   PricingTiers,
   ProcessSteps,
+  RichTextSection,
   StatsBand,
   Testimonials,
 } from "./sections.tsx";
@@ -358,6 +362,97 @@ describe("Testimonials", () => {
     expect(first.querySelector("blockquote")?.textContent).toBe("Citation 1");
     expect(first.querySelector("figcaption")?.textContent).toBe("Prénom A.Rôle");
     expect(screen.getByText("Témoignages fictifs.")).toBeDefined();
+    expect(await axeViolations(container)).toEqual([]);
+  });
+});
+
+describe("ContactCta", () => {
+  it("lists the next steps in order and lays out the app's form", async () => {
+    const { container } = render(
+      <ContactCta
+        id="contact"
+        title="Parlons-en"
+        stepsTitle="Et ensuite ?"
+        steps={[
+          { title: "Étape 1", text: "Texte 1" },
+          { title: "Étape 2", text: "Texte 2" },
+        ]}
+        form={
+          <form aria-label="Formulaire de contact">
+            <label htmlFor="email">E-mail</label>
+            <input id="email" type="email" />
+          </form>
+        }
+      />,
+    );
+    const region = screen.getByRole("region", { name: "Parlons-en" });
+    expect(region.id).toBe("contact");
+    const steps = within(region).getByRole("list", { name: "Et ensuite ?" });
+    expect(steps.tagName).toBe("OL");
+    expect(within(steps).getAllByRole("listitem")).toHaveLength(2);
+    expect(within(region).getByRole("form", { name: "Formulaire de contact" })).toBeDefined();
+    expect(await axeViolations(container)).toEqual([]);
+  });
+});
+
+describe("NewsGrid", () => {
+  it("shows each item with a machine-readable date and its title as the link", async () => {
+    const { container } = render(
+      <NewsGrid
+        title="Actualités"
+        items={[
+          {
+            title: "Actualité 1",
+            href: "/actualites/1",
+            date: "12 mars 2027",
+            dateTime: "2027-03-12",
+            tag: "Événement",
+          },
+        ]}
+        action={<a href="/actualites">Toutes les actualités</a>}
+      />,
+    );
+    const link = screen.getByRole("link", { name: "Actualité 1" });
+    expect(link.closest("h3")).not.toBeNull();
+    const item = link.closest("li") as HTMLElement;
+    expect(item.querySelector("time")?.getAttribute("dateTime")).toBe("2027-03-12");
+    expect(within(item).getByText("Événement")).toBeDefined();
+    expect(screen.getByRole("link", { name: "Toutes les actualités" })).toBeDefined();
+    expect(await axeViolations(container)).toEqual([]);
+  });
+});
+
+describe("DocumentList", () => {
+  it("names each download with its format and size", async () => {
+    const { container } = render(
+      <DocumentList
+        title="Documents"
+        items={[
+          { title: "Statuts", href: "/docs/statuts.pdf", format: "PDF", size: "240 Ko" },
+          { title: "Rapport", href: "/docs/rapport.pdf", format: "PDF" },
+        ]}
+      />,
+    );
+    expect(screen.getByRole("link", { name: "Statuts (PDF, 240 Ko)" }).getAttribute("href")).toBe(
+      "/docs/statuts.pdf",
+    );
+    expect(screen.getByRole("link", { name: "Rapport (PDF)" })).toBeDefined();
+    expect(await axeViolations(container)).toEqual([]);
+  });
+});
+
+describe("RichTextSection", () => {
+  it("renders the given text under the section title, in the styled container", async () => {
+    const { container } = render(
+      <RichTextSection title="Notre mission">
+        <p>Paragraphe</p>
+        <h3>Intertitre</h3>
+      </RichTextSection>,
+    );
+    const region = screen.getByRole("region", { name: "Notre mission" });
+    const body = region.querySelector("[data-rich-text]");
+    expect(body?.querySelector("p")?.textContent).toBe("Paragraphe");
+    expect(within(region).getByRole("heading", { level: 3, name: "Intertitre" })).toBeDefined();
     expect(await axeViolations(container)).toEqual([]);
   });
 });

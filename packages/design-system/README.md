@@ -68,25 +68,25 @@ Lint refuses what bypasses the tokens, in `apps/web` and in `react/` (shared rul
 colors, font sizes and spacing in CSS (`stylelint.config.mjs`). An exception needs a disable comment that
 says why (`-- <reason>`).
 
-## React components (Tasks 2.2a–2.2c, 2.4b, 2.5a, 2.5b)
+## React components (Tasks 2.2a–2.2c, 2.4b, 2.5a–2.5c)
 
 `react/`, imported as `@upwilling/design-system/react`. Server Components (no `"use client"`) except
 `SubmitButton`, `Dialog` and the header's `SiteMenu`, styled with token classes only; every visible or announced text comes from
 props (French copy lives in the application). Preview: `/dev/components` on any site host, locally and
 on recette.
 
-| Group      | Components                                                                                                                                                                        |
-| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Layout     | `Container` (token width + page gutter), `Section` (rhythm, background + matching text color), `Stack`, `Grid`                                                                    |
-| Typography | `Heading` (level ≠ size), `Text`, `Eyebrow`                                                                                                                                       |
-| Actions    | `Button` (primary, secondary, ghost, link; sm/md/lg; icon; loading), `ButtonLink`, `Link`                                                                                         |
-| Content    | `Icon` (Lucide), `Badge`, `Chip`, `AnnouncementPill`, `Card` + `CardMedia/Header/Body/Footer`                                                                                     |
-| Forms      | `Field` (+ `Input`, `Textarea`, `Select`, `FileInput`), `Checkbox`, `Fieldset`, `RadioGroup`, `ChoiceCards`                                                                       |
-| Submission | `SubmitButton` (Client Component: pending state of the enclosing `<form action={…}>`)                                                                                             |
-| Feedback   | `Spinner` (labelled status or decorative), `Skeleton`, `Alert`, `EmptyState`                                                                                                      |
-| Disclosure | `Accordion` (native `<details>`), `Tabs` (Radix), `Dialog` (Client Component: native modal `<dialog>`)                                                                            |
-| Navigation | `Breadcrumbs`, `SiteHeader` (mobile menu: Client Component `SiteMenu`), `SiteFooter`                                                                                              |
-| Sections   | `Hero` (+ `HeroPanel`), `StatsBand`, `PainPoints`, `AudienceTracks`, `FeatureBento`, `ProcessSteps`, `LogoStrip`, `CatalogueGrid`, `PricingTiers`, `FaqAccordion`, `Testimonials` |
+| Group      | Components                                                                                                                                                                                                                                     |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Layout     | `Container` (token width + page gutter), `Section` (rhythm, background + matching text color), `Stack`, `Grid`                                                                                                                                 |
+| Typography | `Heading` (level ≠ size), `Text`, `Eyebrow`                                                                                                                                                                                                    |
+| Actions    | `Button` (primary, secondary, ghost, link; sm/md/lg; icon; loading), `ButtonLink`, `Link`                                                                                                                                                      |
+| Content    | `Icon` (Lucide), `Badge`, `Chip`, `AnnouncementPill`, `Card` + `CardMedia/Header/Body/Footer`                                                                                                                                                  |
+| Forms      | `Field` (+ `Input`, `Textarea`, `Select`, `FileInput`), `Checkbox`, `Fieldset`, `RadioGroup`, `ChoiceCards`                                                                                                                                    |
+| Submission | `SubmitButton` (Client Component: pending state of the enclosing `<form action={…}>`)                                                                                                                                                          |
+| Feedback   | `Spinner` (labelled status or decorative), `Skeleton`, `Alert`, `EmptyState`                                                                                                                                                                   |
+| Disclosure | `Accordion` (native `<details>`), `Tabs` (Radix), `Dialog` (Client Component: native modal `<dialog>`)                                                                                                                                         |
+| Navigation | `Breadcrumbs`, `SiteHeader` (mobile menu: Client Component `SiteMenu`), `SiteFooter`                                                                                                                                                           |
+| Sections   | `Hero` (+ `HeroPanel`), `StatsBand`, `PainPoints`, `AudienceTracks`, `FeatureBento`, `ProcessSteps`, `LogoStrip`, `CatalogueGrid`, `PricingTiers`, `FaqAccordion`, `Testimonials`, `ContactCta`, `NewsGrid`, `DocumentList`, `RichTextSection` |
 
 Conventions:
 
@@ -150,6 +150,13 @@ Conventions:
   `PricingTiers` marks the highlighted tier with `highlightLabel` (words, not color alone).
   `FaqAccordion` is the `Accordion` (native `<details>`) beside its title from `lg`. `Testimonials` are
   `figure`/`blockquote`/`figcaption`; placeholder quotes say they are fictional in `note`.
+- Section patterns, last part (Task 2.5c): `ContactCta` lays out the app's own form (`form` slot: the
+  section never owns a form action) beside "what happens next" as an ordered list named by
+  `stepsTitle`. `NewsGrid` cards carry a `<time dateTime>`, an optional tag and image; the title is the
+  link. `DocumentList` puts the format and size in each link's name ("Statuts (PDF, 240 Ko)"), so
+  nobody downloads by surprise. `RichTextSection` takes plain HTML elements (the CMS's rich text) and
+  styles them from `css/base.css` (`[data-rich-text]`), at reading width, for light backgrounds. The
+  app's `/dev/demo` (local and recette) composes the sections into one demo home page per brand.
 - Header and footer links are not underlined (lists inside a `nav` are recognisable as links);
   they underline on hover. Text links elsewhere keep `Link`, always underlined.
 - `Breadcrumbs` takes the pages above (`items`) and the `current` page's title, which is text with

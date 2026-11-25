@@ -94,6 +94,87 @@ html:has([data-site-header]) {
 }
 
 /*
+ * RichTextSection (Task 2.5c): running text from the CMS has no classes, so its elements are styled
+ * here, with tokens only, for light backgrounds (surface, muted).
+ */
+[data-rich-text] {
+  font-size: var(--uw-font-size-md);
+  line-height: var(--uw-line-height-body);
+}
+
+[data-rich-text] > * + * {
+  margin-top: var(--uw-space-4);
+}
+
+[data-rich-text] > :is(h2, h3, h4) + * {
+  margin-top: var(--uw-space-2);
+}
+
+[data-rich-text] > :is(h2, h3, h4):not(:first-child) {
+  margin-top: var(--uw-space-8);
+}
+
+[data-rich-text] :is(h2, h3, h4) {
+  font-family: var(--uw-font-family-display);
+  font-weight: var(--uw-font-weight-bold);
+  line-height: var(--uw-line-height-tight);
+  text-wrap: balance;
+}
+
+[data-rich-text] h2 {
+  font-size: var(--uw-font-size-2xl);
+}
+
+[data-rich-text] h3 {
+  font-size: var(--uw-font-size-xl);
+}
+
+[data-rich-text] h4 {
+  font-size: var(--uw-font-size-lg);
+}
+
+[data-rich-text] :is(ul, ol) {
+  padding-inline-start: var(--uw-space-6);
+}
+
+[data-rich-text] ul {
+  list-style: disc;
+}
+
+[data-rich-text] ol {
+  list-style: decimal;
+}
+
+[data-rich-text] li + li {
+  margin-top: var(--uw-space-2);
+}
+
+[data-rich-text] a {
+  color: var(--uw-color-primary);
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+}
+
+[data-rich-text] a:hover {
+  color: var(--uw-color-primary-hover);
+}
+
+[data-rich-text] a:focus-visible {
+  outline: var(--uw-focus-ring-width) solid var(--uw-color-focus-ring);
+  outline-offset: var(--uw-focus-ring-offset);
+}
+
+[data-rich-text] blockquote {
+  border-inline-start: var(--uw-border-width-thick) solid var(--uw-color-primary);
+  padding-inline-start: var(--uw-space-4);
+  color: var(--uw-color-text-muted);
+}
+
+[data-rich-text] strong {
+  font-weight: var(--uw-font-weight-bold);
+}
+
+/*
  * While a modal dialog is open (Dialog, Task 2.2c), the page behind it does not scroll. The browser
  * already makes that page inert; this only stops the wheel and touch scrolling from moving it.
  */
