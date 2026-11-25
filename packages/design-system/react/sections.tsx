@@ -1,16 +1,19 @@
-import { Check, type LucideIcon } from "lucide-react";
+import { Check, type LucideIcon, Quote } from "lucide-react";
 import { type ReactNode, useId } from "react";
 
-import { Card, CardBody, CardFooter, CardHeader } from "./content.tsx";
+import { Anchor } from "./actions.tsx";
+import { Badge, Card, CardBody, CardFooter, CardHeader, Chip } from "./content.tsx";
 import { cx } from "./cx.ts";
+import { Accordion, Tabs } from "./disclosure.tsx";
 import { Icon } from "./icon.tsx";
 import { Container, Section } from "./layout.tsx";
 import { Eyebrow, Heading, Text } from "./typography.tsx";
 
-// Section patterns, static part (Task 2.5a, 04_DESIGN_SYSTEM.md §1 and §4). Each one is a full-width
-// `Section` labelled by its own title. They render on the server with no browser JavaScript, take
-// every word from props (French copy lives in the CMS or the app, never here) and fetch nothing: the
-// CMS blocks of Milestone 5 map onto these props.
+// Section patterns (Tasks 2.5a and 2.5b, 04_DESIGN_SYSTEM.md §1 and §4). Each one is a full-width
+// `Section` labelled by its own title. They render on the server, take every word from props (French
+// copy lives in the CMS or the app, never here) and fetch nothing: the CMS blocks of Milestone 5 map
+// onto these props. Only `CatalogueGrid`'s tabs (Radix) run in the browser; `LogoStrip` moves with
+// CSS alone (css/base.css).
 
 /** The page band's background; text colors follow it (see `Section`). */
 export type SectionBackground = "surface" | "muted" | "primary";
@@ -584,6 +587,439 @@ export function ProcessSteps({
             </li>
           ))}
         </ol>
+      </Container>
+    </Section>
+  );
+}
+
+// ---------------------------------------------------------------------------------------------------
+// Logo strip
+
+export interface LogoStripItem {
+  readonly label: string;
+  /** A decorative Lucide icon before the label. Brand logos need a license first (assets/LICENSES.md). */
+  readonly icon?: LucideIcon;
+}
+
+export interface LogoStripProps extends SectionPatternProps {
+  /** Names the section; hidden visually with `hideTitle`. */
+  readonly title: string;
+  readonly hideTitle?: boolean;
+  /** Technologies or partners, as text chips. */
+  readonly items: readonly LogoStripItem[];
+  /** Label of the checkbox that stops the scrolling ("Mettre en pause le défilement"). */
+  readonly pauseLabel: string;
+}
+
+/**
+ * A strip of technologies that scrolls sideways, with CSS only (`css/base.css`, `[data-marquee]`).
+ * It stops on hover, on keyboard focus and with its own pause checkbox (WCAG 2.2.2: moving content
+ * can be stopped). Under reduced motion it does not move: one list that wraps onto several lines,
+ * and no pause control. The second copy of the list, needed for a seamless loop, is hidden from
+ * assistive technology and shown only while the strip moves.
+ */
+export function LogoStrip({
+  id,
+  background = "surface",
+  className,
+  title,
+  hideTitle = false,
+  items,
+  pauseLabel,
+}: LogoStripProps) {
+  const titleId = useId();
+  const list = (copy: boolean) => (
+    <ul
+      {...(copy ? { "aria-hidden": true, "data-marquee-copy": "" } : {})}
+      className="flex flex-wrap items-center justify-center gap-4 pe-4"
+    >
+      {items.map((item) => (
+        <li
+          key={item.label}
+          className="inline-flex items-center gap-2 rounded-full border-thin border-border bg-surface-raised px-4 py-2 font-semibold leading-tight text-text whitespace-nowrap"
+        >
+          {item.icon !== undefined && <Icon icon={item.icon} size="md" className="text-primary" />}
+          {item.label}
+        </li>
+      ))}
+    </ul>
+  );
+  return (
+    <Section
+      id={id}
+      spacing="sm"
+      background={background}
+      aria-labelledby={titleId}
+      className={className}
+    >
+      <Container data-marquee="" className="flex flex-col gap-6">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <SectionIntro
+            titleId={titleId}
+            title={title}
+            background={background}
+            hideTitle={hideTitle}
+          />
+          <label
+            data-marquee-pause=""
+            className="inline-flex cursor-pointer items-center gap-2 rounded-full border-thin border-border-strong bg-surface px-3 py-1 text-sm text-text has-focus-visible:focus-ring"
+          >
+            <input type="checkbox" className="size-4 accent-primary" />
+            {pauseLabel}
+          </label>
+        </div>
+        <div data-marquee-viewport="">
+          <div data-marquee-track="" className="flex">
+            {list(false)}
+            {list(true)}
+          </div>
+        </div>
+      </Container>
+    </Section>
+  );
+}
+
+// ---------------------------------------------------------------------------------------------------
+// Catalogue grid
+
+export interface CatalogueItem {
+  readonly title: string;
+  /** The training's page. The title is the link. */
+  readonly href: string;
+  readonly summary?: string;
+  /** A level or status label ("Débutant", "Complet"), shown as a badge. */
+  readonly badge?: string;
+  /** Short facts: format, duration, number of projects ("3 jours", "Présentiel"). */
+  readonly facts?: readonly string[];
+  /** Technologies covered, as chips. */
+  readonly chips?: readonly string[];
+  /** The price as it should read ("1 200 € HT", "Sur devis"). */
+  readonly price?: string;
+}
+
+export interface CatalogueCategory {
+  /** Short id-like key (letters, digits, hyphens), used by the tabs. */
+  readonly value: string;
+  readonly label: string;
+  readonly items: readonly CatalogueItem[];
+}
+
+export interface CatalogueGridProps extends SectionPatternProps {
+  readonly eyebrow?: string | undefined;
+  readonly title: ReactNode;
+  readonly lead?: ReactNode;
+  /** Names the tab list ("Domaines de formation"). */
+  readonly tabsLabel: string;
+  /** One tab per category; with a single category, no tabs. An "all" category is up to the caller. */
+  readonly categories: readonly CatalogueCategory[];
+}
+
+/** The catalogue: category tabs over a grid of training cards (AC-01, AC-02). */
+export function CatalogueGrid({
+  id,
+  background = "surface",
+  className,
+  eyebrow,
+  title,
+  lead,
+  tabsLabel,
+  categories,
+}: CatalogueGridProps) {
+  const titleId = useId();
+  const grid = (items: readonly CatalogueItem[]) => (
+    <ul className="grid gap-gap-md md:grid-cols-2 lg:grid-cols-3">
+      {items.map((item) => (
+        <Card as="li" key={item.href}>
+          <CardHeader>
+            {item.badge !== undefined && <Badge>{item.badge}</Badge>}
+            <Heading level={3} size="xl">
+              <Anchor
+                href={item.href}
+                className="rounded-sm hover:text-primary hover:underline hover:underline-offset-4 focus-visible:focus-ring"
+              >
+                {item.title}
+              </Anchor>
+            </Heading>
+          </CardHeader>
+          <CardBody className="flex flex-col gap-4">
+            {item.summary !== undefined && <Text tone="muted">{item.summary}</Text>}
+            {item.chips !== undefined && item.chips.length > 0 && (
+              <ul className="flex flex-wrap gap-2">
+                {item.chips.map((chip) => (
+                  <li key={chip}>
+                    <Chip>{chip}</Chip>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardBody>
+          {(item.facts !== undefined || item.price !== undefined) && (
+            <CardFooter className="justify-between border-t-thin border-border pt-4">
+              {item.facts !== undefined && (
+                <ul className="flex flex-wrap gap-x-3 gap-y-1 text-sm text-text-muted">
+                  {item.facts.map((fact) => (
+                    <li key={fact}>{fact}</li>
+                  ))}
+                </ul>
+              )}
+              {item.price !== undefined && (
+                <Text as="span" weight="bold">
+                  {item.price}
+                </Text>
+              )}
+            </CardFooter>
+          )}
+        </Card>
+      ))}
+    </ul>
+  );
+  const [only] = categories;
+  return (
+    <Section id={id} background={background} aria-labelledby={titleId} className={className}>
+      <Container className="flex flex-col gap-gap-lg">
+        <SectionIntro
+          titleId={titleId}
+          eyebrow={eyebrow}
+          title={title}
+          lead={lead}
+          background={background}
+        />
+        {categories.length === 1 && only !== undefined ? (
+          grid(only.items)
+        ) : (
+          <Tabs
+            label={tabsLabel}
+            items={categories.map((category) => ({
+              value: category.value,
+              label: category.label,
+              content: grid(category.items),
+            }))}
+          />
+        )}
+      </Container>
+    </Section>
+  );
+}
+
+// ---------------------------------------------------------------------------------------------------
+// Pricing tiers
+
+export interface PricingTier {
+  readonly name: string;
+  /** The price as it should read ("490 €", "Sur devis", "30 €"). */
+  readonly price: string;
+  /** After the price ("par personne", "par an"). */
+  readonly period?: string;
+  readonly description?: string;
+  readonly features: readonly string[];
+  /** A `ButtonLink`: primary on the highlighted tier, secondary on the others. */
+  readonly action?: ReactNode;
+  /** The recommended tier: framed with the primary color, with `highlightLabel` above its name. */
+  readonly highlighted?: boolean;
+}
+
+export interface PricingTiersProps extends SectionPatternProps {
+  readonly eyebrow?: string | undefined;
+  readonly title: ReactNode;
+  readonly lead?: ReactNode;
+  /** Two to four tiers, one highlighted at most. */
+  readonly tiers: readonly PricingTier[];
+  /** The words that mark the highlighted tier ("Le plus choisi"), so it is not color alone. */
+  readonly highlightLabel?: string | undefined;
+  /** Under the tiers: taxes, conditions, or "Tarifs d’exemple". */
+  readonly note?: string | undefined;
+}
+
+/** Formats or membership tiers side by side, one of them highlighted. Default background `muted`. */
+export function PricingTiers({
+  id,
+  background = "muted",
+  className,
+  eyebrow,
+  title,
+  lead,
+  tiers,
+  highlightLabel,
+  note,
+}: PricingTiersProps) {
+  const titleId = useId();
+  return (
+    <Section id={id} background={background} aria-labelledby={titleId} className={className}>
+      <Container className="flex flex-col gap-gap-lg">
+        <SectionIntro
+          titleId={titleId}
+          eyebrow={eyebrow}
+          title={title}
+          lead={lead}
+          background={background}
+        />
+        <ul
+          className={cx(
+            "grid items-stretch gap-gap-md md:grid-cols-2",
+            tiers.length >= 4 ? "lg:grid-cols-4" : tiers.length === 3 && "lg:grid-cols-3",
+          )}
+        >
+          {tiers.map((tier) => (
+            <li
+              key={tier.name}
+              className={cx(
+                "flex flex-col gap-6 rounded-lg bg-surface-raised p-6 text-text",
+                tier.highlighted === true
+                  ? "border-medium border-primary shadow-md"
+                  : "border-thin border-border shadow-sm",
+              )}
+            >
+              <div className="flex flex-col items-start gap-2">
+                {tier.highlighted === true && highlightLabel !== undefined && (
+                  <Badge tone="primary">{highlightLabel}</Badge>
+                )}
+                <Heading level={3} size="xl">
+                  {tier.name}
+                </Heading>
+                {tier.description !== undefined && <Text tone="muted">{tier.description}</Text>}
+              </div>
+              <p className="flex flex-wrap items-baseline gap-x-2">
+                <span className="font-display text-4xl font-bold leading-tight">{tier.price}</span>
+                {tier.period !== undefined && (
+                  <span className="text-sm text-text-muted">{tier.period}</span>
+                )}
+              </p>
+              <CheckList items={tier.features} className="flex-1" />
+              {tier.action !== undefined && <div className="flex">{tier.action}</div>}
+            </li>
+          ))}
+        </ul>
+        {note !== undefined && (
+          <Text size="sm" tone={background === "primary" ? "inherit" : "muted"}>
+            {note}
+          </Text>
+        )}
+      </Container>
+    </Section>
+  );
+}
+
+// ---------------------------------------------------------------------------------------------------
+// FAQ accordion
+
+export interface FaqItem {
+  readonly question: string;
+  readonly answer: ReactNode;
+}
+
+export interface FaqAccordionProps extends SectionPatternProps {
+  readonly eyebrow?: string | undefined;
+  readonly title: ReactNode;
+  readonly lead?: ReactNode;
+  readonly items: readonly FaqItem[];
+  /** Opening a question closes the others. Default false. */
+  readonly exclusive?: boolean;
+}
+
+/**
+ * Questions and answers (native `<details>`, see `Accordion`): every answer is in the HTML, open or
+ * not. Title on the left and questions on the right from `lg`.
+ */
+export function FaqAccordion({
+  id,
+  background = "surface",
+  className,
+  eyebrow,
+  title,
+  lead,
+  items,
+  exclusive = false,
+}: FaqAccordionProps) {
+  const titleId = useId();
+  return (
+    <Section id={id} background={background} aria-labelledby={titleId} className={className}>
+      <Container className="grid gap-gap-lg lg:grid-cols-3">
+        <SectionIntro
+          titleId={titleId}
+          eyebrow={eyebrow}
+          title={title}
+          lead={lead}
+          background={background}
+        />
+        <Accordion
+          className="lg:col-span-2"
+          exclusive={exclusive}
+          items={items.map((item, index) => ({
+            value: `q${index}`,
+            title: item.question,
+            content: item.answer,
+          }))}
+        />
+      </Container>
+    </Section>
+  );
+}
+
+// ---------------------------------------------------------------------------------------------------
+// Testimonials
+
+export interface Testimonial {
+  readonly quote: string;
+  /** Who said it, as they agreed to be named ("Prénom N."). */
+  readonly name: string;
+  /** Their role or context ("Stagiaire, session de mars"). */
+  readonly role?: string;
+}
+
+export interface TestimonialsProps extends SectionPatternProps {
+  readonly eyebrow?: string | undefined;
+  readonly title: ReactNode;
+  readonly lead?: ReactNode;
+  readonly items: readonly Testimonial[];
+  /** Under the quotes: source, consent, or "Témoignages fictifs" for placeholders. */
+  readonly note?: string | undefined;
+}
+
+/** Quotes from learners or members (AC-16), as figures with their author. */
+export function Testimonials({
+  id,
+  background = "surface",
+  className,
+  eyebrow,
+  title,
+  lead,
+  items,
+  note,
+}: TestimonialsProps) {
+  const titleId = useId();
+  return (
+    <Section id={id} background={background} aria-labelledby={titleId} className={className}>
+      <Container className="flex flex-col gap-gap-lg">
+        <SectionIntro
+          titleId={titleId}
+          eyebrow={eyebrow}
+          title={title}
+          lead={lead}
+          background={background}
+        />
+        <ul className="grid gap-gap-md md:grid-cols-2 lg:grid-cols-3">
+          {items.map((item) => (
+            <li key={`${item.name}-${item.quote}`}>
+              <figure className="flex h-full flex-col gap-4 rounded-lg border-thin border-border bg-surface-raised p-6 text-text shadow-sm">
+                <Icon icon={Quote} size="lg" className="text-primary" />
+                <blockquote className="flex-1 text-lg leading-body">
+                  <p>{item.quote}</p>
+                </blockquote>
+                <figcaption className="flex flex-col">
+                  <span className="font-semibold">{item.name}</span>
+                  {item.role !== undefined && (
+                    <span className="text-sm text-text-muted">{item.role}</span>
+                  )}
+                </figcaption>
+              </figure>
+            </li>
+          ))}
+        </ul>
+        {note !== undefined && (
+          <Text size="sm" tone={background === "primary" ? "inherit" : "muted"}>
+            {note}
+          </Text>
+        )}
       </Container>
     </Section>
   );
