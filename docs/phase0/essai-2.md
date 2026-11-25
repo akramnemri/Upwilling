@@ -76,8 +76,8 @@ committed baselines.
 default, 0.2, chosen to absorb anti-aliasing. Career Boost's primary moved by 0.136 on that scale (hover 0.101, focus
 ring 0.099): under the tolerance, so proof B passed, and in proof A the pale card borders hid the new corners in most
 stories. The tolerance is now **0.05** (`packages/design-system/playwright.config.ts`). The screenshots are always taken
-in the same pinned container, so the stricter value causes no false failures: CI on develop's code passed with it
-(run 45653267108, PR #38) before any proof ran with it.
+in the same pinned container, so the stricter value causes no false failures: CI on develop's code, with only this
+change, passed (run 45653267108, PR #38).
 
 **Logo.** Logos are images per brand, not tokens: a token change cannot affect them. Each site's own logo shows in the
 header of `/dev/demo` (academy: mark and name; Career Boost: its logo).
