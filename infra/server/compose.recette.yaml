@@ -39,11 +39,55 @@ services:
       DEPLOY_ENV: recette
       LOG_LEVEL: ${LOG_LEVEL:-info}
       APP_ROLE: cms
+      # Payload (Task 3.1b): role `app` (db-setup), never the superuser; no password in the URL.
+      DATABASE_URL: postgres://app@postgres:5432/app
+      PGPASSWORD: ${APP_DB_PASSWORD:?set APP_DB_PASSWORD in .env}
+      PAYLOAD_SECRET: ${PAYLOAD_SECRET:?set PAYLOAD_SECRET in .env}
+      # Uploads stay on the media volume until R2 exists (ADR-008 exception for recette, Task 3.1b).
+      MEDIA_DIR: /data/media
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - media:/data/media
     mem_limit: 320m
     networks:
       default: {}
       edge:
         aliases: [recette-cms]
+
+  # One-off containers, started by the deploy agent only (`docker compose run --rm <name>`), in this order:
+  # db-setup (role `app`), the pre-migration backup, migrate, then `up` switches the release (ADR-024).
+  db-setup:
+    extends: { file: compose.base.yaml, service: db-setup }
+    profiles: [deploy-steps]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      default: {}
+
+  migrate:
+    extends: { file: compose.base.yaml, service: app }
+    profiles: [deploy-steps]
+    restart: "no"
+    environment:
+      DEPLOY_ENV: recette
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      APP_ROLE: migrate
+      # Payload (Task 3.1b): role `app` (db-setup), never the superuser; no password in the URL.
+      DATABASE_URL: postgres://app@postgres:5432/app
+      PGPASSWORD: ${APP_DB_PASSWORD:?set APP_DB_PASSWORD in .env}
+      PAYLOAD_SECRET: ${PAYLOAD_SECRET:?set PAYLOAD_SECRET in .env}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # Runs to completion: no liveness to check.
+    healthcheck:
+      disable: true
+    mem_limit: 384m
+    networks:
+      default: {}
 
   worker:
     extends: { file: compose.base.yaml, service: app }
@@ -75,3 +119,5 @@ networks:
 
 volumes:
   postgres-data: {}
+  # Uploaded media (synthetic only) until R2 exists. Not backed up: recette data is disposable.
+  media: {}

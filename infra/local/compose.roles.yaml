@@ -42,6 +42,10 @@ services:
       DEPLOY_ENV: local
       LOG_LEVEL: info
       APP_ROLE: cms
+      # Required by the cms role (Task 3.1b). This project checks roles and hosts, not the database: nothing
+      # listens at this address, so only the admin and the readiness database check would fail.
+      DATABASE_URL: postgres://app@database.invalid:5432/app
+      PAYLOAD_SECRET: roles-smoke-test-only-not-used-anywhere-else
     ports:
       - "127.0.0.1:3002:3000"
     mem_limit: 512m

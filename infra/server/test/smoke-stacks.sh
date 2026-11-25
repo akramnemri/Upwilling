@@ -94,11 +94,27 @@ cat > "$WORK_DIR/stack.env" <<EOF
 APP_IMAGE=upwilling-web:local
 LOG_LEVEL=info
 POSTGRES_PASSWORD=$(openssl rand -hex 32)
+APP_DB_PASSWORD=$(openssl rand -hex 32)
+PAYLOAD_SECRET=$(openssl rand -hex 32)
+# Production's cms requires R2 (ADR-008); nothing is uploaded here, so a placeholder bucket is enough.
+R2_ENDPOINT=https://r2.smoke.invalid
+R2_ACCESS_KEY_ID=smoke-test-only
+R2_SECRET_ACCESS_KEY=smoke-test-only
+R2_PUBLIC_BUCKET=smoke-test-only
 EDGE_NETWORK_PROD=$NETWORK_PROD
 EDGE_NETWORK_RECETTE=$NETWORK_RECETTE
 EOF
 for network in "$NETWORK_PROD" "$NETWORK_RECETTE"; do
   docker network inspect "$network" >/dev/null 2>&1 || docker network create --internal "$network" >/dev/null
+done
+
+echo "== Database steps of a deploy (Task 3.1b): role app, then the image's migrations"
+for stack in prod recette; do
+  if ! "$stack" up -d --wait --wait-timeout 180 postgres || ! "$stack" run --rm -T db-setup ||
+    ! "$stack" run --rm -T migrate; then
+    "$stack" logs --tail 50
+    exit 1
+  fi
 done
 
 echo "== Starting the edge, production and recette projects (waits until Docker reports them healthy)"
@@ -231,6 +247,32 @@ else
   pass "Caddy cannot reach the databases"
 fi
 if recette exec -T postgres pg_isready -U postgres -d app >/dev/null; then pass "recette postgres accepts connections on its own network"; else fail "recette postgres not ready"; fi
+
+echo "== Payload on recette (Task 3.1b)"
+expect_status 200 recette-admin.upwilling.fr /admin/login "Payload's login page" "${AUTH[@]}"
+expect_body recette-admin.upwilling.fr /api/ready '"database":"ok"' "${AUTH[@]}"
+expect_body recette.upwilling.fr /api/ready '"database":"not_configured"' "${AUTH[@]}"
+app_is_superuser=$(recette exec -T postgres psql -U postgres -d app -Atc \
+  "select rolsuper from pg_roles where rolname = 'app'" | tr -d '\r')
+if [[ $app_is_superuser == "f" ]]; then pass "role app exists and is not a superuser"; else fail "role app: superuser='$app_is_superuser'"; fi
+foreign_tables=$(recette exec -T postgres psql -U postgres -d app -Atc \
+  "select count(*) from pg_tables where schemaname = 'public' and tableowner <> 'app'" | tr -d '\r')
+if [[ $foreign_tables == "0" ]]; then pass "every table belongs to app"; else fail "$foreign_tables table(s) not owned by app"; fi
+if recette run --rm -T db-setup >/dev/null 2>&1 && recette run --rm -T migrate >/dev/null 2>&1; then
+  pass "db-setup and migrate run again without changes"
+else
+  fail "db-setup or migrate failed on a second run"
+fi
+if recette exec -T cms sh -c 'touch /data/media/.write-test && rm /data/media/.write-test'; then
+  pass "recette cms can write its media volume"
+else
+  fail "recette cms cannot write /data/media"
+fi
+# Readiness follows the database (Task 0.4's deferred check): stopped -> 503, back -> 200.
+recette stop postgres >/dev/null 2>&1
+expect_status 503 recette-admin.upwilling.fr /api/ready "readiness with the database stopped" "${AUTH[@]}"
+recette up -d --wait --wait-timeout 120 postgres >/dev/null 2>&1
+expect_status 200 recette-admin.upwilling.fr /api/ready "readiness with the database back" "${AUTH[@]}"
 
 echo "== Container hardening"
 caddy_uid=$(edge exec -T caddy id -u | tr -d '\r')

@@ -4,10 +4,15 @@
 # DEPLOY_STACKS, it reads the image tag of the same name (`recette`, `production`), which only the promote
 # workflow moves, and when that tag points to a new commit:
 #   1. fetches the stack's compose files at that commit, so infrastructure changes ship with the code;
-#   2. starts the stack on the image's exact digest and waits until every container is healthy;
-#   3. checks /api/ready and /api/version (must be that commit) inside the stack;
-#   4. on any failure, starts the last good release again and remembers the failed commit, so it does not
+#   2. prepares the database (Task 3.1b): starts PostgreSQL, runs `db-setup` (the non-superuser role `app`),
+#      takes a backup, then runs the new image's migrations in a one-off `migrate` container. Until here the
+#      running release keeps serving; a failure stops the deploy without switching anything;
+#   3. starts the stack on the image's exact digest and waits until every container is healthy;
+#   4. checks /api/ready and /api/version (must be that commit) inside the stack;
+#   5. on any failure, starts the last good release again and remembers the failed commit, so it does not
 #      retry it every minute. Moving the tag to another commit (a fix, or rollback.yml) is the way out.
+#      Migrations are never rolled back: schema changes stay compatible with the previous release
+#      (expand -> migrate data -> contract, 03_GIT_TESTING_PIPELINE.md §10).
 # Runbook: docs/runbooks/local-server.md. Test: infra/server/test/smoke-deploy.sh
 set -eu
 
@@ -20,6 +25,10 @@ COMPOSE_SOURCE_URL=${COMPOSE_SOURCE_URL:-https://raw.githubusercontent.com/akram
 COMPOSE_SOURCE_DIR=${COMPOSE_SOURCE_DIR:-}
 PROJECT_PREFIX=${PROJECT_PREFIX:-}
 SERVER_DIR=${SERVER_DIR:-/srv}
+# Running backup container (compose.backup.yaml) of each stack, for the pre-migration backup. Production never
+# migrates without one (03 §10); recette goes on without it, with a log line.
+BACKUP_CONTAINER_RECETTE=${BACKUP_CONTAINER_RECETTE:-}
+BACKUP_CONTAINER_PRODUCTION=${BACKUP_CONTAINER_PRODUCTION:-}
 STATE_DIR=${STATE_DIR:-/state}
 HEARTBEAT=/tmp/heartbeat
 
@@ -110,9 +119,54 @@ http_get() {
   ' "$3" "$(stack_host "$1")" 2>&1 | tr -d '\r'
 }
 
+# backup_before_migrations <stack>: one new backup of the stack's databases, now, by its backup container.
+backup_before_migrations() {
+  case $1 in
+    recette) backup_container=$BACKUP_CONTAINER_RECETTE ;;
+    production) backup_container=$BACKUP_CONTAINER_PRODUCTION ;;
+  esac
+  if [ -z "$backup_container" ]; then
+    if [ "$1" = production ]; then
+      log "$1" "no BACKUP_CONTAINER_PRODUCTION: production never migrates without a backup"
+      return 1
+    fi
+    log "$1" "no backup container configured: migrating without a pre-migration backup (recette only)"
+    return 0
+  fi
+  # A backup container of another stack would back up the wrong database.
+  backup_stack=$(docker exec "$backup_container" printenv BACKUP_STACK 2>/dev/null || true)
+  if [ "$backup_stack" != "$1" ]; then
+    log "$1" "backup container $backup_container is not running or backs up '$backup_stack', not $1"
+    return 1
+  fi
+  log "$1" "pre-migration backup"
+  if ! docker exec "$backup_container" bash /usr/local/lib/upwilling-backup/backup.sh once; then
+    log "$1" "pre-migration backup failed"
+    return 1
+  fi
+}
+
+# prepare_database <stack> <release dir>: database up, role `app`, backup, migrations (new deploys only).
+# Nothing here touches the running app containers: on failure the current release keeps serving.
+prepare_database() {
+  if ! stack_compose "$1" "$2" up -d --wait --wait-timeout "$WAIT_TIMEOUT" postgres; then
+    log "$1" "database did not become healthy"
+    return 1
+  fi
+  if ! stack_compose "$1" "$2" run --rm -T db-setup; then
+    log "$1" "database role setup (db-setup) failed"
+    return 1
+  fi
+  backup_before_migrations "$1" || return 1
+  log "$1" "migrations"
+  if ! stack_compose "$1" "$2" run --rm -T migrate; then
+    log "$1" "migrations failed: nothing was switched"
+    return 1
+  fi
+}
+
 # start_release <stack> <release dir> <commit>: up, wait for health, check readiness and version.
 start_release() {
-  log "$1" "migrations: none yet (placeholder until Task 3.1)"
   if ! stack_compose "$1" "$2" up -d --wait --wait-timeout "$WAIT_TIMEOUT" --remove-orphans; then
     log "$1" "containers did not become healthy"
     return 1
@@ -169,7 +223,8 @@ deploy_stack() {
   rm -rf "$release"
   mkdir -p "$release"
   printf 'APP_IMAGE=%s\n' "$image" >"$release/image.env"
-  if fetch_compose "$sha" "$release" "$(stack_file "$stack")" && start_release "$stack" "$release" "$sha"; then
+  if fetch_compose "$sha" "$release" "$(stack_file "$stack")" && prepare_database "$stack" "$release" &&
+    start_release "$stack" "$release" "$sha"; then
     [ -n "$current" ] && echo "$current" >"$STATE_DIR/$stack/previous"
     echo "$sha" >"$STATE_DIR/$stack/current"
     rm -f "$STATE_DIR/$stack/failed"

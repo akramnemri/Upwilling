@@ -58,10 +58,19 @@ apply_backup() {
   trap drop_scratch_database EXIT
   SCRATCH_DATABASE="$2_incoming"
   drop_scratch_database
-  admin_sql "CREATE DATABASE $SCRATCH_DATABASE"
-  # --no-owner: the objects belong to whoever restores. Task 3.1 revisits this with the app's own role.
+  # --no-owner: the dump's owners are ignored. When the application's role `app` exists (db-setup, Task 3.1b),
+  # the database and every restored object belong to it, as after a normal deploy; otherwise to the superuser.
+  owner_options=()
+  app_role=$(psql --dbname postgres --no-psqlrc --tuples-only --no-align \
+    --command "SELECT 1 FROM pg_roles WHERE rolname = 'app'")
+  if [[ $app_role == 1 ]]; then
+    admin_sql "CREATE DATABASE $SCRATCH_DATABASE OWNER app"
+    owner_options=(--role=app)
+  else
+    admin_sql "CREATE DATABASE $SCRATCH_DATABASE"
+  fi
   decrypt_backup "$1" |
-    pg_restore --dbname "$SCRATCH_DATABASE" --no-owner --no-privileges --single-transaction
+    pg_restore --dbname "$SCRATCH_DATABASE" --no-owner --no-privileges --single-transaction "${owner_options[@]}"
   log "replacing database $2"
   admin_sql "DROP DATABASE IF EXISTS $2 WITH (FORCE)"
   admin_sql "ALTER DATABASE $SCRATCH_DATABASE RENAME TO $2"

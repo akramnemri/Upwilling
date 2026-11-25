@@ -58,6 +58,8 @@ cat >"$WORK_DIR/stack.env" <<EOF
 APP_IMAGE=upwilling-web:local
 LOG_LEVEL=info
 POSTGRES_PASSWORD=$(openssl rand -hex 32)
+APP_DB_PASSWORD=$(openssl rand -hex 32)
+PAYLOAD_SECRET=$(openssl rand -hex 32)
 EDGE_NETWORK_RECETTE=$NETWORK
 EOF
 docker network inspect "$NETWORK" >/dev/null 2>&1 || docker network create --internal "$NETWORK" >/dev/null

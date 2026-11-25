@@ -17,6 +17,9 @@ services:
       # recette, production, or both separated by a space.
       DEPLOY_STACKS: ${DEPLOY_STACKS:-recette}
       DEPLOY_INTERVAL: ${DEPLOY_INTERVAL:-60}
+      # Pre-migration backups (Task 3.1b): container names of compose.backup.yaml, e.g. upwilling-backup-backup-1.
+      BACKUP_CONTAINER_RECETTE: ${BACKUP_CONTAINER_RECETTE:-}
+      BACKUP_CONTAINER_PRODUCTION: ${BACKUP_CONTAINER_PRODUCTION:-}
       # The Docker CLI keeps its small config here (the root file system is read-only).
       DOCKER_CONFIG: /tmp/.docker
     volumes:
