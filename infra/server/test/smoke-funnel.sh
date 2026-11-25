@@ -114,53 +114,7 @@ expect_status 200 8082 / "Career Boost" "${AUTH[@]}"
 expect_body 8082 / "construire la vie que vous voulez demain" "${AUTH[@]}"
 # The admin home redirects to Payload's admin (Task 3.1): only the admin host does that.
 expect_status 307 8083 / "admin" "${AUTH[@]}"
-expect_header 8083 / '^location: (https?://[^/]+)?/admin.?
-expect_status 404 8081 /admin "no admin on a site" "${AUTH[@]}"
-
-echo "== Basic auth, with /api/version open for the deploy check"
-expect_status 401 8081 / "academy without credentials"
-expect_status 401 8082 / "Career Boost without credentials"
-expect_status 401 8083 / "admin without credentials"
-expect_status 401 8081 / "wrong password" -u "$auth_user:wrong-password"
-expect_status 401 8081 /api/ready "readiness is not public"
-expect_status 200 8081 /api/version "version is public"
-expect_body 8081 /api/version '{"version":"'
-
-echo "== Headers"
-for port in 8081 8082 8083; do
-  expect_header "$port" / '^x-robots-tag: noindex, nofollow$' present "${AUTH[@]}"
-  expect_header "$port" / '^x-content-type-options: nosniff$' present "${AUTH[@]}"
-  expect_header "$port" / '^x-frame-options: DENY$' present "${AUTH[@]}"
-  expect_header "$port" / '^server:' absent "${AUTH[@]}"
-  expect_header "$port" / '^x-powered-by:' absent "${AUTH[@]}"
-done
-# The 401 page too.
-expect_header 8081 / '^x-robots-tag: noindex, nofollow$' present
-expect_header 8081 / '^x-content-type-options: nosniff$' present
-expect_header 8081 / '^x-frame-options: DENY$' present
-
-echo "== Ingress container"
-networks=$(docker inspect -f '{{range $name, $_ := .NetworkSettings.Networks}}{{println $name}}{{end}}' \
-  upwilling-smoke-funnel-ingress-1 | sed '/^$/d' | sort | tr '\n' ' ')
-if [[ $networks == "upwilling-smoke-funnel-edge-recette upwilling-smoke-funnel_internal " ]]; then
-  pass "ingress is only on the internal funnel network and the recette edge network"
-else
-  fail "ingress networks: $networks"
-fi
-published=$(docker ps --filter "label=com.docker.compose.project=upwilling-smoke-funnel" --format '{{.Ports}}' | grep -- '->' || true)
-if [[ -z $published ]]; then pass "the funnel project publishes no port"; else fail "published: $published"; fi
-uid=$(funnel exec -T ingress id -u | tr -d '\r')
-if [[ $uid == "65534" ]]; then pass "ingress runs as uid 65534 (nobody)"; else fail "ingress runs as uid $uid"; fi
-if funnel exec -T ingress sh -c 'touch /etc/caddy/x' 2>/dev/null; then fail "ingress can write its config"; else pass "ingress file system is read-only"; fi
-
-echo "== Result"
-if [[ $failures -gt 0 ]]; then
-  echo "$failures check(s) failed. Ingress log:"
-  funnel logs --tail 40 ingress
-  exit 1
-fi
-echo "All funnel checks passed."
- present "${AUTH[@]}"
+expect_header 8083 / '^location: (https?://[^/]+)?/admin$' present "${AUTH[@]}"
 expect_status 404 8081 /admin "no admin on a site" "${AUTH[@]}"
 
 echo "== Basic auth, with /api/version open for the deploy check"

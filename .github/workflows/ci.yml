@@ -78,7 +78,9 @@ jobs:
         working-directory: apps/web
         env:
           DEPLOY_ENV: local
-          DATABASE_URL: postgres://app:app-local-only@127.0.0.1:55432/app_test
+          # No password in the URL: node-postgres reads PGPASSWORD (local-only value of the service above).
+          DATABASE_URL: postgres://app@127.0.0.1:55432/app_test
+          PGPASSWORD: app-local-only
           PAYLOAD_SECRET: ci-only-placeholder-secret-not-used-anywhere
         run: pnpm migrate
 
@@ -87,7 +89,9 @@ jobs:
         working-directory: apps/web
         env:
           DEPLOY_ENV: local
-          DATABASE_URL: postgres://app:app-local-only@127.0.0.1:55432/app_test
+          # No password in the URL: node-postgres reads PGPASSWORD (local-only value of the service above).
+          DATABASE_URL: postgres://app@127.0.0.1:55432/app_test
+          PGPASSWORD: app-local-only
           PAYLOAD_SECRET: ci-only-placeholder-secret-not-used-anywhere
         run: |
           pnpm migrate:create ci-pending-check --skip-empty

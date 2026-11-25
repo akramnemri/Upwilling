@@ -182,7 +182,7 @@ expect_body recette-careerboost.upwilling.fr / "construire la vie que vous voule
 expect_status 401 recette-admin.upwilling.fr / "admin without credentials"
 # The admin home redirects to Payload's admin (Task 3.1); the admin itself needs the database (Task 3.1b).
 expect_status 307 recette-admin.upwilling.fr / "admin" "${AUTH[@]}"
-expect_header recette-admin.upwilling.fr / '^location: (https?://[^/]+)?/admin.?
+expect_header recette-admin.upwilling.fr / '^location: (https?://[^/]+)?/admin$' present "${AUTH[@]}"
 expect_status 404 recette-hooks.upwilling.fr / "hooks host, no basic auth, root refused"
 expect_header recette-hooks.upwilling.fr /admin "$REQUEST_ID" absent
 expect_header recette-hooks.upwilling.fr /api/webhooks/smoke "$REQUEST_ID" present
@@ -196,78 +196,6 @@ expect_status 200 upwilling.fr / "academy site"
 expect_body upwilling.fr / "Notre nouveau site arrive bientôt."
 expect_status 200 careerboost.upwilling.fr / "Career Boost site"
 expect_status 307 admin.upwilling.fr / "admin (Cloudflare Access in front)"
-expect_header admin.upwilling.fr / '^x-robots-tag:' present
-expect_header upwilling.fr / '^x-robots-tag:' absent
-expect_status 301 www.upwilling.fr "/formations?ref=smoke" "www redirect"
-expect_header www.upwilling.fr "/formations?ref=smoke" '^location: https://upwilling.fr/formations\?ref=smoke$' present
-expect_status 404 hooks.upwilling.fr / "hooks host root"
-expect_header hooks.upwilling.fr /admin "$REQUEST_ID" absent
-expect_header hooks.upwilling.fr /api/webhooks/smoke "$REQUEST_ID" present
-
-echo "== Security headers"
-for host in upwilling.fr careerboost.upwilling.fr admin.upwilling.fr; do
-  expect_header "$host" / '^x-content-type-options: nosniff$' present
-  expect_header "$host" / '^x-frame-options: DENY$' present
-  expect_header "$host" / '^referrer-policy: strict-origin-when-cross-origin$' present
-  expect_header "$host" / '^permissions-policy: ' present
-  expect_header "$host" / '^server:' absent
-  expect_header "$host" / '^x-powered-by:' absent
-done
-expect_header recette.upwilling.fr / '^x-content-type-options: nosniff$' present "${AUTH[@]}"
-
-echo "== Isolation"
-for project in upwilling-smoke-prod upwilling-smoke-recette; do
-  published=$(docker ps --filter "label=com.docker.compose.project=$project" --format '{{.Names}} {{.Ports}}' | grep -- '->' || true)
-  if [[ -z $published ]]; then pass "$project publishes no port"; else fail "$project publishes a port: $published"; fi
-done
-if recette exec -T web-upwilling getent hosts prod-web-upwilling >/dev/null 2>&1; then
-  fail "recette web can resolve a production container"
-else
-  pass "recette web cannot reach production containers"
-fi
-if edge exec -T caddy nc -z -w 3 postgres 5432 >/dev/null 2>&1; then
-  fail "Caddy can reach a database"
-else
-  pass "Caddy cannot reach the databases"
-fi
-if recette exec -T postgres pg_isready -U postgres -d app >/dev/null; then pass "recette postgres accepts connections on its own network"; else fail "recette postgres not ready"; fi
-
-echo "== Container hardening"
-caddy_uid=$(edge exec -T caddy id -u | tr -d '\r')
-if [[ $caddy_uid == "$(id -u)" && $caddy_uid != "0" ]]; then pass "caddy runs as uid $caddy_uid, not root"; else fail "caddy runs as uid $caddy_uid"; fi
-if edge exec -T caddy sh -c 'touch /etc/write-test' 2>/dev/null; then fail "caddy can write to its file system"; else pass "caddy file system is read-only"; fi
-pg_uid=$(prod exec -T postgres id -u | tr -d '\r')
-if [[ $pg_uid == "999" ]]; then pass "postgres runs as uid 999"; else fail "postgres runs as uid $pg_uid"; fi
-for service in web-upwilling cms worker; do
-  uid=$(prod exec -T "$service" id -u | tr -d '\r')
-  if [[ $uid == "1000" ]]; then pass "prod $service runs as uid 1000"; else fail "prod $service runs as uid $uid"; fi
-done
-
-echo "== Memory in use (docker stats, idle)"
-mapfile -t smoke_containers < <(docker ps -q --filter name=upwilling-smoke-)
-docker stats --no-stream --format '  {{.Name}}: {{.MemUsage}}' "${smoke_containers[@]}" || true
-
-echo "== Result"
-if [[ $failures -gt 0 ]]; then
-  echo "$failures check(s) failed. Caddy logs:"
-  edge logs --tail 40
-  exit 1
-fi
-echo "All stack checks passed."
- present "${AUTH[@]}"
-expect_status 404 recette-hooks.upwilling.fr / "hooks host, no basic auth, root refused"
-expect_header recette-hooks.upwilling.fr /admin "$REQUEST_ID" absent
-expect_header recette-hooks.upwilling.fr /api/webhooks/smoke "$REQUEST_ID" present
-expect_header recette-hooks.upwilling.fr /api/webhooks/smoke "$NOINDEX" present
-# Dot segments must not walk out of the webhook prefix, raw or percent-encoded.
-expect_status 404 recette-hooks.upwilling.fr /api/webhooks/../admin "dot segments" --path-as-is
-expect_status 404 recette-hooks.upwilling.fr /api/webhooks/%2e%2e/admin "encoded dot segments" --path-as-is
-
-echo "== Production (no basic auth)"
-expect_status 200 upwilling.fr / "academy site"
-expect_body upwilling.fr / "Notre nouveau site arrive bientôt."
-expect_status 200 careerboost.upwilling.fr / "Career Boost site"
-expect_status 200 admin.upwilling.fr / "admin (Cloudflare Access in front)"
 expect_header admin.upwilling.fr / '^x-robots-tag:' present
 expect_header upwilling.fr / '^x-robots-tag:' absent
 expect_status 301 www.upwilling.fr "/formations?ref=smoke" "www redirect"

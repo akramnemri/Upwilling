@@ -50,7 +50,7 @@ expect_body() {
 expect_location() {
   local port=$1 host=$2 path=$3 target=$4
   if curl -s -o /dev/null -D - --max-time 10 -H "Host: $host" "http://127.0.0.1:$port$path" |
-    tr -d '' | grep -iE "^location: (https?://[^/]+)?$target$" >/dev/null; then
+    tr -d '\r' | grep -iE "^location: (https?://[^/]+)?$target$" >/dev/null; then
     pass "$host$path on :$port redirects to $target"
   else
     fail "$host$path on :$port does not redirect to $target"
