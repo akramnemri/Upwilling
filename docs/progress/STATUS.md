@@ -8,8 +8,8 @@ Payload install, PR open.)
   review on `/dev/demo` is still pending. **Task 3.1 is split** (supervisor's go, 2026-11-25): **3.1a** (this branch,
   `feat/m3-install-payload`) installs Payload 3.93.0 for local development and CI; **3.1b** wires the servers
   (migrations in the deploy step, non-superuser database role, `DATABASE_URL`/`PAYLOAD_SECRET` in the server
-  compose files, recette media volume). **Until 3.1b is merged, recette's admin host redirects to an `/admin` that
-  fails** (no secret, no tables there): health, readiness, the public sites and deploys are unaffected.
+  compose files, recette media volume). **PR #39 (3.1a) is on hold** (supervisor, 2026-11-25): it is merged only
+  together with 3.1b, because on its own recette's `/admin` would fail (no secret, no tables there).
 - **Local development needs PostgreSQL now:** `docker compose -f infra/local/compose.yaml up -d postgres`
   (127.0.0.1:55432, 256 MB limit, no auto-restart; port 5432 is taken by another program on the supervisor's laptop).
   Then `pnpm --filter @upwilling/web migrate` and `seed`. README "Setup" has the steps. Public pages work without it.
@@ -58,8 +58,8 @@ Payload install, PR open.)
 ## Current position
 - Milestone: **M3 — Payload core & multi-tenancy (Essai 4)**, in progress since 2026-11-25. **M2** waits only for
   the PO design review (all its tasks merged). M1 closed 2026-11-06.
-- Task: **3.1a — Install Payload (local + CI)** — state: **implemented, PR open**, waiting for the supervisor's manual
-  test. Branch `feat/m3-install-payload`.
+- Task: **3.1a — Install Payload (local + CI)** — state: **implemented, PR #39 open, all CI checks green, merge on
+  hold until 3.1b is ready** (supervisor, 2026-11-25); manual test pending. Branch `feat/m3-install-payload`.
   - Payload **3.93.0** (not 3.94.2: 3.94.x needs Next ≥ 16.4.5; supervisor's choice). Payload requires Node
     ≥ 24.22.1: Node moved to **24.22.3** (image digest, root `engines`); the supervisor's laptop was upgraded by the
     agent at their request (winget `OpenJS.NodeJS.24`).
@@ -490,8 +490,9 @@ Payload install, PR open.)
 
 ## Next step (exact)
 1. Supervisor's manual test of 3.1a (local admin login, image upload into `apps/web/media/`, migrations on a clean
-   database), then the merge (squash); after it: sync `develop`, check CI, delete the branch.
-2. Task 3.1b (server wiring) after the supervisor's go. Do not start it before.
+   database). **Do not merge #39 yet:** it waits for 3.1b.
+2. Task 3.1b (server wiring) after the supervisor's go, branched from `feat/m3-install-payload`. Do not start it
+   before. Then merge #39 and the 3.1b PR back to back (squash); after each: sync `develop`, check CI, delete the branch.
 3. In parallel, **PO design review** on recette (`/dev/demo` on both addresses; Docker Desktop must be running), feedback and
    decisions written into `docs/phase0/essai-2.md`. [PO] — the agent does not run it.
 4. Then the supervisor closes M2 (or opens follow-up tasks from the review).
