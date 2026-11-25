@@ -700,7 +700,7 @@ export const BASE_TOKENS: Readonly<Record<string, Readonly<Record<string, string
   "radius": {
     "--uw-radius-sm": "0.375rem",
     "--uw-radius-md": "0.75rem",
-    "--uw-radius-lg": "1rem",
+    "--uw-radius-lg": "0.25rem",
     "--uw-radius-xl": "1.5rem",
     "--uw-radius-full": "9999px"
   },
