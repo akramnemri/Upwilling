@@ -498,7 +498,12 @@ PR #39 on hold; Task 3.1b, Payload on the servers, PR open on top of it.)
 - Large `docker`/Windows disk checks are slow here (antivirus): scan targeted folders, not the whole drive.
 
 ## Next step (exact)
-1. Supervisor's manual tests of 3.1a (local admin, upload, clean migrations) and 3.1b (see its PR).
+1. **3.1a manual test passed** (2026-11-26, run by the agent at the supervisor's request, on #40's branch which
+   contains #39): `migrate:fresh` + seed on the local `app` database; French login and dashboard; image uploaded
+   through the admin form (generated PNG, alt text localized "Français") landed in `apps/web/media/` (gitignored)
+   and is served on the admin host only; site hosts answer 404 for `/admin`, `/api/users` and media files; anonymous
+   `/api/users` on the admin host → 403; unknown page → branded French 404. PR #40's CI green (incl. smoke-deploy and
+   smoke-backup). **3.1b's manual test** (recette deploy, first admin, upload kept across a deploy) runs at merge time.
 2. **Laptop prepared on 2026-11-26 by the agent, at the supervisor's request** (values generated, never displayed):
    `APP_DB_PASSWORD` + `PAYLOAD_SECRET` appended to `C:\upwilling-server\recette\.env`; `C:\upwilling-server\agent\.env`
    created with `BACKUP_CONTAINER_RECETTE=upwilling-backup-backup-1`; `agent.sh` and `compose.deploy-agent.yaml`
