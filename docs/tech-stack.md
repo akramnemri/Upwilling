@@ -18,10 +18,10 @@ alternatives. One page for newcomers, the PO and reviewers.
 | Technology | Version | Status | Role | Why this one | Alternatives set aside |
 |---|---|---|---|---|---|
 | TypeScript | 5.9.3 | in use | Language of the whole repository | One typed language from the database to the UI; strict options (ADR-019) catch errors before runtime | TypeScript 7: new major, not yet used by Payload, linting compatibility unverified (ADR-018) |
-| Node.js | 24.22.0 (24.x LTS) | in use | Runtime (build, server, worker) | LTS until 2028-04-30; Payload builds with Node 24 (ADR-018) | Node 26: not LTS when chosen; revisit once Payload builds with it |
+| Node.js | 24.22.3 (24.x LTS, ≥ 24.22.1 required by Payload) | in use | Runtime (build, server, worker) | LTS until 2028-04-30; Payload builds with Node 24 (ADR-018) | Node 26: not LTS when chosen; revisit once Payload builds with it |
 | Next.js | 16.3.8 | in use | Web framework: pages, routing, server rendering | Payload 3 runs inside a Next.js app, so one application serves sites and admin (ADR-002); 16.3.x is the line Payload tests | 16.4.x: allowed by Payload's range, later `chore(deps)` PR |
 | React | 19.2.9 | in use | UI library | Required by Next.js and Payload; latest patch of the line Payload tests | 19.3: outside the line Payload tests |
-| Payload CMS | 3.91.0 | planned (Task 3.1) | Back-office, content, accounts, jobs | Embedded in the same Next.js app: one codebase, one admin, accounts shared by both sites, editors draft/review/publish without code (ADR-002, ADR-009) | Two separate applications and admin panels: double the upgrade and security work for a small team (ADR-002); Markdown files as the source of truth: trainers are not developers (ADR-009) |
+| Payload CMS | 3.93.0 | in use (Task 3.1) | Back-office, content, accounts, jobs | Embedded in the same Next.js app: one codebase, one admin, accounts shared by both sites, editors draft/review/publish without code (ADR-002, ADR-009) | Two separate applications and admin panels: double the upgrade and security work for a small team (ADR-002); Markdown files as the source of truth: trainers are not developers (ADR-009) |
 | Zod | 4.6.7 | in use | Validation of environment, route input, webhooks | Typed schemas checked at runtime, one definition for type and check | — |
 | Lucide icons | 1.61.0 | in use | The one icon set | Open license (ISC), tree-shaken, React 19 support | — |
 | Radix Tabs | 1.2.1 | in use | Accessible tabs widget | HTML has no native tabs; Radix implements the WAI-ARIA pattern (keyboard, roles) | Radix for Accordion and Dialog: native `<details>` and `<dialog>` are enough |
@@ -60,7 +60,7 @@ alternatives. One page for newcomers, the PO and reviewers.
 
 | Technology | Version | Status | Role | Why this one | Alternatives set aside |
 |---|---|---|---|---|---|
-| PostgreSQL | 18.6 | in use (recette, backups); app tables with Task 3.1 | Database, one per stack | Payload's Postgres adapter; simple, cheap, clear ownership (ADR-005) | Managed Postgres with point-in-time recovery: revisit later (ADR-005) |
+| PostgreSQL | 18.6 | in use (recette, backups, local, CI); Payload's tables since Task 3.1 | Database, one per stack | Payload's Postgres adapter; simple, cheap, clear ownership (ADR-005) | Managed Postgres with point-in-time recovery: revisit later (ADR-005) |
 | Payload Jobs Queue | with Payload | planned (M3) | Background jobs (emails, PDFs, exports) in the worker | Stored in Postgres: no Redis, no extra broker (ADR-007) | A separate queue (Redis/broker): one more service to run |
 | Cloudflare R2 | — | planned | Media, private files, off-site backups | Cheap, keeps containers stateless (ADR-008) | — |
 | Brevo | — | planned | Transactional email, sent only from the worker | Free tier at launch; Mailpit catches mail locally (ADR-012) | — |
@@ -72,7 +72,7 @@ alternatives. One page for newcomers, the PO and reviewers.
 
 | Technology | Version | Status | Role | Why this one | Alternatives set aside |
 |---|---|---|---|---|---|
-| Docker image, several container roles | `node:24.22.0-trixie-slim` | in use | One image runs web (per site), cms and worker | A crash in one role does not take down the others, with one codebase (ADR-004) | — |
+| Docker image, several container roles | `node:24.22.3-trixie-slim` | in use | One image runs web (per site), cms and worker | A crash in one role does not take down the others, with one codebase (ADR-004) | — |
 | One VPS + Docker Compose | Compose v5.6.0 | in use (recette on the supervisor's laptop for the test phase) | Production and recette stacks | Commercial use excludes free hosting tiers; cheapest option we fully control (ADR-003) | Free PaaS tiers: not allowed for commercial use (ADR-003); Oracle Cloud free VM for the test phase (ADR-021) |
 | Caddy | 2.11.7 | in use | Reverse proxy, TLS, recette password | Automatic HTTPS, simple config, stock image (ADR-003, ADR-023) | — |
 | Cloudflare (DNS, CDN, origin certificate) | — | planned (when the domain is ready) | Edge in front of the server | Hides the server, TLS end to end (ADR-023) | Let's Encrypt DNS-01: a DNS-edit secret on the server; Cloudflare Tunnel: one more moving part (ADR-023) |

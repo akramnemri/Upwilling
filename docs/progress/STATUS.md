@@ -1,13 +1,22 @@
 # STATUS
 
-Updated: 2026-11-25 by Claude (session 10 — Task 2.5 merged; Task 2.6, Essai 2 proof and report, PR open.)
+Updated: 2026-11-25 by Claude (session 11 — Task 2.6 merged; M3 started in parallel with M2's PO review; Task 3.1a,
+Payload install, PR open.)
 
 ## Handoff for the next session (read first)
+- **M3 started on 2026-11-25, in parallel with M2** (supervisor's choice): M2 is not formally closed, the PO design
+  review on `/dev/demo` is still pending. **Task 3.1 is split** (supervisor's go, 2026-11-25): **3.1a** (this branch,
+  `feat/m3-install-payload`) installs Payload 3.93.0 for local development and CI; **3.1b** wires the servers
+  (migrations in the deploy step, non-superuser database role, `DATABASE_URL`/`PAYLOAD_SECRET` in the server
+  compose files, recette media volume). **Until 3.1b is merged, recette's admin host redirects to an `/admin` that
+  fails** (no secret, no tables there): health, readiness, the public sites and deploys are unaffected.
+- **Local development needs PostgreSQL now:** `docker compose -f infra/local/compose.yaml up -d postgres`
+  (127.0.0.1:55432, 256 MB limit, no auto-restart; port 5432 is taken by another program on the supervisor's laptop).
+  Then `pnpm --filter @upwilling/web migrate` and `seed`. README "Setup" has the steps. Public pages work without it.
 - **M2 is under way.** Tasks 2.1 (tokens, Tailwind theme + lint), 2.2 (2.2a–c components), 2.3 (2.3a Storybook,
   2.3b visual regression) and 2.4 (2.4a fonts, 2.4b `SiteHeader`/`SiteFooter`/page layout on `/dev/site` only) are
   merged, and **2.5** (2.5a static sections, 2.5b interactive sections, 2.5c the rest + `/dev/demo` per brand) is
-  merged too. **2.6** (this branch, `feat/TR-01-essai-2-proof`): Essai 2 proof and report; then the PO design review
-  closes M2. Essai 2 report: `docs/phase0/essai-2.md`. Technology overview: `docs/tech-stack.md`. How-to:
+  merged too, and **2.6** (Essai 2 proof and report) is merged; the PO design review then closes M2. Essai 2 report: `docs/phase0/essai-2.md`. Technology overview: `docs/tech-stack.md`. How-to:
   `packages/design-system/README.md`. Previews: `/dev/demo` (for the PO), `/dev/tokens`, `/dev/components` and
   `/dev/site` on either site host (local, recette), and Storybook (`pnpm --filter @upwilling/design-system storybook`).
 - **Production approval, one-off exception:** on 2026-11-06 the supervisor's own approval of the first production
@@ -47,17 +56,20 @@ Updated: 2026-11-25 by Claude (session 10 — Task 2.5 merged; Task 2.6, Essai 2
 - Oracle Cloud (ADR-021) and the Cloudflare setup (ADR-023) stay the plan once a card / the domain are available.
 
 ## Current position
-- Milestone: **M2 — Design system foundation (Essai 2)**, in progress. M1 closed 2026-11-06.
-- Task: **2.6 — Essai 2 proof & report** — state: **implemented, PR #38 open**, waiting for the supervisor's manual
-  test (read `docs/phase0/essai-2.md`). Branch `feat/TR-01-essai-2-proof`.
-  - Proofs on throwaway draft PRs, never merged (#36, #37: closed, branches deleted). A: `radius.lg` changed → 44 of
-    187 screenshots per brand. B: Career Boost's `blue` changed → 101 Career Boost, 0 UpWilling.
-  - **Gap found and fixed:** at Playwright's default tolerance (0.2) proof B passed unseen and proof A caught only 13
-    per brand. `playwright.config.ts` now sets `threshold: 0.05`; CI on develop's code passed with it (no false
-    failures). README: tolerance note, and the baseline download now goes through an empty folder (`gh run download`
-    refuses to overwrite).
-  - `docs/phase0/essai-2.md`: criteria table, proof table, two before/after images (`docs/phase0/essai-2/`, synthetic
-    stories), conclusion: conclusive for the technical criteria, PO review still to do.
+- Milestone: **M3 — Payload core & multi-tenancy (Essai 4)**, in progress since 2026-11-25. **M2** waits only for
+  the PO design review (all its tasks merged). M1 closed 2026-11-06.
+- Task: **3.1a — Install Payload (local + CI)** — state: **implemented, PR open**, waiting for the supervisor's manual
+  test. Branch `feat/m3-install-payload`.
+  - Payload **3.93.0** (not 3.94.2: 3.94.x needs Next ≥ 16.4.5; supervisor's choice). Payload requires Node
+    ≥ 24.22.1: Node moved to **24.22.3** (image digest, root `engines`); the supervisor's laptop was upgraded by the
+    agent at their request (winget `OpenJS.NodeJS.24`).
+  - `src/app` split into `(frontend)` (public sites, unchanged) and `(payload)` (admin, REST API); two root layouts,
+    so `global-not-found.tsx` (experimental `globalNotFound`) serves unmatched URLs. GraphQL disabled.
+  - Collections: `users` (core: auth, lockout 5 tries / 10 min, logged-in only) and `media` (content: public read,
+    `alt` localized). Payload entries `modules/<name>/payload.ts` keep React out of the Payload CLI.
+  - Push off everywhere; first migration `20261125_185819_initial`; CI: Postgres service, migrations on a clean
+    database, pending-migration check, integration tests on `app_test`.
+  - ADR updates: 018 (versions), 005 (18 verified), 008 (local storage, R2 wired but off), 014 (cost measured, kept).
 - GitHub environments (re-checked 2026-11-06): `production` has the supervisor as required reviewer and accepts `main`
   only; `recette` accepts `develop` only. Branch rules: none exist (see the handoff).
 - Docker Desktop starts only when the supervisor works on the project (supervisor, 2026-10-26): recette is offline
@@ -145,6 +157,8 @@ Updated: 2026-11-25 by Claude (session 10 — Task 2.5 merged; Task 2.6, Essai 2
   supervisor's request), manual test run by the agent at the supervisor's request (phone menu anchors on both hosts,
   axe on both demo pages and the 8 new stories × 2 brands: 0 violations). 16 new baselines. CI on `develop` green,
   recette tag moved.
+- 2.6 — Essai 2 proof & report (`docs/phase0/essai-2.md`, visual tolerance 0.05) — merged 2026-11-25 (PR #38,
+  `6ad35ac`, squash), CI on `develop` green. M2 closes after the PO design review.
 
 ## What exists now (so a new session does not have to rediscover it)
 - pnpm 11 workspace + Turborepo: `apps/web` (Next.js 16.3.8, App Router, `src/`), `packages/config`
@@ -253,6 +267,11 @@ Updated: 2026-11-25 by Claude (session 10 — Task 2.5 merged; Task 2.6, Essai 2
   A third check, **SonarCloud Code Analysis**, also runs on PRs: it comes from a GitHub App on the repository,
   not from this repo's files (not set up by the agent; confirm with the supervisor before relying on it). Its
   automatic analysis reads `.sonarcloud.properties` (Task 2.1a: generated token files out of duplication checks).
+
+- Payload (Task 3.1a): `apps/web/src/payload.config.ts`; settings validated in `src/lib/payload-settings.ts`
+  (placeholders during `next build` only); migrations in `src/migrations/`; generated `src/payload-types.ts` and
+  `src/app/(payload)/admin/importMap.js` (never edit); seed `scripts/seed.ts` + `scripts/seed-data.ts` (local only);
+  integration tests `tests/integration/payload.test.ts` (database `app_test`, rebuilt each run).
 
 ## Decisions since last milestone
 - ADR-001…ADR-017 recorded from `docs/ai/01_ARCHITECTURE.md` §3 (see `docs/decisions/README.md`).
@@ -377,12 +396,12 @@ Updated: 2026-11-25 by Claude (session 10 — Task 2.5 merged; Task 2.6, Essai 2
 - Each task is verified from a **fresh clone** with `pnpm install --frozen-lockfile` before the PR is opened.
   **Delete the clone right after** (disk space is tight, see below); never leave clones in the scratchpad.
 
-## Deferred database work (PostgreSQL now confirmed, ADR-005) — picked up in Task 3.1
-- Task 0.3: no Postgres container in `infra/local/compose.yaml` yet.
-- Task 0.4: `/api/ready` reports `database: "not_configured"`; the "stop the DB, ready fails" manual step waits for the DB.
-- Task 0.5: no database-backed integration tests yet (placeholder `tests/integration/environment.test.ts`).
-- Task 0.6: CI without a Postgres service container and without a migration check.
-- Task 1.4: the server stacks run Postgres with its `postgres` superuser only; the app's own non-superuser role and
+## Deferred database work (PostgreSQL now confirmed, ADR-005) — Task 3.1a / 3.1b
+- Done in 3.1a: local Postgres container (Task 0.3), database-backed integration tests (Task 0.5), CI service
+  container and migration check (Task 0.6).
+- Task 0.4 → 3.1b: `/api/ready` still reports `database: "not_configured"`; the database check and the "stop the DB,
+  ready fails" manual step come with the server wiring.
+- Task 1.4 → 3.1b: the server stacks run Postgres with its `postgres` superuser only; the app's own non-superuser role and
   `DATABASE_URL` come with Task 3.1.
 - Task 1.6a: backups run as the superuser and restores use `--no-owner`. Task 3.1 adds a backup role, decides how
   roles are restored (`pg_dump` does not contain them), and wires the pre-migration backup (03 §10) into the agent.
@@ -460,7 +479,7 @@ Updated: 2026-11-25 by Claude (session 10 — Task 2.5 merged; Task 2.6, Essai 2
   until accepting traffic (ADR-022).
 
 ## Supervisor's machine (Windows 11) — notes for the agent
-- Node.js 24.20.0 (winget), pnpm 11.28.6 via Corepack (`corepack enable pnpm` was run as admin), GitHub CLI 2.102.0
+- Node.js 24.22.3 (winget package `OpenJS.NodeJS.24`, upgraded 2026-11-25; `OpenJS.NodeJS.LTS` would jump to 26), pnpm 11.28.6 via Corepack (`corepack enable pnpm` was run as admin), GitHub CLI 2.102.0
   (logged in as `akramnemri`), Docker Desktop (may need to be started).
 - In the agent's Git Bash, prepend `/c/Program Files/nodejs` and `/c/Program Files/GitHub CLI` to `PATH`
   (the shell may predate these installs), and set `COREPACK_ENABLE_DOWNLOAD_PROMPT=0`.
@@ -470,10 +489,10 @@ Updated: 2026-11-25 by Claude (session 10 — Task 2.5 merged; Task 2.6, Essai 2
 - Large `docker`/Windows disk checks are slow here (antivirus): scan targeted folders, not the whole drive.
 
 ## Next step (exact)
-1. Supervisor's manual test of 2.6 (read `docs/phase0/essai-2.md` and its images; the failing runs of #36 and #37),
-   then the merge (squash); after it: sync `develop`, check CI, delete the branch.
-2. **PO design review** on recette (`/dev/demo` on both addresses; Docker Desktop must be running), feedback and
+1. Supervisor's manual test of 3.1a (local admin login, image upload into `apps/web/media/`, migrations on a clean
+   database), then the merge (squash); after it: sync `develop`, check CI, delete the branch.
+2. Task 3.1b (server wiring) after the supervisor's go. Do not start it before.
+3. In parallel, **PO design review** on recette (`/dev/demo` on both addresses; Docker Desktop must be running), feedback and
    decisions written into `docs/phase0/essai-2.md`. [PO] — the agent does not run it.
-3. Then the supervisor closes M2 (or opens follow-up tasks from the review). Do not start M3 (Task 3.1) before the
-   supervisor's go.
-4. Still waiting on the human: branch protection, the backup key copy, the Oracle VM (see "Waiting on human").
+4. Then the supervisor closes M2 (or opens follow-up tasks from the review).
+5. Still waiting on the human: branch protection, the backup key copy, the Oracle VM (see "Waiting on human").

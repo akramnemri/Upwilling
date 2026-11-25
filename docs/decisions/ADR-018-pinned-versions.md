@@ -2,7 +2,8 @@
 
 - Status: Accepted (supervisor merged PR #1, 2026-10-18; lint tooling rows added in Task 0.2; CI tooling added in Task 0.6;
   styling rows added in Task 2.1b; component and accessibility testing rows added in Task 2.2a; Radix Tabs added in
-  Task 2.2c; Storybook moved to 10.6.5 and its Vite rows added in Task 2.3a; Playwright image added in Task 2.3b; brand font files added in Task 2.4a)
+  Task 2.2c; Storybook moved to 10.6.5 and its Vite rows added in Task 2.3a; Playwright image added in Task 2.3b; brand font files added in Task 2.4a;
+  Payload installed at 3.93.0, Node moved to 24.22.3 and the Payload rows added in Task 3.1, 2026-11-25)
 - Date: 2026-10-18
 - Verified on: 2026-10-18, from official sources only (no remembered versions)
 
@@ -27,10 +28,12 @@ Upgrades are deliberate PRs (`chore(deps)`), never drive-by changes.
 
 | Tool / package | Pinned | Latest seen | Why this version |
 |---|---|---|---|
-| Node.js | **24.x LTS** (24.22.0; `.nvmrc` = `24`, Docker `node:24-*`) | 26.12.0 (Current, LTS on 2026-10-28) | Node 24 "Krypton" is LTS, supported until 2028-04-30. Payload builds with Node 24.13.0 (`.tool-versions`). Payload requires `>=20.18.1`. |
+| Node.js | **24.x LTS** (24.22.3; `.nvmrc` = `24`, root `engines` `>=24.22.1 <25`, Docker `node:24.22.3-*`) | 26.13.1 (checked 2026-11-25) | Node 24 "Krypton" is LTS, supported until 2028-04-30. **Task 3.1:** Payload 3.93.0 declares `engines.node` `^22.23.4 || >=24.22.1`, and `engineStrict` makes pnpm enforce it, so 24.22.0 no longer installs. 24.22.3 is the latest 24 release (2026-11-10, a security release). Every developer machine needs ≥ 24.22.1. |
 | pnpm | **11.28.6** (`packageManager` field) | 12.14.0 | Payload uses pnpm 11.9.0; its template declares `pnpm: ^9 \|\| ^10 \|\| ^11`. pnpm 12 is not in that range. |
 | Turborepo (`turbo`) | **2.11.9** | 2.11.9 | Latest; requires Node `>=20`. |
-| Payload (`payload`, `@payloadcms/*`) | **3.91.0** (all `@payloadcms/*` packages in lockstep) | 3.91.0 (2026-10-15) | Latest Payload 3. Installed in Task 3.1, re-verified then. |
+| Payload (`payload`, `@payloadcms/next`, `@payloadcms/db-postgres`, `@payloadcms/richtext-lexical`, `@payloadcms/storage-s3`, `@payloadcms/translations`) | **3.93.0** (all in lockstep; dependencies of `apps/web`) | 3.94.2 (2026-11-24; checked 2026-11-25) | Installed in Task 3.1 (supervisor's choice, 2026-11-25). **3.94.x requires Next `>=16.4.5`** (`@payloadcms/next` peer range), while 3.93.0 (2026-11-04, three weeks old) still accepts our 16.3.8 (`>=16.3.3 <17`). Moving to 3.94 means moving Next to 16.4 in the same `chore(deps)` PR. `db-postgres` brings `pg` 8.20.0 and `drizzle-orm` 0.45.2 (unchanged since 3.91.0). `storage-s3` is the R2 adapter (R2 speaks S3). `translations` gives the French admin. |
+| GraphQL (`graphql`) | **16.15.0** | 17.1.0 | Required peer of `payload` and `@payloadcms/next` (`^16.8.1`), so not 17. Payload's GraphQL API itself is disabled (`graphQL.disable`, Task 3.1). |
+| sharp | **0.35.5** (dependency of `apps/web`) | 0.35.5 (2026-09-27) | Image resizing and metadata for Payload uploads; Payload's template uses 0.35.4. Prebuilt binaries from optional platform packages: no install script needed (`pnpm ignored-builds` lists none). |
 | Next.js | **16.3.8** | 16.4.2 (16.4.0 released 2026-10-06) | `@payloadcms/next@3.91.0` peer range: `>=15.2.9 <15.3.0 \|\| >=15.3.9 <15.4.0 \|\| >=15.4.11 <15.5.0 \|\| >=16.3.3 <17.0.0`. Payload's blank template ships 16.3.3; 16.3.8 is the latest patch of that tested line. 16.4.x is allowed by the range and can be adopted in a later `chore(deps)` PR. |
 | React / React DOM | **19.2.9** | 19.3.1 | Payload peer range `^19.0.1 \|\| ^19.1.2 \|\| ^19.2.1`; Payload builds and tests with 19.2.6. 19.2.9 is the latest patch of that line. |
 | TypeScript | **5.9.3** | 7.0.2 | Payload builds with 5.7.3 and its template ships 5.7.3. TypeScript 7 (new major) is not used by Payload yet; ESLint/typed-lint compatibility unverified. |
@@ -56,7 +59,7 @@ Upgrades are deliberate PRs (`chore(deps)`), never drive-by changes.
 | React, Next.js, React types in `packages/design-system` | peers **19.2.9 / 16.3.8**, devDependencies at the same pins | — | The components render React and `next/link`; the package declares them as peers and installs the workspace pins for its own tests and typecheck. Task 2.2a. |
 | Stylelint (`stylelint`) | **17.16.0** (devDependency of `apps/web`) | 18.0.0 (2026-11-03) | Forbids raw colors, font sizes and spacing in the application's CSS (ESLint has no such CSS rules). 18.0.0 is a new major released six days before Task 2.1b; adopt it later in a `chore(deps)` PR. Task 2.1b. |
 | `@types/node` / `@types/react` / `@types/react-dom` | **24.19.2 / 19.2.18 / 19.2.7** | — | Latest patches of the Node 24 and React 19.2 lines. |
-| Database | **not pinned** | — | Placeholder; see ADR-005. |
+| Database | **PostgreSQL 18** (`postgres:18.6-trixie`, digest below) | 18.6 | ADR-005. Task 3.1: migrations and integration tests pass on 18.6, locally and in CI's `checks` job (service container, same digest). |
 | esbuild | **0.28.2** (devDependency of `apps/web`) | 0.28.2 (2026-08-08) | Bundles the worker and the Docker healthcheck into single CommonJS files (Task 1.1b, decision D4). Its install script is not run (`allowBuilds: esbuild: false`): the platform binary comes from an optional dependency. |
 
 ### CI tooling (added in Task 0.6, verified 2026-10-18 from each project's latest GitHub release)
@@ -79,14 +82,14 @@ with the version in a trailing comment. Upgrades are `chore(ci)` PRs that update
 
 | Image | Tag | Digest (multi-arch index) | Notes |
 |---|---|---|---|
-| Node.js | **`node:24.22.0-trixie-slim`** | `sha256:7f486cabe892bff8fef04c0f7da8dba84a560be3e4e2740b7a86afc57ebec315` | Build and runtime stages of `apps/web/Dockerfile` (decision D3). Debian 13 slim; 24.22.0 is the latest Node 24 release (2026-10-14). Upgrades are `chore(deps)` PRs that change tag and digest together. |
+| Node.js | **`node:24.22.3-trixie-slim`** | `sha256:4d00acb4bcc42c454c4eb801526f7ad7f772ea3bd4fd168c5cc2e384abcbb9d4` | Build and runtime stages of `apps/web/Dockerfile` (decision D3). Debian 13 slim. Moved from 24.22.0 in Task 3.1 (Payload's `engines`, checked 2026-11-25). Upgrades are `chore(deps)` PRs that change tag and digest together. |
 
 ### Server stack images (added in Task 1.4, verified 2026-10-20)
 
 | Image | Tag | Digest (multi-arch index) | Notes |
 |---|---|---|---|
 | Caddy | **`caddy:2.11.7-alpine`** | `sha256:d8542f48d34a9cf4e4c11a478865229840e87e4c96ea3f439101f31a5d35f75f` | Edge proxy, `infra/server/compose.edge.yaml` (ADR-023). Latest release (2026-10-03). Stock image: no plugins needed. |
-| PostgreSQL | **`postgres:18.6-trixie`** | `sha256:74935e72241653ca55e0414067e6d8763aceb8a810eb51b452253ec3dcfc4336` | One per stack, `infra/server/compose.base.yaml` (ADR-005). 18.6 is the current minor of the current major. |
+| PostgreSQL | **`postgres:18.6-trixie`** | `sha256:74935e72241653ca55e0414067e6d8763aceb8a810eb51b452253ec3dcfc4336` | One per stack, `infra/server/compose.base.yaml` (ADR-005). 18.6 is the current minor of the current major. Same digest for local development (`infra/local/compose.yaml`) and CI's `checks` service container (Task 3.1). |
 | curl (test only) | **`curlimages/curl:8.23.0`** | `sha256:a134550be58ab783810e613ae96fd253c38f7bdd16d9bf9be350700c7a29ac06` | Client of `infra/server/test/smoke-stacks.sh` (presents the test client certificate). Never deployed. |
 | Docker CLI | **`docker:29.9.1-cli`** | `sha256:6fae2214c3121a28d5aa639d09032f61310b7c9c75ffbad1025f261a1b621800` | Deploy agent, `infra/server/compose.deploy-agent.yaml` (ADR-024; added 2026-10-20). Includes Compose v5.6.0 and buildx. |
 | Tailscale | **`tailscale/tailscale:v1.104.2`** | `sha256:b11583ad2e93e4671128538c88cf11f460444a5d7e449311dd1933a400ab849d` | Public access to recette in the test phase, `infra/server/compose.funnel.yaml` (ADR-025; added 2026-10-26). Latest stable (2026-10-21). |
