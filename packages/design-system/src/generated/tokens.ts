@@ -257,12 +257,12 @@ export const BRAND_TOKENS: Readonly<Record<Brand, BrandTokens>> = {
       "border": "#D6DBE3",
       "border-strong": "#818D9F",
       "primary-contrast": "#FFFFFF",
-      "primary": "#006BCF",
-      "primary-hover": "#0056A9",
+      "primary": "#415FD9",
+      "primary-hover": "#314BB7",
       "accent": "#F89808",
       "accent-contrast": "#1C2128",
       "support": "#389840",
-      "focus-ring": "#2E8CF6",
+      "focus-ring": "#5D81FD",
       "success": "#00842B",
       "success-surface": "#F0FAF0",
       "success-text": "#00842B",
@@ -307,19 +307,19 @@ export const BRAND_TOKENS: Readonly<Record<Brand, BrandTokens>> = {
     },
     "palettes": {
       "primary": {
-        "source": "#0070D8",
+        "source": "#3550C8",
         "steps": {
-          "50": "#F1F7FF",
-          "100": "#E1EEFF",
-          "200": "#C3DDFF",
-          "300": "#9CC7FF",
-          "400": "#69ACFF",
-          "500": "#2E8CF6",
-          "600": "#006BCF",
-          "700": "#0056A9",
-          "800": "#004387",
-          "900": "#003266",
-          "950": "#002045"
+          "50": "#F3F7FF",
+          "100": "#E5EDFF",
+          "200": "#CCDAFF",
+          "300": "#ACC2FF",
+          "400": "#85A5FF",
+          "500": "#5D81FD",
+          "600": "#415FD9",
+          "700": "#314BB7",
+          "800": "#253994",
+          "900": "#1A2A71",
+          "950": "#0F1A4C"
         }
       },
       "accent": {
