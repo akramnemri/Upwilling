@@ -9,7 +9,7 @@
 # comes from environment variables only. Runbook: docs/runbooks/local-container-roles.md
 
 # Node 24 LTS on Debian 13 slim, pinned by the digest of the multi-arch index (ADR-018).
-ARG NODE_IMAGE=node:24.22.0-trixie-slim@sha256:7f486cabe892bff8fef04c0f7da8dba84a560be3e4e2740b7a86afc57ebec315
+ARG NODE_IMAGE=node:24.22.3-trixie-slim@sha256:4d00acb4bcc42c454c4eb801526f7ad7f772ea3bd4fd168c5cc2e384abcbb9d4
 
 # ---------------------------------------------------------------------------------------------------
 FROM ${NODE_IMAGE} AS build
