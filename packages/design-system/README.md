@@ -239,15 +239,22 @@ Storybook it opens in the "Large mobile" viewport.
 - **When a story changes on purpose** (or a new story has no baseline), the `visual` job fails and
   uploads two artifacts: `visual-report` (Playwright report with expected / actual / diff) and
   `visual-baselines` (the screenshots that differ or were missing, at their baseline paths).
-  To approve: check the report, then download the baselines into the branch and commit them:
+  To approve: check the report, then download the baselines into the branch and commit them. The
+  artifact holds every screenshot, and `gh run download` refuses to overwrite files, so download it to
+  an empty folder and copy it over (only the changed or new files then show in `git status`):
 
   ```bash
-  gh run download <run-id> --name visual-baselines --dir packages/design-system/visual/__screenshots__
+  gh run download <run-id> --name visual-baselines --dir /tmp/visual-baselines
+  cp -r /tmp/visual-baselines/. packages/design-system/visual/__screenshots__/
   ```
 
   The PR then shows each changed picture; review them like code. CI never commits by itself.
 
 - **When it was not on purpose:** fix the code; the baselines stay.
+- **Color tolerance: 0.05** (`threshold` in `playwright.config.ts`, Task 2.6). Playwright's default,
+  0.2, let a change of Career Boost's blue pass unseen, and hid the corners of pale-bordered cards
+  (Essai 2, `docs/phase0/essai-2.md`). Rendering is the same on every run in the pinned container, so
+  the stricter value causes no false failures.
 - **Fonts:** Storybook loads the same self-hosted fonts as the application (see "Fonts"), and the test
   loads every declared font face before the screenshot, so weight changes show up. (Before Task 2.4a
   the system stack resolved, in the container, to a font with no visible bold.)

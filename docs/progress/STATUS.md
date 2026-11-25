@@ -1,15 +1,14 @@
 # STATUS
 
-Updated: 2026-11-25 by Claude (session 10 — Tasks 2.5a and 2.5b merged; Task 2.5c, last sections and demo pages,
-PR open.)
+Updated: 2026-11-25 by Claude (session 10 — Task 2.5 merged; Task 2.6, Essai 2 proof and report, PR open.)
 
 ## Handoff for the next session (read first)
 - **M2 is under way.** Tasks 2.1 (tokens, Tailwind theme + lint), 2.2 (2.2a–c components), 2.3 (2.3a Storybook,
   2.3b visual regression) and 2.4 (2.4a fonts, 2.4b `SiteHeader`/`SiteFooter`/page layout on `/dev/site` only) are
-  merged. **2.5** is split (supervisor's go, 2026-11-25): 2.5a static sections and 2.5b interactive sections (both
-  merged); **2.5c** (this branch, `feat/TR-01-section-patterns-demo`) (LogoStrip, CatalogueGrid, PricingTiers, FaqAccordion, Testimonials);
-  2.5c the rest (ContactCta, NewsGrid, DocumentList, RichTextSection), a `/dev/demo` page per brand and the
-  `docs/phase0/essai-2.md` skeleton, then the PO design review. Technology overview: `docs/tech-stack.md`. How-to: `packages/design-system/README.md`. Previews: `/dev/tokens`, `/dev/components` and
+  merged, and **2.5** (2.5a static sections, 2.5b interactive sections, 2.5c the rest + `/dev/demo` per brand) is
+  merged too. **2.6** (this branch, `feat/TR-01-essai-2-proof`): Essai 2 proof and report; then the PO design review
+  closes M2. Essai 2 report: `docs/phase0/essai-2.md`. Technology overview: `docs/tech-stack.md`. How-to:
+  `packages/design-system/README.md`. Previews: `/dev/demo` (for the PO), `/dev/tokens`, `/dev/components` and
   `/dev/site` on either site host (local, recette), and Storybook (`pnpm --filter @upwilling/design-system storybook`).
 - **Production approval, one-off exception:** on 2026-11-06 the supervisor's own approval of the first production
   deployment did not register (CI run 42240836809 on `main`, `a7e47a8`, PR #21); they told the agent "you do the
@@ -49,19 +48,16 @@ PR open.)
 
 ## Current position
 - Milestone: **M2 — Design system foundation (Essai 2)**, in progress. M1 closed 2026-11-06.
-- Task: **2.5c — Section patterns, last part + demo pages** (TR-01) — state: **implemented, PR open**, waiting for CI
-  (new baselines expected to fail the first `visual` run) and the supervisor's manual test, then the **PO design
-  review** on recette. Branch `feat/TR-01-section-patterns-demo`.
-  - Design system (`react/sections.tsx`): `ContactCta` (form slot from the app + "what happens next" list),
-    `NewsGrid` (`<time dateTime>`, title = link), `DocumentList` (format and size in each link's name),
-    `RichTextSection` (plain HTML styled by `css/base.css`, `[data-rich-text]`). 15 section patterns in all.
-  - Stories: 8 (3 tagged `visual-mobile`), so 16 new screenshots. Tests: 4 more in `react/sections.test.tsx` (20).
-  - App: `/dev/demo` (local and recette only; `notFound` in production), one demo home page per brand in the order
-    of 04 §5, all copy synthetic and marked as examples; section ids match the header anchors. The contact form has
-    no action (Task 5.4). e2e `demo.spec.ts` (both hosts: one h1, header anchors land on sections, axe, no
-    horizontal scroll at 375 px).
-  - `docs/phase0/essai-2.md`: skeleton (exit criteria, where and how to review, feedback table, decisions to take);
-    the PO review fills it, Task 2.6 completes it.
+- Task: **2.6 — Essai 2 proof & report** — state: **implemented, PR #38 open**, waiting for the supervisor's manual
+  test (read `docs/phase0/essai-2.md`). Branch `feat/TR-01-essai-2-proof`.
+  - Proofs on throwaway draft PRs, never merged (#36, #37: closed, branches deleted). A: `radius.lg` changed → 44 of
+    187 screenshots per brand. B: Career Boost's `blue` changed → 101 Career Boost, 0 UpWilling.
+  - **Gap found and fixed:** at Playwright's default tolerance (0.2) proof B passed unseen and proof A caught only 13
+    per brand. `playwright.config.ts` now sets `threshold: 0.05`; CI on develop's code passed with it (no false
+    failures). README: tolerance note, and the baseline download now goes through an empty folder (`gh run download`
+    refuses to overwrite).
+  - `docs/phase0/essai-2.md`: criteria table, proof table, two before/after images (`docs/phase0/essai-2/`, synthetic
+    stories), conclusion: conclusive for the technical criteria, PO review still to do.
 - GitHub environments (re-checked 2026-11-06): `production` has the supervisor as required reviewer and accepts `main`
   only; `recette` accepts `develop` only. Branch rules: none exist (see the handoff).
 - Docker Desktop starts only when the supervisor works on the project (supervisor, 2026-10-26): recette is offline
@@ -144,6 +140,11 @@ PR open.)
   manual test run by the agent at the supervisor's request (axe on 13 stories × 2 brands: 0 violations; strip motion,
   pause on hover, focus and checkbox, and reduced motion checked in headless Chromium; catalogue tabs by keyboard).
   26 new baselines. CI on `develop` green, recette tag moved.
+- 2.5c — Section patterns, last part (`ContactCta`, `NewsGrid`, `DocumentList`, `RichTextSection`) and `/dev/demo`
+  per brand, `essai-2.md` skeleton — merged 2026-11-25 (PR #35, `c710238`, squash-merged by the agent at the
+  supervisor's request), manual test run by the agent at the supervisor's request (phone menu anchors on both hosts,
+  axe on both demo pages and the 8 new stories × 2 brands: 0 violations). 16 new baselines. CI on `develop` green,
+  recette tag moved.
 
 ## What exists now (so a new session does not have to rediscover it)
 - pnpm 11 workspace + Turborepo: `apps/web` (Next.js 16.3.8, App Router, `src/`), `packages/config`
@@ -469,10 +470,10 @@ PR open.)
 - Large `docker`/Windows disk checks are slow here (antivirus): scan targeted folders, not the whole drive.
 
 ## Next step (exact)
-1. CI on the 2.5c PR: commit the `visual-baselines` artifact after looking at the new screenshots, then CI green.
-2. Supervisor's manual test of 2.5c (`/dev/demo` on both hosts, phone and desktop; header links land on their
-   section; the new Storybook stories), then the merge (squash); after it: sync `develop`, check CI, delete the branch.
-3. **PO design review** on recette (`/dev/demo` on both addresses, the reference site side by side), feedback written
-   into `docs/phase0/essai-2.md`. [PO] — the agent does not run it.
-4. Then Task 2.6 — Essai 2 proof & report (post its plan first). Do not start it before the supervisor's go.
-5. Still waiting on the human: branch protection, the backup key copy, the Oracle VM (see "Waiting on human").
+1. Supervisor's manual test of 2.6 (read `docs/phase0/essai-2.md` and its images; the failing runs of #36 and #37),
+   then the merge (squash); after it: sync `develop`, check CI, delete the branch.
+2. **PO design review** on recette (`/dev/demo` on both addresses; Docker Desktop must be running), feedback and
+   decisions written into `docs/phase0/essai-2.md`. [PO] — the agent does not run it.
+3. Then the supervisor closes M2 (or opens follow-up tasks from the review). Do not start M3 (Task 3.1) before the
+   supervisor's go.
+4. Still waiting on the human: branch protection, the backup key copy, the Oracle VM (see "Waiting on human").
