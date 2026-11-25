@@ -13,6 +13,7 @@ const WEB_UPWILLING: AppRole = { kind: "web", site: "upwilling" };
 const WEB_CAREERBOOST: AppRole = { kind: "web", site: "careerboost" };
 const CMS: AppRole = { kind: "cms" };
 const WORKER: AppRole = { kind: "worker" };
+const MIGRATE: AppRole = { kind: "migrate" };
 const ALL: AppRole = { kind: "all" };
 
 type Row = [label: string, role: AppRole, host: string, path: string, expected: RouteDecision];
@@ -61,6 +62,9 @@ describe("resolveRoute — production role/host matrix", () => {
     // worker: serves nothing.
     ["worker", WORKER, "upwilling.fr", "/", "not_found"],
     ["worker", WORKER, "admin.upwilling.fr", "/admin", "not_found"],
+    // migrate (Task 3.1b): a one-off container, serves nothing either.
+    ["migrate", MIGRATE, "admin.upwilling.fr", "/admin", "not_found"],
+    ["migrate", MIGRATE, "upwilling.fr", "/", "not_found"],
     // unknown hosts: refused whatever the role.
     ["web-upwilling", WEB_UPWILLING, "www.upwilling.fr", "/", "not_found"],
     ["cms", CMS, "evil.example.test", "/admin", "not_found"],
@@ -185,6 +189,7 @@ describe("roleFromEnv", () => {
     });
     expect(roleFromEnv({ APP_ROLE: "cms" })).toEqual({ kind: "cms" });
     expect(roleFromEnv({ APP_ROLE: "worker" })).toEqual({ kind: "worker" });
+    expect(roleFromEnv({ APP_ROLE: "migrate" })).toEqual({ kind: "migrate" });
   });
 
   it("refuses a web role without a site rather than guessing one", () => {

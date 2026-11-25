@@ -1,5 +1,6 @@
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 
 import { defineConfig } from "vitest/config";
 
@@ -7,6 +8,12 @@ import { defineConfig } from "vitest/config";
 // `docker compose -f infra/local/compose.yaml up -d postgres`). `pnpm test` runs both; `--project <name>`
 // runs one.
 export default defineConfig({
+  // Same alias as tsconfig.json: Payload's convention for importing its configuration.
+  resolve: {
+    alias: {
+      "@payload-config": fileURLToPath(new URL("./src/payload.config.ts", import.meta.url)),
+    },
+  },
   test: {
     environment: "node",
     // Code under test calls getEnv(); tests run as a local deployment unless they parse their own env.

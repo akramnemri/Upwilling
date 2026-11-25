@@ -10,6 +10,8 @@ export type AppRole =
   | { kind: "web"; site: TenantSlug }
   | { kind: "cms" }
   | { kind: "worker" }
+  // One-off migration container (Task 3.1b): serves no HTTP either.
+  | { kind: "migrate" }
   // Every role at once: local development and e2e only (env validation refuses it elsewhere: Task 1.1, decision D1).
   | { kind: "all" };
 
@@ -42,6 +44,8 @@ export function roleFromEnv(env: Pick<Env, "APP_ROLE" | "SITE">): AppRole {
       return { kind: "cms" };
     case "worker":
       return { kind: "worker" };
+    case "migrate":
+      return { kind: "migrate" };
   }
 }
 
@@ -79,7 +83,8 @@ function roleServesHost(role: AppRole, target: HostTarget, deployEnv: DeployEnv)
     case "cms":
       return target.kind === "admin" || target.kind === "hooks";
     case "worker":
-      // The worker serves no HTTP at all; this only matters if someone starts Next.js with that role.
+    case "migrate":
+      // Neither serves HTTP at all; this only matters if someone starts Next.js with that role.
       return false;
     case "all":
       // Startup already refuses this outside local; checked again so a mistake cannot open every host.

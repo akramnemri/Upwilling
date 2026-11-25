@@ -1,3 +1,4 @@
+import { checkDatabase } from "../../../lib/database-check";
 import { getEnv } from "../../../lib/env";
 import { NO_STORE } from "../../../lib/http/route-handler";
 
@@ -7,11 +8,11 @@ type CheckResult = "ok" | "failed" | "not_configured";
  * Readiness: "this instance can serve real traffic". Used by deploy smoke tests and the uptime monitor.
  * Failure details stay in the logs; the response only names which check failed.
  */
-export function GET(): Response {
+export async function GET(): Promise<Response> {
   const checks: Record<string, CheckResult> = {
     config: checkConfig(),
-    // The database is a placeholder (ADR-005): this check becomes real when it is provided.
-    database: "not_configured",
+    // Real where the container uses the database (cms, Task 3.1b); "not_configured" elsewhere.
+    database: await checkDatabase(),
   };
   const ready = !Object.values(checks).includes("failed");
 

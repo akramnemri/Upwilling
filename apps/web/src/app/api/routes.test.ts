@@ -21,8 +21,8 @@ describe("GET /api/health", () => {
 });
 
 describe("GET /api/ready", () => {
-  it("is ready when the configuration is valid; the database check is a placeholder (ADR-005)", async () => {
-    const response = readyGet();
+  it("is ready when the configuration is valid; no database configured for this container", async () => {
+    const response = await readyGet();
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({
       status: "ready",
