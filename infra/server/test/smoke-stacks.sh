@@ -180,8 +180,9 @@ expect_header recette.upwilling.fr / '^x-frame-options: DENY$' present
 expect_status 200 recette-careerboost.upwilling.fr / "Career Boost site" "${AUTH[@]}"
 expect_body recette-careerboost.upwilling.fr / "construire la vie que vous voulez demain" "${AUTH[@]}"
 expect_status 401 recette-admin.upwilling.fr / "admin without credentials"
-expect_status 200 recette-admin.upwilling.fr / "admin" "${AUTH[@]}"
-expect_body recette-admin.upwilling.fr / "espace d'administration" "${AUTH[@]}"
+# The admin home redirects to Payload's admin (Task 3.1); the admin itself needs the database (Task 3.1b).
+expect_status 307 recette-admin.upwilling.fr / "admin" "${AUTH[@]}"
+expect_header recette-admin.upwilling.fr / '^location: (https?://[^/]+)?/admin$' present "${AUTH[@]}"
 expect_status 404 recette-hooks.upwilling.fr / "hooks host, no basic auth, root refused"
 expect_header recette-hooks.upwilling.fr /admin "$REQUEST_ID" absent
 expect_header recette-hooks.upwilling.fr /api/webhooks/smoke "$REQUEST_ID" present
@@ -194,7 +195,7 @@ echo "== Production (no basic auth)"
 expect_status 200 upwilling.fr / "academy site"
 expect_body upwilling.fr / "Notre nouveau site arrive bientôt."
 expect_status 200 careerboost.upwilling.fr / "Career Boost site"
-expect_status 200 admin.upwilling.fr / "admin (Cloudflare Access in front)"
+expect_status 307 admin.upwilling.fr / "admin (Cloudflare Access in front)"
 expect_header admin.upwilling.fr / '^x-robots-tag:' present
 expect_header upwilling.fr / '^x-robots-tag:' absent
 expect_status 301 www.upwilling.fr "/formations?ref=smoke" "www redirect"

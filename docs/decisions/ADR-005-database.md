@@ -5,6 +5,18 @@
 - Source: `docs/ai/01_ARCHITECTURE.md` §3, §9; supervisor instructions of 2026-10-18 and 2026-10-20;
   PostgreSQL versioning policy and the `postgres` Docker image page, checked 2026-10-20
 
+## Update 2026-11-25 — Task 3.1: major 18 verified
+
+- Payload's documentation (v3.93.0, `docs/database/postgres.mdx`) still lists no supported PostgreSQL majors, and
+  Payload's own CI still runs `postgres:15`. Our integration tests (migrations on a clean database, seed,
+  access, localization) pass on **18.6**, locally and in CI's `checks` job: **major 18 stays**.
+- Local development: `postgres` service in `infra/local/compose.yaml` (same digest as the servers), on
+  `127.0.0.1:55432` (5432 is often taken by another local PostgreSQL), memory limit 256 MB, not restarted
+  automatically. Databases `app` (`pnpm dev`) and `app_test` (integration tests, rebuilt on every run).
+- CI: the same image as a service container of the `checks` job.
+- Still open, moved to **Task 3.1b**: the non-superuser role owning `app` on the servers, and `DATABASE_URL`
+  in the server compose files.
+
 ## Update 2026-10-20 — PostgreSQL confirmed
 
 - Engine: PostgreSQL, through `@payloadcms/db-postgres` (Task 3.1).

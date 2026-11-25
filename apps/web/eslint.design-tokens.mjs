@@ -14,7 +14,7 @@ const webDesignTokenRules = designTokenRules({
   files: ["src/**/*.{ts,tsx}"],
   ignores: ["src/**/*.test.{ts,tsx}"],
   cwd: WEB_ROOT,
-  entryPoint: join(WEB_ROOT, "src/app/globals.css"),
+  entryPoint: join(WEB_ROOT, "src/app/(frontend)/globals.css"),
 });
 
 export default webDesignTokenRules;

@@ -11,9 +11,9 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 
-import { getEnv } from "../../../lib/env";
-import { SITE_CHROME, SiteLayout } from "../../../modules/content";
-import { resolveHost } from "../../../modules/core";
+import { getEnv } from "../../../../lib/env";
+import { SITE_CHROME, SiteLayout } from "../../../../modules/content";
+import { resolveHost } from "../../../../modules/core";
 
 // Rendered per request: the tenant comes from the Host header, and at build time there is no
 // DEPLOY_ENV to check.

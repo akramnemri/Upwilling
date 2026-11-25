@@ -4,8 +4,6 @@
 # approval, Task 1.5b): the only jobs with a write permission (packages). Everything else gets a
 # read-only token, and no job gets secrets: the repository is public.
 #
-# Not here yet, on purpose: Postgres service container and migration check (Task 3.1, ADR-005).
-#
 # Actions are pinned to full commit SHAs (a tag can be moved; a SHA cannot). Versions: ADR-018.
 name: CI
 
@@ -32,6 +30,22 @@ jobs:
     name: checks
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    # PostgreSQL for Payload (Task 3.1, ADR-005): same pinned image as the servers, same local-only
+    # credentials and port as infra/local/compose.yaml, so the integration tests' defaults work unchanged.
+    services:
+      postgres:
+        image: postgres:18.6-trixie@sha256:74935e72241653ca55e0414067e6d8763aceb8a810eb51b452253ec3dcfc4336
+        env:
+          POSTGRES_USER: app
+          POSTGRES_PASSWORD: app-local-only
+          POSTGRES_DB: app_test
+        ports:
+          - 55432:5432
+        options: >-
+          --health-cmd "pg_isready -U app -d app_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -57,6 +71,36 @@ jobs:
 
       - name: Format
         run: pnpm format:check
+
+      # Every committed migration runs, in order, on the empty database (03_GIT_TESTING_PIPELINE.md §10),
+      # through the same CLI the deploy step will use (Task 3.1b).
+      - name: Migrations on a clean database
+        working-directory: apps/web
+        env:
+          DEPLOY_ENV: local
+          # No password in the URL: node-postgres reads PGPASSWORD (local-only value of the service above).
+          DATABASE_URL: postgres://app@127.0.0.1:55432/app_test
+          PGPASSWORD: app-local-only
+          PAYLOAD_SECRET: ci-only-placeholder-secret-not-used-anywhere
+        run: pnpm migrate
+
+      # A collection or field changed without its migration: Payload would write a new migration file here.
+      - name: No schema change without a migration
+        working-directory: apps/web
+        env:
+          DEPLOY_ENV: local
+          # No password in the URL: node-postgres reads PGPASSWORD (local-only value of the service above).
+          DATABASE_URL: postgres://app@127.0.0.1:55432/app_test
+          PGPASSWORD: app-local-only
+          PAYLOAD_SECRET: ci-only-placeholder-secret-not-used-anywhere
+        run: |
+          pnpm migrate:create ci-pending-check --skip-empty
+          pending=$(git status --porcelain -- src/migrations)
+          if [ -n "$pending" ]; then
+            echo "::error::The Payload schema changed without a migration. Run 'pnpm migrate:create <name>' in apps/web and commit it."
+            echo "$pending"
+            exit 1
+          fi
 
       - name: Typecheck
         run: pnpm typecheck

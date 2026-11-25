@@ -1,8 +1,11 @@
 {
   "extends": "@upwilling/config/tsconfig/nextjs.json",
   "compilerOptions": {
+    // Payload generates the admin import map as JavaScript (src/app/(payload)/admin/importMap.js).
+    "allowJs": true,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@payload-config": ["./src/payload.config.ts"]
     }
   },
   "include": [

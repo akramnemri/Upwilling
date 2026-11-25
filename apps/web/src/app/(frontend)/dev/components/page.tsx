@@ -24,7 +24,7 @@ import { ArrowRight, Code, Download, ShieldCheck } from "lucide-react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { getEnv } from "../../../lib/env";
+import { getEnv } from "../../../../lib/env";
 import { FormsPreview } from "./forms-preview";
 import { InteractivePreview } from "./interactive-preview";
 import { PreviewSection } from "./preview-section";

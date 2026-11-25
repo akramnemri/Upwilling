@@ -1,8 +1,37 @@
-# Local development services. Start with:  docker compose -f infra/local/compose.yaml up -d
-# The database is not here yet: it is a placeholder until the supervisor provides it (ADR-005).
+# Local development services. Start both with:  docker compose -f infra/local/compose.yaml up -d
+# Only the database (enough for `pnpm dev` and the tests):  docker compose -f infra/local/compose.yaml up -d postgres
+# Stop them when you are done:  docker compose -f infra/local/compose.yaml stop
 name: upwilling-local
 
 services:
+  postgres:
+    # Same image as the server stacks (infra/server/compose.base.yaml, ADR-005, ADR-018).
+    image: postgres:18.6-trixie@sha256:74935e72241653ca55e0414067e6d8763aceb8a810eb51b452253ec3dcfc4336
+    # Not restarted with Docker Desktop: it runs only while you work on the project.
+    restart: "no"
+    ports:
+      # 127.0.0.1 only, and 55432 rather than 5432 so it never collides with another local PostgreSQL.
+      - "127.0.0.1:55432:5432"
+    environment:
+      # Local-only credentials for a throwaway database reachable from this machine only; never reused
+      # anywhere else. The server stacks get generated passwords (runbook local-server.md).
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app-local-only
+      POSTGRES_DB: app
+    # Small settings for a laptop: a handful of connections and little shared memory.
+    command: ["postgres", "-c", "shared_buffers=32MB", "-c", "max_connections=30"]
+    mem_limit: 256m
+    shm_size: 64m
+    volumes:
+      - postgres-data:/var/lib/postgresql
+      - ./postgres/create-test-database.sql:/docker-entrypoint-initdb.d/create-test-database.sql:ro
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "app", "-d", "app"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
   mailpit:
     # Catches every email sent locally; nothing leaves the machine (ADR-012).
     image: axllent/mailpit:v1.31.6
@@ -28,3 +57,4 @@ services:
 
 volumes:
   mailpit-data:
+  postgres-data:

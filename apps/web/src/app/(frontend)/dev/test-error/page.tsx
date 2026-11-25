@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 
-import { getEnv } from "../../../lib/env";
+import { getEnv } from "../../../../lib/env";
 
 // Rendered per request: at build time there is no DEPLOY_ENV, and the build must not throw.
 export const dynamic = "force-dynamic";

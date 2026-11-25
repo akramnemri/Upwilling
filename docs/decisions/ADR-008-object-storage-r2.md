@@ -23,6 +23,20 @@ Some files are private (course materials, invoices, CVs, trainer documents).
 - R2 credentials are environment variables; creating buckets and keys is a human action.
 - Local development needs an R2-compatible emulation or a local storage fallback (decided in Task 3.1).
 
+## Update 2026-11-25 — Task 3.1: local storage until the Cloudflare account exists
+
+- The R2 adapter is `@payloadcms/storage-s3` (R2 speaks the S3 API, `region: auto`). It is wired for the public
+  `media` collection and turns on only when the four variables `R2_ENDPOINT`, `R2_ACCESS_KEY_ID`,
+  `R2_SECRET_ACCESS_KEY`, `R2_PUBLIC_BUCKET` are set (all or none, checked at startup).
+- Without them, uploads go to `MEDIA_DIR` (default `apps/web/media`, gitignored, never in the image). This is the
+  **local fallback** this ADR left to Task 3.1. No S3 emulator (MinIO, LocalStack): one container less on the laptop.
+- `alwaysInsertFields: true`: the adapter's `prefix` column exists with or without R2, so one set of migrations
+  fits every environment.
+- The **private bucket** is not wired yet: no collection holds private files before the LMS and the forms. The
+  first such collection adds it, with signed URLs after an access check.
+- **Temporary exception, Task 3.1b:** the recette `cms` container gets a named volume for `MEDIA_DIR` until R2
+  exists (containers are otherwise stateless). Production does not go live without R2.
+
 ## Revisit when
 
 No foreseen trigger.

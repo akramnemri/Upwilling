@@ -12,10 +12,10 @@ Decisions: [`docs/decisions/`](docs/decisions/README.md). Current progress: [`do
 
 | Tool    | Version                                  | Notes                                                                                                                          |
 | ------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| Node.js | 24 LTS (see `.nvmrc`)                    | `pnpm install` refuses other majors.                                                                                           |
+| Node.js | 24 LTS, at least 24.22.1 (see `.nvmrc`)  | `pnpm install` refuses older versions and other majors (Payload's `engines`, ADR-018).                                         |
 | pnpm    | 11.28.6                                  | Provided by Corepack from the `packageManager` field: run `corepack enable` once (needs an administrator terminal on Windows). |
 | Git     | any recent                               | The repository uses LF line endings (`.gitattributes`).                                                                        |
-| Docker  | Docker Desktop / Engine with Compose v2+ | Runs the local services in `infra/local/compose.yaml` (Mailpit; the database later, ADR-005).                                  |
+| Docker  | Docker Desktop / Engine with Compose v2+ | Runs the local services in `infra/local/compose.yaml`: PostgreSQL (needed by Payload and the tests) and Mailpit.               |
 
 ## Setup
 
@@ -24,21 +24,44 @@ git clone https://github.com/akramnemri/Upwilling.git
 cd Upwilling
 corepack enable
 pnpm install
-cp .env.example apps/web/.env.local
+cp .env.example apps/web/.env.local     # then set PAYLOAD_SECRET (the file says how to generate one)
 docker compose -f infra/local/compose.yaml up -d
+pnpm --filter @upwilling/web migrate     # creates the tables
+pnpm --filter @upwilling/web seed        # synthetic administrator + one image (scripts/seed-data.ts)
 pnpm dev
 ```
+
+Log into <http://admin.localhost:3000/admin> with the seed account written in `apps/web/scripts/seed-data.ts`
+(local only: the seed refuses any other `DEPLOY_ENV`). Uploaded files land in `apps/web/media/` until R2 exists
+(ADR-008). The first visit of the admin compiles for up to a minute; later visits are fast.
+
+The local PostgreSQL listens on `127.0.0.1:55432` and uses at most 256 MB. It does not restart by itself: stop it
+with `docker compose -f infra/local/compose.yaml stop` when you are done. Public pages work without it; the admin,
+`migrate`, `seed` and the integration tests need it.
+
+### Changing the database schema (Payload)
+
+Payload's automatic "push" is off, locally too: the schema only changes through committed migrations.
+
+1. Change a collection or field.
+2. `pnpm --filter @upwilling/web migrate:create <short-name>`: writes `apps/web/src/migrations/<date>_<name>.ts`.
+   Read it, and write its assumptions at the top (03_GIT_TESTING_PIPELINE.md §10).
+3. `pnpm --filter @upwilling/web migrate` applies it locally; `migrate:status` lists what ran.
+4. `pnpm --filter @upwilling/web generate:types` (and `generate:importmap` after adding admin components): commit
+   the regenerated files, never edit them by hand.
+
+CI applies every migration to an empty database, then fails if the schema changed without a migration.
 
 ## Local hosts
 
 The app serves one site per host name. `localhost` itself is **not** a known host and answers 404.
 
-| URL                                 | Serves                                  |
-| ----------------------------------- | --------------------------------------- |
-| <http://upwilling.localhost:3000>   | Academy site (tenant `upwilling`)       |
-| <http://careerboost.localhost:3000> | Association site (tenant `careerboost`) |
-| <http://admin.localhost:3000>       | Admin host (Payload from Milestone 3)   |
-| <http://localhost:8025>             | Mailpit: emails captured locally        |
+| URL                                 | Serves                                              |
+| ----------------------------------- | --------------------------------------------------- |
+| <http://upwilling.localhost:3000>   | Academy site (tenant `upwilling`)                   |
+| <http://careerboost.localhost:3000> | Association site (tenant `careerboost`)             |
+| <http://admin.localhost:3000>       | Admin host: redirects to Payload's admin (`/admin`) |
+| <http://localhost:8025>             | Mailpit: emails captured locally                    |
 
 Modern browsers resolve `*.localhost` to `127.0.0.1` by themselves. If yours does not, add to your hosts file
 (`C:\Windows\System32\drivers\etc\hosts` on Windows, `/etc/hosts` elsewhere):
@@ -99,7 +122,8 @@ similar values are replaced with `[REDACTED]`. Log through `getLogger()` / `getR
 | Integration | `apps/web/tests/integration/`                            | `pnpm test`, or `pnpm test:integration` in `apps/web` |
 | End-to-end  | `apps/web/tests/e2e/*.spec.ts`                           | `pnpm e2e` (builds first)                             |
 
-Integration tests will use the local database once it exists (ADR-005); until then the project holds a placeholder.
+Integration tests need the local PostgreSQL (`docker compose -f infra/local/compose.yaml up -d postgres`). They rebuild
+the `app_test` database from the migrations on every run, so they never touch your `app` data.
 
 End-to-end tests run the **production build** with `next start` on port 3100 (`DEPLOY_ENV=local`), so they do not
 clash with `pnpm dev` on 3000. They open the local hosts (`upwilling.localhost:3100`, …) in Chromium. Install the

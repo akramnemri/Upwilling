@@ -112,8 +112,9 @@ expect_status 200 8081 / "academy" "${AUTH[@]}"
 expect_body 8081 / "Notre nouveau site arrive bientôt." "${AUTH[@]}"
 expect_status 200 8082 / "Career Boost" "${AUTH[@]}"
 expect_body 8082 / "construire la vie que vous voulez demain" "${AUTH[@]}"
-expect_status 200 8083 / "admin" "${AUTH[@]}"
-expect_body 8083 / "espace d'administration" "${AUTH[@]}"
+# The admin home redirects to Payload's admin (Task 3.1): only the admin host does that.
+expect_status 307 8083 / "admin" "${AUTH[@]}"
+expect_header 8083 / '^location: (https?://[^/]+)?/admin$' present "${AUTH[@]}"
 expect_status 404 8081 /admin "no admin on a site" "${AUTH[@]}"
 
 echo "== Basic auth, with /api/version open for the deploy check"

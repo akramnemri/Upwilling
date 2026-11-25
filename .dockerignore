@@ -32,3 +32,6 @@ infra
 CLAUDE.md
 apps/web/AGENTS.md
 apps/web/CLAUDE.md
+
+# Local uploads (MEDIA_DIR default, Task 3.1): someone's local files never go into the public image
+apps/web/media

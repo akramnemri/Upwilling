@@ -5,9 +5,9 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import type { ReactNode } from "react";
 
-import { getEnv } from "../lib/env";
-import { brandForHost, buildSiteMetadata } from "../modules/content";
-import { resolveHost } from "../modules/core";
+import { getEnv } from "../../lib/env";
+import { brandForHost, buildSiteMetadata } from "../../modules/content";
+import { resolveHost } from "../../modules/core";
 import styles from "./layout.module.css";
 
 export async function generateMetadata(): Promise<Metadata> {
