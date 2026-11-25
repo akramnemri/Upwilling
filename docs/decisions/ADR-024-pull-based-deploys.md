@@ -74,3 +74,6 @@ A new deploy now prepares the database before starting the new containers (`prep
 Any failure stops the deploy before the switch: the running release keeps serving, the commit is marked failed
 and not retried. Restoring the previous release never runs migrations down: schema changes must stay compatible
 with the previous release (03 §10). Tested in `smoke-deploy.sh` (a release whose migrations fail switches nothing).
+
+Releases whose stack file has no `migrate` service (anything older than Task 3.1b: a rollback, or the deploy that
+brings 3.1b in) skip these steps with a log line, so rolling back across Task 3.1b still works.

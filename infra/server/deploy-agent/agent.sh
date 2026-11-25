@@ -149,6 +149,11 @@ backup_before_migrations() {
 # prepare_database <stack> <release dir>: database up, role `app`, backup, migrations (new deploys only).
 # Nothing here touches the running app containers: on failure the current release keeps serving.
 prepare_database() {
+  # Releases from before Task 3.1b (a rollback, or the deploy that brings 3.1b in) have no such steps.
+  if ! grep -x '  migrate:' "$2/$(stack_file "$1")" >/dev/null; then
+    log "$1" "release has no database steps (older than Task 3.1b): skipped"
+    return 0
+  fi
   if ! stack_compose "$1" "$2" up -d --wait --wait-timeout "$WAIT_TIMEOUT" postgres; then
     log "$1" "database did not become healthy"
     return 1
