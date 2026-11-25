@@ -25,7 +25,11 @@ export default defineConfig({
   reporter: [["list"], ["html", { open: "never", outputFolder: "visual-report" }]],
   outputDir: "visual-results",
   expect: {
-    toHaveScreenshot: { animations: "disabled", caret: "hide", scale: "css" },
+    // `threshold` is the color difference a pixel may have and still match (0 to 1, YIQ). Playwright's
+    // default, 0.2, let a change of Career Boost's blue pass unseen (Essai 2, Task 2.6: primary
+    // #006BCF -> #415FD9 measures 0.136). 0.05 catches it; screenshots are always taken in the same
+    // pinned container, so rendering does not vary between runs.
+    toHaveScreenshot: { animations: "disabled", caret: "hide", scale: "css", threshold: 0.05 },
   },
   use: {
     baseURL: `http://127.0.0.1:${PORT}`,
