@@ -4,6 +4,7 @@ import { getPayload, type Payload } from "payload";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { SEED_ADMIN, SEED_IMAGE_ALT, seed } from "../../scripts/seed-data";
+import { checkDatabase } from "../../src/lib/database-check";
 import { getEnv } from "../../src/lib/env";
 import config from "../../src/payload.config";
 
@@ -39,6 +40,12 @@ describe("migrations", () => {
     expect(names).toContain("20261125_185819_initial");
     // `dev` would mean Payload pushed the schema itself instead of running migrations.
     expect(names).not.toContain("dev");
+  });
+});
+
+describe("readiness database check (Task 3.1b)", () => {
+  it("reports ok once the migrations ran", async () => {
+    expect(await checkDatabase()).toBe("ok");
   });
 });
 

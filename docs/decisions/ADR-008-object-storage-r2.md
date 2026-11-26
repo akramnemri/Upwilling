@@ -40,3 +40,10 @@ Some files are private (course materials, invoices, CVs, trainer documents).
 ## Revisit when
 
 No foreseen trigger.
+
+## Update 2026-11-25 — Task 3.1b: recette media volume, R2 required in production
+
+- Recette's `cms` writes uploads to the named volume `media` (`MEDIA_DIR=/data/media`; the image creates
+  `/data/media` owned by `node`). Recette data is synthetic: the volume is not backed up.
+- Production's `cms` refuses to start without the four `R2_*` variables (startup validation and
+  `compose.production.yaml`): production media never live in a container (supervisor's choice, 2026-11-25).

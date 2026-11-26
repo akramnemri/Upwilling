@@ -60,3 +60,42 @@ services:
         max-size: "10m"
         max-file: "3"
     # Never published: reachable only on the stack's own network.
+
+  # One-off (Task 3.1b, ADR-005): makes sure the application's own role `app` exists, is not a superuser, and
+  # owns database `app` and its `public` schema, so Payload and its migrations never run as `postgres`.
+  # Idempotent: the deploy agent runs it before every migration, which also converts an existing volume.
+  # The superuser password only lives in this container, for the time it runs.
+  db-setup:
+    image: postgres:18.6-trixie@sha256:74935e72241653ca55e0414067e6d8763aceb8a810eb51b452253ec3dcfc4336
+    user: "999:999"
+    restart: "no"
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 64m
+    environment:
+      PGHOST: postgres
+      PGUSER: postgres
+      PGDATABASE: app
+      PGPASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD:?set APP_DB_PASSWORD in .env}
+    # psql variables (:'app_password') are quoted by psql itself; `$$` is a literal `$` for Compose.
+    command:
+      - sh
+      - -c
+      - |
+        psql -v ON_ERROR_STOP=1 -v app_password="$$APP_DB_PASSWORD" <<'SQL'
+        SELECT 'CREATE ROLE app LOGIN' WHERE NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'app') \gexec
+        ALTER ROLE app WITH LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOREPLICATION NOBYPASSRLS PASSWORD :'app_password';
+        ALTER DATABASE app OWNER TO app;
+        ALTER SCHEMA public OWNER TO app;
+        SQL
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

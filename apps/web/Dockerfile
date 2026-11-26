@@ -59,6 +59,9 @@ COPY --chmod=755 apps/web/docker/entrypoint.sh /usr/local/bin/upwilling-entrypoi
 
 # Next.js writes its data cache here at runtime: the one writable app path (compose mounts a tmpfs on it).
 RUN mkdir -p apps/web/.next/cache && chown node:node apps/web/.next/cache
+# Uploads while R2 is not configured (MEDIA_DIR, ADR-008, Task 3.1b): recette mounts a named volume here.
+# A new named volume copies this folder's owner, so the `node` user can write to it.
+RUN mkdir -p /data/media && chown node:node /data/media
 
 # The commit this image was built from, set by the publish workflow (Task 1.5) and served by /api/version.
 # Hand-made builds stay "local". Declared last so a new commit does not invalidate the layers above.

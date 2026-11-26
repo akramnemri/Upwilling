@@ -58,10 +58,32 @@ Then create `C:\upwilling-server\recette\.env` (Notepad is fine) with:
 ```text
 LOG_LEVEL=info
 POSTGRES_PASSWORD=<64 hexadecimal characters>
+APP_DB_PASSWORD=<64 hexadecimal characters, another one>
+PAYLOAD_SECRET=<64 hexadecimal characters, another one>
 ```
 
-Get the password from Git Bash with `openssl rand -hex 32` and keep it in your password manager. Do not set
-`APP_IMAGE`: the agent chooses the image. Never put this file in the repository.
+Get each value from Git Bash with `openssl rand -hex 32` (three different values) and keep them in your password
+manager. Do not set `APP_IMAGE`: the agent chooses the image. Never put this file in the repository.
+`APP_DB_PASSWORD` and `PAYLOAD_SECRET` exist since Task 3.1b: a recette `.env` without them makes every deploy
+fail at its first step, and the running release keeps serving.
+
+### Pre-migration backups (Task 3.1b)
+
+Every deploy backs up the database before running the new release's migrations, through the running backup
+container (`backup-restore.md` §2). Tell the agent its name in `C:\upwilling-server\agent\.env`:
+
+```text
+BACKUP_CONTAINER_RECETTE=upwilling-backup-backup-1
+```
+
+Without it, recette deploys still run, with the log line `no backup container configured`. Production never
+migrates without its own (`BACKUP_CONTAINER_PRODUCTION`).
+
+### First administrator (once, right after the first deploy with Payload)
+
+Open `https://admin-recette.<tailnet>.ts.net/admin` (behind the recette password) and create the first
+administrator at once: until one exists, anyone past the recette password could create it. Use a synthetic
+address (`…@example.test`) and a long password from your password manager.
 
 ## 4. Start the agent
 
@@ -74,7 +96,8 @@ docker compose -f compose.deploy-agent.yaml logs -f agent
 Expected log lines (Ctrl+C stops following, not the agent):
 
 - `started: stacks 'recette' …`, then, once the `recette` tag exists (after the first merge to `develop` that
-  contains Task 1.5b): `deploying <commit>` … `deployed <commit>`.
+  contains Task 1.5b): `deploying <commit>` … `deployed <commit>`. Since Task 3.1b, in between: `pre-migration
+  backup` (or `no backup container configured`), `migrations`, then Payload's `Migrating:` lines when there are any.
 - Before that: `cannot read ghcr.io/akramnemri/upwilling-web:recette (not promoted yet …)` every minute: normal.
 
 ## 5. Check what runs
@@ -91,7 +114,10 @@ The second command prints `{"version":"<commit>"}`: the commit of the last merge
 GitHub → **Actions** → **Rollback** → **Run workflow**: choose the stack and paste the full commit SHA to go back
 to (Actions history or `git log --format=%H`). Run it from the `develop` branch for recette, from `main` for
 production (the environments only accept those branches). Production waits for your approval. The agent deploys
-the commit within a minute. The database is never rolled back automatically.
+the commit within a minute. The database is never rolled back automatically: the older release runs on the newer
+schema, which is why schema changes stay compatible with the previous release (expand → migrate data → contract,
+03_GIT_TESTING_PIPELINE.md §10). To undo a migration's data, restore a backup (`backup-restore.md` §4): every
+deploy takes one just before migrating.
 
 ## 7. Production on this machine (later)
 

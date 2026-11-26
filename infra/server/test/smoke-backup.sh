@@ -119,7 +119,11 @@ generate_key wrong-key.txt >/dev/null
 # The same password on both: the production refusal below must come from the guard, not from a failed login.
 PASSWORD=$(openssl rand -hex 32)
 for name in recette production; do
-  printf 'APP_IMAGE=upwilling-backup-smoke-not-started\nPOSTGRES_PASSWORD=%s\n' "$PASSWORD" >"$SERVER_DIR/$name/.env"
+  # The stack files also need the Payload and R2 values to parse (Task 3.1b); the app containers never start here.
+  printf '%s\n' "APP_IMAGE=upwilling-backup-smoke-not-started" "POSTGRES_PASSWORD=$PASSWORD" \
+    "APP_DB_PASSWORD=$(openssl rand -hex 32)" "PAYLOAD_SECRET=$(openssl rand -hex 32)" \
+    "R2_ENDPOINT=https://r2.smoke.invalid" "R2_ACCESS_KEY_ID=smoke" "R2_SECRET_ACCESS_KEY=smoke" \
+    "R2_PUBLIC_BUCKET=smoke" >"$SERVER_DIR/$name/.env"
 done
 # From the real template, so its empty optional settings are tested too. The last value of a name wins.
 cp .env.backup.example "$SERVER_DIR/backup/.env"
@@ -135,6 +139,8 @@ echo "== Databases"
 docker network create --internal "$EDGE_NETWORK" >/dev/null
 stack recette up -d --wait --wait-timeout 60 postgres
 stack production up -d --wait --wait-timeout 60 postgres
+# Recette gets the application's role, as after a deploy (Task 3.1b): restores must hand the tables to it.
+stack recette run --rm -T db-setup >/dev/null
 expect "recette's server says recette" "$(sql "$RECETTE_PROJECT" 'SHOW cluster_name')" "recette"
 expect "production's server says production" "$(sql "$PRODUCTION_PROJECT" 'SHOW cluster_name')" "production"
 sql "$RECETTE_PROJECT" "CREATE TABLE restore_proof (id int PRIMARY KEY, note text);
@@ -230,6 +236,10 @@ expect "check changes nothing" "$(proof_rows)" "$((ROWS - 1))"
 sql "$RECETTE_PROJECT" 'CREATE TABLE added_after_backup (id int)' >/dev/null
 if restore_with backup-key.txt apply "$GOOD" >/dev/null 2>&1; then pass "apply succeeds"; else fail "apply failed"; fi
 expect "the rows are back" "$(proof_rows)" "$ROWS"
+expect "restored tables belong to the app role" \
+  "$(sql "$RECETTE_PROJECT" "SELECT tableowner FROM pg_tables WHERE tablename = 'restore_proof'")" "app"
+expect "the restored database belongs to the app role" \
+  "$(sql "$RECETTE_PROJECT" "SELECT pg_get_userbyid(datdba) FROM pg_database WHERE datname = 'app'" postgres)" "app"
 expect "the rows are the same" \
   "$(sql "$RECETTE_PROJECT" "SELECT md5(string_agg(note, '' ORDER BY id)) FROM restore_proof")" \
   "$(sql "$RECETTE_PROJECT" "SELECT md5(string_agg(md5(n::text), '' ORDER BY n)) FROM generate_series(1, $ROWS) n" postgres)"

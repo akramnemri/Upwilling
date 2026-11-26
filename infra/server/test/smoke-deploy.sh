@@ -25,6 +25,7 @@ PROJECT="smoke-upwilling-recette"
 V1=$(printf '1%.0s' {1..40})
 V2=$(printf '2%.0s' {1..40})
 BAD=$(printf '3%.0s' {1..40})
+BAD_MIGRATION=$(printf '4%.0s' {1..40})
 failures=0
 
 agent() {
@@ -56,6 +57,14 @@ fail() { echo "  FAIL  $1"; failures=$((failures + 1)); }
 release() {
   printf 'FROM upwilling-web:local\nENV APP_VERSION=%s\nLABEL org.opencontainers.image.revision=%s\n' "$2" "$1" |
     docker build -q -t "$REPO:$1" - >/dev/null
+  docker push -q "$REPO:$1" >/dev/null
+}
+# release_with_failing_migration <commit>: a correct release whose migration container exits with code 1.
+release_with_failing_migration() {
+  printf '%s\n' 'FROM upwilling-web:local' "ENV APP_VERSION=$1" "LABEL org.opencontainers.image.revision=$1" \
+    'USER root' \
+    "RUN echo 'console.error(\"smoke: failing migration\"); process.exit(1);' > /app/apps/web/dist/migrate.mjs" \
+    'USER node' | docker build -q -t "$REPO:$1" - >/dev/null
   docker push -q "$REPO:$1" >/dev/null
 }
 # promote <commit>: what the promote workflow does to GHCR.
@@ -91,6 +100,8 @@ mkdir -p "$WORK_DIR/srv/recette"
 cat >"$WORK_DIR/srv/recette/.env" <<EOF
 LOG_LEVEL=info
 POSTGRES_PASSWORD=$(openssl rand -hex 32)
+APP_DB_PASSWORD=$(openssl rand -hex 32)
+PAYLOAD_SECRET=$(openssl rand -hex 32)
 EOF
 docker run -d --name "$REGISTRY_NAME" -p 127.0.0.1:5005:5000 "$REGISTRY_IMAGE" >/dev/null
 for _ in $(seq 1 20); do curl -s -o /dev/null http://127.0.0.1:5005/v2/ && break; sleep 1; done
@@ -98,12 +109,17 @@ release "$V1" "$V1"
 release "$V2" "$V2"
 # A bad release: its label says one commit, the app reports another. The agent's version check must catch it.
 release "$BAD" "$V1"
+release_with_failing_migration "$BAD_MIGRATION"
 promote "$V1"
 
 echo "== Agent deploys the first release"
 agent up -d --wait --wait-timeout 60
 if wait_for current "$V1" 240; then pass "first deploy recorded"; else fail "first deploy not recorded"; fi
 expect_running "$V1"
+# Task 3.1b: role setup and migrations ran before the switch (no backup container in this test).
+if agent logs agent | grep -F "no backup container configured" >/dev/null; then pass "missing recette backup logged"; else fail "no line about the pre-migration backup"; fi
+migrated=$(docker exec "$PROJECT-postgres-1" psql -U postgres -d app -Atc "select count(*) from payload_migrations" 2>/dev/null | tr -d '\r' || true)
+if [[ $migrated -ge 1 ]]; then pass "migrations ran ($migrated recorded)"; else fail "no migration recorded ('$migrated')"; fi
 
 echo "== Agent follows the tag to the next release"
 promote "$V2"
@@ -121,6 +137,13 @@ if [[ $(state current) == "$V2" ]]; then pass "current release unchanged"; else 
 sleep 10
 attempts=$(agent logs agent | grep -cF "deploying $BAD" || true)
 if [[ $attempts == "1" ]]; then pass "bad release not retried"; else fail "bad release attempted $attempts times"; fi
+
+echo "== A release whose migrations fail switches nothing (Task 3.1b)"
+promote "$BAD_MIGRATION"
+if wait_for failed "$BAD_MIGRATION" 240; then pass "release with failing migrations marked as failed"; else fail "release with failing migrations not marked as failed"; fi
+if agent logs agent | grep -F "migrations failed: nothing was switched" >/dev/null; then pass "agent logged the failed migrations"; else fail "no failed-migrations line"; fi
+expect_running "$V2"
+if [[ $(state current) == "$V2" ]]; then pass "current release unchanged"; else fail "current release is '$(state current)'"; fi
 
 echo "== Rollback (what rollback.yml does: move the tag back)"
 promote "$V1"

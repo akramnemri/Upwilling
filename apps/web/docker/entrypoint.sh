@@ -4,6 +4,10 @@
 set -eu
 
 case "${APP_ROLE:-}" in
+  migrate)
+    # One-off: runs pending migrations, then exits (Task 3.1b). The deploy agent starts it before switching.
+    exec node --enable-source-maps /app/apps/web/dist/migrate.mjs
+    ;;
   worker)
     exec node --enable-source-maps /app/apps/web/dist/worker.cjs
     ;;

@@ -121,9 +121,9 @@ describe("parseEnv — APP_VERSION (baked into the image, Task 1.5)", () => {
   });
 });
 
-describe("parseEnv — Payload and R2 (Task 3.1)", () => {
+describe("parseEnv — Payload and R2 (Tasks 3.1a, 3.1b)", () => {
   const cms = {
-    DEPLOY_ENV: "production",
+    DEPLOY_ENV: "recette",
     APP_ROLE: "cms",
     DATABASE_URL: "postgres://app:synthetic@postgres:5432/app",
     PAYLOAD_SECRET: "a".repeat(32),
@@ -133,9 +133,25 @@ describe("parseEnv — Payload and R2 (Task 3.1)", () => {
     expect(parseEnv(cms)).toMatchObject({ APP_ROLE: "cms", DATABASE_URL: cms.DATABASE_URL });
   });
 
-  it("leaves them optional at startup: only Payload itself needs them (Task 3.1b requires them for cms)", () => {
+  it("refuses a cms or migrate container without database or secret", () => {
+    for (const role of ["cms", "migrate"]) {
+      const parse = () => parseEnv({ DEPLOY_ENV: "recette", APP_ROLE: role });
+      expect(parse).toThrow(`DATABASE_URL is missing (required when APP_ROLE is ${role})`);
+      expect(parse).toThrow(`PAYLOAD_SECRET is missing (required when APP_ROLE is ${role})`);
+    }
+  });
+
+  it("leaves them optional for the other roles and locally, where only Payload itself needs them", () => {
     expect(parseEnv({ DEPLOY_ENV: "local" }).DATABASE_URL).toBeUndefined();
-    expect(parseEnv({ DEPLOY_ENV: "production", APP_ROLE: "cms" }).PAYLOAD_SECRET).toBeUndefined();
+    expect(parseEnv({ DEPLOY_ENV: "recette", APP_ROLE: "worker" }).PAYLOAD_SECRET).toBeUndefined();
+  });
+
+  it("refuses a production cms without R2 (ADR-008), but not a production migrate container", () => {
+    const production = { ...cms, DEPLOY_ENV: "production" };
+    expect(() => parseEnv(production)).toThrow(
+      "R2_ENDPOINT is missing (production media must be on R2, ADR-008)",
+    );
+    expect(parseEnv({ ...production, APP_ROLE: "migrate" }).APP_ROLE).toBe("migrate");
   });
 
   it("refuses a short secret and a database URL that is not PostgreSQL", () => {

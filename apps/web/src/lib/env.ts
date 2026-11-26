@@ -21,7 +21,8 @@ const envSchema = z
     DEPLOY_ENV: z.enum(["local", "recette", "production"]),
     LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug"]).default("info"),
     // Container role (01_ARCHITECTURE.md §5.3). Unset means "serve every role", allowed only locally.
-    APP_ROLE: z.enum(["web", "cms", "worker"]).optional(),
+    // `migrate` is the one-off container the deploy agent runs before switching releases (Task 3.1b).
+    APP_ROLE: z.enum(["web", "cms", "worker", "migrate"]).optional(),
     // The one site a `web` container serves.
     SITE: z.enum(TENANT_SLUGS).optional(),
     // Commit the image was built from, baked in by the publish workflow (Task 1.5). Never set by hand.
@@ -29,9 +30,8 @@ const envSchema = z
       .string()
       .regex(/^([0-9a-f]{40}|local)$/, "must be a full commit SHA or local")
       .default("local"),
-    // Payload (Task 3.1). Optional at startup: Payload itself refuses to start without them
-    // (src/lib/payload-settings.ts), while pages that do not use Payload keep working. Task 3.1b makes them
-    // required for the cms role, together with the server compose files that provide them.
+    // Payload (Task 3.1). Required by the cms and migrate roles (Task 3.1b). Locally optional: Payload itself
+    // refuses to start without them (src/lib/payload-settings.ts), while public pages keep working.
     DATABASE_URL: z
       .string()
       .regex(/^postgres(ql)?:\/\//, "must be a postgres:// connection URL")
@@ -67,6 +67,30 @@ const envSchema = z
         code: "custom",
         path: ["SITE"],
         message: "is invalid: only allowed when APP_ROLE is web",
+      });
+    }
+    if (env.APP_ROLE === "cms" || env.APP_ROLE === "migrate") {
+      for (const variable of ["DATABASE_URL", "PAYLOAD_SECRET"] as const) {
+        if (env[variable] === undefined) {
+          ctx.addIssue({
+            code: "custom",
+            path: [variable],
+            message: `is missing (required when APP_ROLE is ${env.APP_ROLE})`,
+          });
+        }
+      }
+    }
+    // ADR-008: production media live on R2. A production cms without it would write uploads into its own
+    // container, where a redeploy loses them.
+    if (
+      env.DEPLOY_ENV === "production" &&
+      env.APP_ROLE === "cms" &&
+      env.R2_ENDPOINT === undefined
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["R2_ENDPOINT"],
+        message: "is missing (production media must be on R2, ADR-008)",
       });
     }
     const r2Variables = R2_VARIABLES.filter((variable) => env[variable] !== undefined);
